@@ -1,0 +1,129 @@
+### CLion 特定文件 ###
+.idea/
+*.iml
+*.iws
+*.ipr
+cmake-build-*/
+
+### Qt 构建文件 ###
+# 构建目录
+build*/
+*/build-*
+CMakeLists.txt.user
+
+# Qt 编译中间文件
+*.pro.user
+*.qrc.d
+*.qmlc
+*.jsc
+
+# Qt 元对象编译器生成的文件
+moc_*.cpp
+qrc_*.cpp
+ui_*.h
+
+# Qt 资源系统文件
+*.qrc.depends
+
+### 可执行文件和库 ###
+*.exe
+*.app
+*.dll
+*.so
+*.so.*
+*.dylib
+*.a
+*.lib
+
+### CMake 生成文件 ###
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+Makefile
+*.ninja
+*.cbp
+*.cmake
+compile_commands.json
+
+### 编译中间文件 ###
+*.o
+*.obj
+*.pch
+*.gcno
+*.gcda
+
+### Qt Creator 文件 ###
+*.creator.user
+*.config
+*.files
+*.includes
+*.cflags
+*.cxxflags
+*.config
+
+### 用户特定文件 ###
+*.user
+*.swp
+*.swo
+*~
+*.bak
+*.tmp
+*.orig
+
+### 日志和调试文件 ###
+*.log
+*.dmp
+*.core
+*.pid
+
+### 系统文件 ###
+.DS_Store
+Thumbs.db
+desktop.ini
+
+### 依赖管理文件 ###
+# Conan 包管理器
+conanbuildinfo.*
+conaninfo.txt
+
+# vcpkg 包管理器
+vcpkg_installed/
+
+### 文档生成 ###
+doc/html/
+doc/latex/
+doxygen/
+
+### 打包文件 ###
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+### 测试相关文件 ###
+CTestTestfile.cmake
+Testing/
+coverage/
+gcov/
+lcov.info
+
+### Qt 翻译文件 ###
+# 忽略二进制翻译文件，但保留 .ts 源文件
+*.qm
+
+### 项目特定文件 ###
+# 应用配置文件
+appconfig.ini
+
+# 本地数据库
+*.db
+*.sqlite
+
+# 本地临时数据
+*.dat
+*.bin

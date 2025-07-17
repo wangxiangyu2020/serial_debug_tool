@@ -1,0 +1,26 @@
+/* 简洁现代风格 - 带圆角悬停效果 */
+QTabBar::tab {
+    background: transparent;
+    color: #666;
+    border: none;
+    border-radius: 5px;  /* 添加基础圆角 */
+    padding: 10px 20px;
+    margin: 0 2px;      /* 增加水平间距避免圆角重叠 */
+}
+
+QTabBar::tab:hover {
+    color: #333;
+    background: rgba(0,0,0,0.05);
+    border-radius: 5px;  /* 悬停时圆角 */
+}
+
+QTabBar::tab:selected {
+    color: #1a73e8;
+    border-radius: 5px 5px 0 0;        /* 顶部圆角 */
+    border-bottom: 2px solid #1a73e8;
+    font-weight: 500;
+}
+
+QTabWidget::pane {
+    border: none;
+}

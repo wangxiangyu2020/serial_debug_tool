@@ -1,0 +1,88 @@
+/* === logo按钮 */
+QPushButton#logoBtn {
+    padding-left: 10px;  /* 在图标和文本之间添加5px间距 */
+    /* 仅调整图标和文本 */
+    qproperty-icon: url(:/resources/icons/logo.svg);
+    qproperty-iconSize: 28px;  /* 图标放大至28px */
+    font-size: 13px;           /* 文本缩小至13px */
+    font-weight: 500;          /* 字重调整为中等(500) */
+
+    /* 保持原有其他样式不变 */
+    border: none;
+    border-radius: 2px;
+    min-width: 24px;
+    min-height: 24px;
+    padding: 0px;
+    font-family: 'Segoe UI', 'Microsoft YaHei UI', sans-serif;
+    color: #555555;
+    background-color: transparent;
+}
+
+
+/* === 最小化按钮 - 增强悬停效果 === */
+QPushButton#minBtn {
+    border: none;
+    border-radius: 2px;
+    min-width: 24px;
+    min-height: 24px;
+    padding: 0px;
+    font-family: 'Segoe UI', 'Microsoft YaHei UI', sans-serif;
+    font-size: 24px;
+    font-weight: bold;
+    color: #555555;
+    background-color: transparent;
+}
+QPushButton#minBtn:hover {
+    background-color: #E5E5E5; /* 加深悬停背景色 */
+    color: #000000; /* 悬停时黑色文字 */
+    border: 1px solid #C0C0C0; /* 添加边框增强效果 */
+}
+QPushButton#minBtn:pressed {
+    background-color: #D0D0D0;
+    border: 1px solid #B0B0B0;
+}
+
+/* === 最大化按钮 - 增强悬停效果 === */
+QPushButton#maxBtn {
+    border: none;
+    border-radius: 2px;
+    min-width: 24px;
+    min-height: 24px;
+    padding: 0px;
+    font-family: 'Segoe UI', 'Microsoft YaHei UI', sans-serif;
+    font-size: 18px;
+    color: #555555;
+    background-color: transparent;
+}
+QPushButton#maxBtn:hover {
+    background-color: #E5E5E5;
+    color: #000000;
+    border: 1px solid #C0C0C0;
+}
+QPushButton#maxBtn:pressed {
+    background-color: #D0D0D0;
+    border: 1px solid #B0B0B0;
+}
+
+/* === 关闭按钮 - 增强悬停效果 === */
+QPushButton#closeBtn {
+    border: none;
+    border-radius: 2px;
+    min-width: 24px;
+    min-height: 24px;
+    padding: 0px;
+    font-family: 'Segoe UI', 'Microsoft YaHei UI', sans-serif;
+    font-size: 20px;
+    font-weight: bold;
+    color: #555555;
+    background-color: transparent;
+}
+QPushButton#closeBtn:hover {
+    background-color: #E81123;
+    color: white;
+    border: 1px solid #C01123; /* 添加边框增强效果 */
+}
+QPushButton#closeBtn:pressed {
+    background-color: #F1707A;
+    border: 1px solid #D01020;
+}
