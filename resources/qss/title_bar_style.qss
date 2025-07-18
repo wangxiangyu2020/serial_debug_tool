@@ -33,9 +33,9 @@ QPushButton#minBtn {
     background-color: transparent;
 }
 QPushButton#minBtn:hover {
-    background-color: #E5E5E5; /* 加深悬停背景色 */
-    color: #000000; /* 悬停时黑色文字 */
-    border: 1px solid #C0C0C0; /* 添加边框增强效果 */
+    color: #333;
+    background: rgba(0,0,0,0.05);
+    border-radius: 5px;  /* 悬停时圆角 */
 }
 QPushButton#minBtn:pressed {
     background-color: #D0D0D0;
@@ -55,9 +55,9 @@ QPushButton#maxBtn {
     background-color: transparent;
 }
 QPushButton#maxBtn:hover {
-    background-color: #E5E5E5;
-    color: #000000;
-    border: 1px solid #C0C0C0;
+    color: #333;
+    background: rgba(0,0,0,0.05);
+    border-radius: 5px;  /* 悬停时圆角 */
 }
 QPushButton#maxBtn:pressed {
     background-color: #D0D0D0;
@@ -80,7 +80,7 @@ QPushButton#closeBtn {
 QPushButton#closeBtn:hover {
     background-color: #E81123;
     color: white;
-    border: 1px solid #C01123; /* 添加边框增强效果 */
+    border-radius: 5px;  /* 悬停时圆角 */
 }
 QPushButton#closeBtn:pressed {
     background-color: #F1707A;

@@ -1,0 +1,72 @@
+/* styles/serial_port_send_settings.qss */
+SerialPortSendSettingsWidget {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    padding: 8px 12px 8px 12px;  /* 上下左右一致 */
+    font-family: 'Segoe UI', 'Microsoft YaHei UI', sans-serif;
+}
+
+/* 标题标签样式 */
+#m_pTitleLabel {
+    color: #495057;
+    font-size: 12px;
+    font-weight: bold;
+    padding-bottom: 0;
+    background-color: transparent;
+    margin-bottom: 0;
+}
+
+/* 复选框样式 */
+SerialPortSendSettingsWidget > QCheckBox {
+    color: #495057;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 1px 0 1px 15px;
+    spacing: 6px;
+    background-color: transparent;
+}
+
+SerialPortSendSettingsWidget > QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    background-color: #ffffff;
+}
+
+SerialPortSendSettingsWidget > QCheckBox::indicator:hover {
+    border-color: #80bdff;
+}
+
+SerialPortSendSettingsWidget > QCheckBox::indicator:checked {
+    image: url(:/resources/icons/checkmark_blue.svg);
+    background-color: #ffffff;
+    border: 1px solid #ced4da;
+}
+
+/* 输入框样式 - 减小尺寸 */
+SerialPortSendSettingsWidget > QLineEdit {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 2px 5px;
+    font-size: 11px;  /* 字体略小 */
+    background-color: white;
+    min-height: 22px;  /* 高度略减 */
+    min-width: 45px;   /* 最小宽度减小 */
+    max-width: 50px;   /* 最大宽度减小 */
+}
+
+/* 标签样式 */
+SerialPortSendSettingsWidget > QLabel {
+    color: #495057;
+    font-size: 11px;  /* 与输入框字体一致 */
+    background-color: transparent;
+}
+
+/* 水平布局优化 */
+SerialPortSendSettingsWidget > QHBoxLayout {
+    spacing: 6px;     /* 间距略减 */
+    margin-top: 4px;
+    margin-left: 15px;
+}

@@ -1,0 +1,80 @@
+/* styles/serial_port_receive_settings.qss */
+/* === 主容器样式 === */
+SerialPortReceiveSettingsWidget {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    padding: 8px 12px;  /* 减少垂直内边距 */
+    font-family: 'Segoe UI', 'Microsoft YaHei UI', sans-serif;
+}
+
+/* === 标题标签样式 - 最小化间距 === */
+SerialPortReceiveSettingsWidget > QLabel#m_pTitleLabel {
+    color: #495057;
+    font-size: 12px;
+    font-weight: bold;
+    padding-bottom: 0;  /* 完全移除底部内边距 */
+    background-color: transparent;
+}
+
+/* === 复选框样式 - 紧凑布局 === */
+SerialPortReceiveSettingsWidget > QCheckBox {
+    color: #495057;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 1px 0 1px 15px;  /* 最小化垂直内边距 */
+    spacing: 6px;
+    background-color: transparent;
+}
+
+SerialPortReceiveSettingsWidget > QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    background-color: #ffffff;
+}
+
+SerialPortReceiveSettingsWidget > QCheckBox::indicator:hover {
+    border-color: #80bdff;
+}
+
+SerialPortReceiveSettingsWidget > QCheckBox::indicator:checked {
+    image: url(:/resources/icons/checkmark_blue.svg);
+    background-color: #ffffff;
+    border: 1px solid #ced4da;
+}
+
+/* === 按钮样式 === */
+QPushButton {
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    min-height: 24px;
+    min-width: 80px;
+    max-width: 100px;
+}
+
+QPushButton:hover {
+    background-color: #0b5ed7;
+}
+
+QPushButton:pressed {
+    background-color: #0a58ca;
+}
+
+/* === 按钮布局优化 === */
+SerialPortReceiveSettingsWidget > QHBoxLayout {
+    spacing: 8px;
+    margin-top: 4px;  /* 减少顶部外边距 */
+}
+
+/* 确保所有文本元素背景透明 */
+SerialPortReceiveSettingsWidget > QLabel,
+SerialPortReceiveSettingsWidget > QCheckBox {
+    background-color: transparent;
+}

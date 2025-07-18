@@ -48,9 +48,12 @@ qt_add_resources(${PROJECT_NAME} "resources"
         resources/icons/waves.svg
         resources/icons/settings.svg
         resources/icons/down_arrow.svg
+        resources/icons/checkmark_blue.svg
         resources/qss/tab_style.qss
         resources/qss/title_bar_style.qss
         resources/qss/serial_config.qss
+        resources/qss/serial_port_receive_settings.qss
+        resources/qss/serial_port_send_settings.qss
         #        resources/web/echarts.min.js
         #        resources/web/wave.html
 )
