@@ -21,4 +21,5 @@ void SerialPortConfigTab::setUI()
     this->setAttribute(Qt::WA_StyledBackground);
     // 设置背景颜色为白色
     this->setStyleSheet("background-color: white;");
+    m_pSerialPortConfigWidget = new SerialPortConnectConfigWidget(this);
 }

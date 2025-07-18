@@ -9,6 +9,7 @@
   */
 
 #include <QWidget>
+#include "ui/SerialPortConnectConfigWidget.h"
 
 #ifndef SERIALPORTCONFIG_H
 #define SERIALPORTCONFIG_H
@@ -23,6 +24,9 @@ public:
 
 private:
     void setUI();
+
+private:
+    SerialPortConnectConfigWidget* m_pSerialPortConfigWidget = nullptr;
 };
 
 #endif //SERIALPORTCONFIG_H
