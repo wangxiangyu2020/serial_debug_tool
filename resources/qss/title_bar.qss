@@ -1,6 +1,9 @@
 /* 标题栏样式 - 顶部圆角 */
 TitleBar {
     background: #f8f9fa; /* 深色标题栏增强对比 */
+    border-top: 1px solid #000000;
+    border-left: 1px solid #000000;
+    border-right: 1px solid #000000;
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
     padding: 12px 15px;

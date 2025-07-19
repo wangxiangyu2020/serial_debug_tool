@@ -10,6 +10,8 @@ QTabBar::tab {
 
 QTabBar {
     background-color: #f8f9fa; /* 你想要的底色 */
+    border-left: 1px solid #000000;
+    border-right: 1px solid #000000;
 }
 
 QTabBar::tab:hover {

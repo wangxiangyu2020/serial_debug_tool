@@ -37,17 +37,17 @@ void TitleBar::setUI()
     m_pMinBtn = new QPushButton(this);
     m_pMinBtn->setObjectName("minBtn");
     m_pMinBtn->setText("-");
-    m_pMinBtn->setFixedSize(32, 20);
+    m_pMinBtn->setFixedSize(32, 32);
 
     m_pMaxBtn = new QPushButton(this);
     m_pMaxBtn->setObjectName("maxBtn");
     m_pMaxBtn->setText("□"); // 最大化按钮
-    m_pMaxBtn->setFixedSize(32, 20);
+    m_pMaxBtn->setFixedSize(32, 32);
 
     m_pCloseBtn = new QPushButton(this);
     m_pCloseBtn->setObjectName("closeBtn");
     m_pCloseBtn->setText("×"); // 关闭按钮
-    m_pCloseBtn->setFixedSize(32, 20);
+    m_pCloseBtn->setFixedSize(32, 32);
 
     // 加载单个QSS文件
     QFile styleFile(":/resources/qss/title_bar.qss");
