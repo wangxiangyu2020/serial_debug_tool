@@ -1,0 +1,77 @@
+/* styles/serial_port_receive_widget.qss */
+SerialPortDataReceiveWidget {
+    background-color: #f8f9fa;  /* 与参考样式完全一致 */
+    border-radius: 8px;        /* 与参考样式相同圆角大小 */
+    border: 1px solid #dee2e6; /* 与参考样式相同边框 */
+    padding: 8px 12px 8px 12px; /* 与参考样式相同内边距 */
+    font-family: 'Segoe UI', 'Microsoft YaHei UI', sans-serif;
+}
+
+/* 文本编辑框样式 */
+QPlainTextEdit {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;  /* 与参考样式输入框边框一致 */
+    border-radius: 8px;         /* 与参考样式相同圆角大小 */
+    padding: 5px;
+    font-size: 11px;            /* 与参考样式输入框字体大小一致 */
+    color: #495057;             /* 与参考样式文本颜色一致 */
+    selection-background-color: #d1e7ff;
+    selection-color: #000000;
+}
+
+/* 滚动条样式 */
+QScrollBar:vertical {
+    border: none;
+    background: #f1f3f5;
+    width: 10px;
+    margin: 0;
+}
+
+QScrollBar::handle:vertical {
+    background: #ced4da;
+    border-radius: 4px;
+    min-height: 20px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #adb5bd;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0;
+    background: none;
+}
+
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+QScrollBar:horizontal {
+    border: none;
+    background: #f1f3f5;
+    height: 10px;
+    margin: 0;
+}
+
+QScrollBar::handle:horizontal {
+    background: #ced4da;
+    border-radius: 4px;
+    min-width: 20px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background: #adb5bd;
+}
+
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal {
+    width: 0;
+    background: none;
+}
+
+QScrollBar::add-page:horizontal,
+QScrollBar::sub-page:horizontal {
+    background: none;
+}

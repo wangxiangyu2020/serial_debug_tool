@@ -1,0 +1,43 @@
+/* styles/serial_port_send_widget.qss */
+SerialPortDataSendWidget {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    padding: 12px;
+    font-family: 'Segoe UI', 'Microsoft YaHei UI', sans-serif;
+}
+
+/* 文本编辑框样式 */
+QPlainTextEdit {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    padding: 8px;
+    font-size: 15px;
+    font-weight: bold;    /* 添加字体加粗 */
+    color: #495057;
+    selection-background-color: #d1e7ff;
+    selection-color: #000000;
+}
+
+/* 发送按钮样式 */
+QPushButton {
+    background-color: #f8f9fa;  /* 与容器背景一致 */
+    border: 1px solid #ced4da;  /* 柔和边框 */
+    border-radius: 4px;
+    font-size: 11px;
+    color: #495057;
+    font-weight: 500;
+    padding: 0;
+    text-align: center; /* 水平居中 */
+}
+
+QPushButton:hover {
+    background-color: #f2f6fc;  /* 更接近正常状态的悬停效果 */
+    border-color: #b0c4de;     /* 轻微变化的边框 */
+}
+
+QPushButton:pressed {
+    background-color: #e8f0f8;  /* 稍微深一点的按下效果 */
+    border-color: #90a8c0;      /* 深一点的蓝色边框 */
+}

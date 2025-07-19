@@ -12,6 +12,8 @@
 #include "ui/SerialPortConnectConfigWidget.h"
 #include "ui/SerialPortReceiveSettingsWidget.h"
 #include "ui/SerialPortSendSettingsWidget.h"
+#include "ui/SerialPortDataReceiveWidget.h"
+#include "ui/SerialPortDataSendWidget.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 
@@ -36,6 +38,8 @@ private:
     SerialPortConnectConfigWidget* m_pSerialPortConfigWidget = nullptr;
     SerialPortReceiveSettingsWidget* m_pSerialPortReceiveSettingsWidget = nullptr;
     SerialPortSendSettingsWidget* m_pSerialPortSendSettingsWidget = nullptr;
+    SerialPortDataReceiveWidget* m_pSerialPortDataReceiveWidget = nullptr;
+    SerialPortDataSendWidget* m_pSerialPortDataSendWidget = nullptr;
 };
 
 #endif //SERIALPORTCONFIG_H

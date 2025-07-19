@@ -1,0 +1,74 @@
+/**
+  ******************************************************************************
+  * @file           : SerialPortDataSendWidget.cpp
+  * @author         : wangxiangyu
+  * @brief          : None
+  * @attention      : None
+  * @date           : 2025/7/19
+  ******************************************************************************
+  */
+
+#include "ui/SerialPortDataSendWidget.h"
+#include "utils/StyleLoader.h"
+#include <QTimer>
+
+SerialPortDataSendWidget::SerialPortDataSendWidget(QWidget* parent)
+    : QWidget(parent)
+{
+    this->setUI();
+    StyleLoader::loadStyleFromFile(this, ":/resources/qss/serial_port_data_send_widget.qss");
+}
+
+// 重写事件处理函数
+void SerialPortDataSendWidget::resizeEvent(QResizeEvent* event)
+{
+    QWidget::resizeEvent(event);
+    // 设置按钮高度
+    int textEditHeight = m_pSendTextEdit->height();
+    m_pSendButton->setFixedHeight(textEditHeight);
+}
+
+void SerialPortDataSendWidget::setUI()
+{
+    this->setAttribute(Qt::WA_StyledBackground);
+
+    // 主水平布局
+    m_pMainLayout = new QHBoxLayout(this);
+    m_pMainLayout->setSpacing(10);
+    m_pMainLayout->setContentsMargins(0, 0, 0, 0);
+
+    // 发送文本编辑框
+    m_pSendTextEdit = new QPlainTextEdit(this);
+    m_pSendTextEdit->setPlaceholderText("输入要发送的数据...");
+
+    // 设置文本框高度策略
+    const int minHeight = 80;
+    m_pSendTextEdit->setMinimumHeight(minHeight);
+    m_pSendTextEdit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    // 使用等宽字体
+    QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    fixedFont.setPointSize(10);
+    m_pSendTextEdit->setFont(fixedFont);
+
+    // 发送按钮
+    m_pSendButton = new QPushButton(this);
+    m_pSendButton->setFixedWidth(100); // 固定宽度
+    // 设置按钮文本和图标
+    QIcon sendIcon(":/resources/icons/send.svg");
+    m_pSendButton->setIcon(sendIcon);
+    m_pSendButton->setIconSize(QSize(40, 40));
+
+    // 初始设置按钮高度
+    QTimer::singleShot(0, this, [this]()
+    {
+        // 设置按钮高度
+        int textEditHeight = m_pSendTextEdit->height();
+        m_pSendButton->setFixedHeight(textEditHeight);
+    });
+
+    // 添加到布局
+    m_pMainLayout->addWidget(m_pSendTextEdit, 1);
+    m_pMainLayout->setSpacing(0);
+    m_pMainLayout->addWidget(m_pSendButton, 0);
+}

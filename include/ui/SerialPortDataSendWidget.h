@@ -1,0 +1,41 @@
+/**
+  ******************************************************************************
+  * @file           : SerialPortDataSendWidget.h
+  * @author         : wangxiangyu
+  * @brief          : None
+  * @attention      : None
+  * @date           : 2025/7/19
+  ******************************************************************************
+  */
+
+#include <QWidget>
+#include <QPlainTextEdit>
+#include <QPushButton>
+#include <QHBoxLayout>
+
+#ifndef SERIALPORTDATASENDWIDGET_H
+#define SERIALPORTDATASENDWIDGET_H
+
+class SerialPortDataSendWidget : public QWidget
+{
+    Q_OBJECT
+
+public:
+    explicit SerialPortDataSendWidget(QWidget* parent = nullptr);
+    ~SerialPortDataSendWidget() = default;
+
+protected:
+    void resizeEvent(QResizeEvent* event) override;
+
+private:
+    void setUI();
+
+private:
+    // 组件
+    QPlainTextEdit* m_pSendTextEdit = nullptr;
+    QPushButton* m_pSendButton = nullptr;
+    // 布局
+    QHBoxLayout* m_pMainLayout = nullptr;
+};
+
+#endif //SERIALPORTDATASENDWIDGET_H
