@@ -27,6 +27,7 @@ find_package(Qt6 COMPONENTS
         Widgets
         Svg
         SvgWidgets
+        SerialPort
         REQUIRED)
 
 add_executable(${PROJECT_NAME}
@@ -69,6 +70,7 @@ target_link_libraries(${PROJECT_NAME}
         Qt::Widgets
         Qt::Svg
         Qt::SvgWidgets
+        Qt::SerialPort
 )
 
 # 添加 Windows 部署规则

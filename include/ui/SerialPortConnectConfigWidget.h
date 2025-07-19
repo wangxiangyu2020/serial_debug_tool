@@ -13,6 +13,11 @@
 #include <QLabel>
 #include <QGridLayout>
 #include <QPushButton>
+#include <QSerialPort>
+#include <QSerialPortInfo>
+#include <QMessageBox>
+#include "utils/StyleLoader.h"
+#include "utils/SerialPortSettings.h"
 
 #ifndef SERIALPORTCONNECTCONFIGWIDGET_H
 #define SERIALPORTCONNECTCONFIGWIDGET_H
@@ -27,6 +32,13 @@ public:
 
 private:
     void setUI();
+    void createComponents();
+    void componentPropertySettings();
+    void createLayout();
+    void connectSignals();
+
+private slots:
+    void onConnectButtonClicked();
 
 private:
     // 下拉框组件
@@ -36,7 +48,6 @@ private:
     QComboBox* m_pStopBitsComboBox = nullptr;
     QComboBox* m_pParityComboBox = nullptr;
     QComboBox* m_pFlowControlComboBox; // 流控制下拉框
-
     // 其他辅助组件
     QLabel* m_pPortLabel = nullptr;
     QLabel* m_pBaudRateLabel = nullptr;
@@ -44,10 +55,9 @@ private:
     QLabel* m_pStopBitsLabel = nullptr;
     QLabel* m_pParityLabel = nullptr;
     QLabel* m_pFlowControlLabel; // 流控制标签
-
     // 按钮
     QPushButton* m_pConnectButton; // 连接按钮
-
+    // 布局
     QGridLayout* m_pMainLayout = nullptr;
 };
 

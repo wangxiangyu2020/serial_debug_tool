@@ -18,7 +18,7 @@ QLabel {
 
 /* === 紧凑型下拉框样式 === */
 QComboBox {
-    background-color: #ffffff;
+    background-color: white;
     border: 1px solid #ced4da;
     border-radius: 4px;
     padding: 3px 6px;
@@ -61,9 +61,6 @@ QComboBox QAbstractItemView {
     border-radius: 4px;
     font-size: 12px;
     padding: 2px;
-    min-height: 20px;
-    min-width: 100px;
-    max-width: 140px;
 
     /* 完全移除阴影效果 */
     background-clip: border;
