@@ -1,3 +1,15 @@
+/* 标题栏样式 - 顶部圆角 */
+TitleBar {
+    background: #f8f9fa; /* 深色标题栏增强对比 */
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    padding: 12px 15px;
+    height: 40px;
+    font-size: 14px;
+    font-weight: bold;
+    color: white; /* 白色文本 */
+}
+
 /* === logo按钮 */
 QPushButton#logoBtn {
     padding-left: 10px;  /* 在图标和文本之间添加5px间距 */

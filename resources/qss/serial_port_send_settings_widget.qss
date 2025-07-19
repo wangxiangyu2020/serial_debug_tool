@@ -1,4 +1,4 @@
-/* styles/serial_port_send_settings.qss */
+/* styles/serial_port_send_settings_widget.qss */
 SerialPortSendSettingsWidget {
     background-color: #f8f9fa;
     border-radius: 8px;

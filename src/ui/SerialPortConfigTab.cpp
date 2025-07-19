@@ -9,17 +9,18 @@
   */
 
 #include "ui/SerialPortConfigTab.h"
+#include "utils/StyleLoader.h"
 
 SerialPortConfigTab::SerialPortConfigTab(QWidget* parent)
     : QWidget(parent)
 {
     this->setUI();
+    StyleLoader::loadStyleFromFile(this, ":resources/qss/serial_prot_config_tab.qss");
 }
 
 void SerialPortConfigTab::setUI()
 {
     this->setAttribute(Qt::WA_StyledBackground);
-    this->setStyleSheet("background-color: white;");
 
     // ==== 创建左侧设置区域 ====
     QWidget* settingsPanel = new QWidget(this); // 左侧容器

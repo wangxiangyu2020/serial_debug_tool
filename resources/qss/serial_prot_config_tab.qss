@@ -1,0 +1,5 @@
+SerialPortConfigTab {
+    background-color: #f8f9fa;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}

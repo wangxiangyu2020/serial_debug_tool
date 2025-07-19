@@ -24,7 +24,7 @@ QPlainTextEdit {
 QPushButton {
     background-color: #f8f9fa;  /* 与容器背景一致 */
     border: 1px solid #ced4da;  /* 柔和边框 */
-    border-radius: 4px;
+    border-radius: 8px;
     font-size: 11px;
     color: #495057;
     font-weight: 500;

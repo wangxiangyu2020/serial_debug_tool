@@ -9,22 +9,25 @@
   */
 #include "ui/MainWindow.h"
 #include <QVBoxLayout>
+#include "utils/StyleLoader.h"
 
 MainWindow::MainWindow(QWidget* parent)
     : FramelessBase(parent)
 {
     this->setUI();
+    StyleLoader::loadStyleFromFile(this, ":/resources/qss/main_window.qss");
 }
 
 
 void MainWindow::setUI()
 {
+    this->setAttribute(Qt::WA_TranslucentBackground);
     m_pTitleBar = new TitleBar(this);
     m_pTabContainer = new CTabWidget(this);
 
     QVBoxLayout* pMainLayout = new QVBoxLayout(this);
     pMainLayout->addWidget(m_pTitleBar);
-    pMainLayout->setSpacing(5);
+    pMainLayout->setSpacing(0);
     pMainLayout->addWidget(m_pTabContainer);
 
     pMainLayout->setContentsMargins(0, 0, 0, 0);

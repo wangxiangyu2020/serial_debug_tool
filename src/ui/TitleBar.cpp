@@ -20,7 +20,7 @@ TitleBar::TitleBar(QWidget* parent)
     : QWidget(parent)
 {
     this->setUI();
-    StyleLoader::loadStyleFromFile(this, ":/resources/qss/title_bar_style.qss");
+    StyleLoader::loadStyleFromFile(this, ":/resources/qss/title_bar.qss");
 }
 
 void TitleBar::setUI()
@@ -50,7 +50,7 @@ void TitleBar::setUI()
     m_pCloseBtn->setFixedSize(32, 20);
 
     // 加载单个QSS文件
-    QFile styleFile(":/resources/qss/title_bar_style.qss");
+    QFile styleFile(":/resources/qss/title_bar.qss");
     styleFile.open(QFile::ReadOnly);
     QString styleSheet = QLatin1String(styleFile.readAll());
     this->setStyleSheet(styleSheet);

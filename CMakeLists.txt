@@ -50,11 +50,13 @@ qt_add_resources(${PROJECT_NAME} "resources"
         resources/icons/down_arrow.svg
         resources/icons/checkmark_blue.svg
         resources/icons/send.svg
-        resources/qss/tab_style.qss
-        resources/qss/title_bar_style.qss
-        resources/qss/serial_config.qss
-        resources/qss/serial_port_receive_settings.qss
-        resources/qss/serial_port_send_settings.qss
+        resources/qss/main_window.qss
+        resources/qss/tab_bar.qss
+        resources/qss/title_bar.qss
+        resources/qss/serial_prot_config_tab.qss
+        resources/qss/serial_port_connect_config_widget.qss
+        resources/qss/serial_port_receive_settings_widget.qss
+        resources/qss/serial_port_send_settings_widget.qss
         resources/qss/serial_port_data_receive_widget.qss
         resources/qss/serial_port_data_send_widget.qss
         #        resources/web/echarts.min.js

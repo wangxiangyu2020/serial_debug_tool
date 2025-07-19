@@ -19,7 +19,7 @@ CTabWidget::CTabWidget(QWidget* parent)
     : QTabWidget(parent)
 {
     this->setUI();
-    StyleLoader::loadStyleFromFile(this, ":/resources/qss/tab_style.qss");
+    StyleLoader::loadStyleFromFile(this, ":/resources/qss/tab_bar.qss");
 }
 
 void CTabWidget::setUI()

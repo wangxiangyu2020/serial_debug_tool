@@ -14,7 +14,7 @@ SerialPortReceiveSettingsWidget::SerialPortReceiveSettingsWidget(QWidget* parent
     : QWidget(parent)
 {
     this->setUI();
-    StyleLoader::loadStyleFromFile(this, ":/resources/qss/serial_port_receive_settings.qss");
+    StyleLoader::loadStyleFromFile(this, ":/resources/qss/serial_port_receive_settings_widget.qss");
 }
 
 void SerialPortReceiveSettingsWidget::setUI()

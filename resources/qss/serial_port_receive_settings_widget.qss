@@ -1,4 +1,4 @@
-/* styles/serial_port_receive_settings.qss */
+/* styles/serial_port_receive_settings_widget.qss */
 /* === 主容器样式 === */
 SerialPortReceiveSettingsWidget {
     background-color: #f8f9fa;

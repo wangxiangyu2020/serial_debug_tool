@@ -14,7 +14,7 @@ SerialPortConnectConfigWidget::SerialPortConnectConfigWidget(QWidget* parent)
     : QWidget(parent)
 {
     this->setUI();
-    StyleLoader::loadStyleFromFile(this, ":/resources/qss/serial_config.qss");
+    StyleLoader::loadStyleFromFile(this, ":/resources/qss/serial_port_connect_config_widget.qss");
 }
 
 void SerialPortConnectConfigWidget::setUI()

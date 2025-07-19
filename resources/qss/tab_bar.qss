@@ -8,6 +8,10 @@ QTabBar::tab {
     margin: 0 2px;      /* 增加水平间距避免圆角重叠 */
 }
 
+QTabBar {
+    background-color: #f8f9fa; /* 你想要的底色 */
+}
+
 QTabBar::tab:hover {
     color: #333;
     background: rgba(0,0,0,0.05);
@@ -22,5 +26,6 @@ QTabBar::tab:selected {
 }
 
 QTabWidget::pane {
-    border: none;
+    background: #ffffff;
+    border-radius: 0 0 8px 8px;
 }
