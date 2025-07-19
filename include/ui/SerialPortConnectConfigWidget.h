@@ -18,6 +18,7 @@
 #include <QMessageBox>
 #include "utils/StyleLoader.h"
 #include "utils/SerialPortSettings.h"
+#include "ui/WaveformTab.h"
 
 #ifndef SERIALPORTCONNECTCONFIGWIDGET_H
 #define SERIALPORTCONNECTCONFIGWIDGET_H

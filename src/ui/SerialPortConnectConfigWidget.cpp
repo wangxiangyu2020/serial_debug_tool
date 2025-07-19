@@ -9,6 +9,8 @@
   */
 #include "ui/SerialPortConnectConfigWidget.h"
 
+#include "ui/CMessageBox.h"
+
 SerialPortConnectConfigWidget::SerialPortConnectConfigWidget(QWidget* parent)
     : QWidget(parent)
 {
@@ -139,7 +141,10 @@ void SerialPortConnectConfigWidget::onConnectButtonClicked()
     // 需要判断端口复选框是否有选项
     if (!isConnected && m_pPortComboBox->count() == 0)
     {
-        QMessageBox::warning(this, "提示", "请选择串口");
+        // 使用自定义提示框（无按钮，自动消失）
+        CMessageBox* toast = new CMessageBox(this, "请选择串口", 1500); // 显示1.5秒
+        toast->showToast();
+        toast->setAttribute(Qt::WA_DeleteOnClose); // 自动删除
         return;
     }
     m_pConnectButton->setProperty("connected", !isConnected);
