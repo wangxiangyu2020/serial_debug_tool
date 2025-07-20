@@ -24,7 +24,7 @@ QPushButton#logoBtn {
 
     /* 保持原有其他样式不变 */
     border: none;
-    border-radius: 2px;
+/*    border-radius: 2px;*/
     min-width: 24px;
     min-height: 24px;
     padding: 0px;
@@ -37,8 +37,8 @@ QPushButton#logoBtn {
 /* === 最小化按钮 - 增强悬停效果 === */
 QPushButton#minBtn {
     border: none;
-    border-radius: 2px;
-    min-width: 24px;
+/*    border-radius: 2px;*/
+    min-width: 32px;
     min-height: 24px;
     padding: 0px;
     font-family: 'Segoe UI', 'Microsoft YaHei UI', sans-serif;
@@ -50,7 +50,7 @@ QPushButton#minBtn {
 QPushButton#minBtn:hover {
     color: #333;
     background: rgba(0,0,0,0.05);
-    border-radius: 5px;  /* 悬停时圆角 */
+/*    border-radius: 8px;*/
 }
 QPushButton#minBtn:pressed {
     background-color: #D0D0D0;
@@ -60,8 +60,8 @@ QPushButton#minBtn:pressed {
 /* === 最大化按钮 - 增强悬停效果 === */
 QPushButton#maxBtn {
     border: none;
-    border-radius: 2px;
-    min-width: 24px;
+/*    border-radius: 2px;*/
+    min-width: 32px;
     min-height: 24px;
     padding: 0px;
     font-family: 'Segoe UI', 'Microsoft YaHei UI', sans-serif;
@@ -72,7 +72,7 @@ QPushButton#maxBtn {
 QPushButton#maxBtn:hover {
     color: #333;
     background: rgba(0,0,0,0.05);
-    border-radius: 5px;  /* 悬停时圆角 */
+/*    border-radius: 5px; */
 }
 QPushButton#maxBtn:pressed {
     background-color: #D0D0D0;
@@ -82,8 +82,7 @@ QPushButton#maxBtn:pressed {
 /* === 关闭按钮 - 增强悬停效果 === */
 QPushButton#closeBtn {
     border: none;
-    border-radius: 2px;
-    min-width: 24px;
+    min-width: 32px;
     min-height: 24px;
     padding: 0px;
     font-family: 'Segoe UI', 'Microsoft YaHei UI', sans-serif;
@@ -95,7 +94,7 @@ QPushButton#closeBtn {
 QPushButton#closeBtn:hover {
     background-color: #E81123;
     color: white;
-    border-radius: 5px;  /* 悬停时圆角 */
+    border-top-right-radius: 8px;
 }
 QPushButton#closeBtn:pressed {
     background-color: #F1707A;
