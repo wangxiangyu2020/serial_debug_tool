@@ -8,18 +8,16 @@
   ******************************************************************************
   */
 #include "ui/SerialPortConnectConfigWidget.h"
-
 #include "ui/CMessageBox.h"
 
-SerialPortConnectConfigWidget::SerialPortConnectConfigWidget(QWidget* parent)
-    : QWidget(parent)
-{
+SerialPortConnectConfigWidget::SerialPortConnectConfigWidget(QWidget *parent)
+    : QWidget(parent) {
     this->setUI();
+    qRegisterMetaType<QSerialPortInfo>("QSerialPortInfo"); // 注册元类型
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/serial_port_connect_config_widget.qss");
 }
 
-void SerialPortConnectConfigWidget::setUI()
-{
+void SerialPortConnectConfigWidget::setUI() {
     this->setAttribute(Qt::WA_StyledBackground);
     // 创建控件
     this->createComponents();
@@ -29,8 +27,7 @@ void SerialPortConnectConfigWidget::setUI()
     this->connectSignals();
 }
 
-void SerialPortConnectConfigWidget::createComponents()
-{
+void SerialPortConnectConfigWidget::createComponents() {
     // 初始化标签
     m_pPortLabel = new QLabel("端口:", this);
     m_pPortLabel->setObjectName("portLabel");
@@ -69,14 +66,13 @@ void SerialPortConnectConfigWidget::createComponents()
     this->componentPropertySettings();
 }
 
-void SerialPortConnectConfigWidget::componentPropertySettings()
-{
+void SerialPortConnectConfigWidget::componentPropertySettings() {
     // 添加端口选项 (自动检测可用串口)
     const auto ports = QSerialPortInfo::availablePorts();
-    for (const QSerialPortInfo& port : ports)
-    {
-        m_pPortComboBox->addItem(port.portName());
-    }
+    // for (const QSerialPortInfo &port: ports) {
+    //     m_pPortComboBox->addItem(port.portName(), QVariant::fromValue(port));
+    // }
+    m_pPortComboBox->addItem("Com1", QVariant::fromValue(QSerialPortInfo("Com1")));
     // 添加波特率选项
     SerialPortSettings::setSerialPortComboBox(m_pBaudRateComboBox, SerialPortSettings::getBaudRateOptions(),
                                               QVariant::fromValue(QSerialPort::Baud9600));
@@ -94,8 +90,7 @@ void SerialPortConnectConfigWidget::componentPropertySettings()
                                               QVariant::fromValue(QSerialPort::NoFlowControl));
 }
 
-void SerialPortConnectConfigWidget::createLayout()
-{
+void SerialPortConnectConfigWidget::createLayout() {
     // 创建网格布局
     m_pMainLayout = new QGridLayout(this);
     // 添加到布局
@@ -128,25 +123,50 @@ void SerialPortConnectConfigWidget::createLayout()
     m_pMainLayout->setContentsMargins(15, 15, 15, 15);
 }
 
-void SerialPortConnectConfigWidget::connectSignals()
-{
+void SerialPortConnectConfigWidget::connectSignals() {
     this->connect(m_pConnectButton, &QPushButton::clicked, this,
                   &SerialPortConnectConfigWidget::onConnectButtonClicked);
 }
 
-void SerialPortConnectConfigWidget::onConnectButtonClicked()
-{
-    //获取连接状态
+void SerialPortConnectConfigWidget::onConnectButtonClicked() {
+    //获取连接状态 区分已连接和未连接
     bool isConnected = m_pConnectButton->property("connected").toBool();
     // 需要判断端口复选框是否有选项
-    if (!isConnected && m_pPortComboBox->count() == 0)
-    {
+    if (!isConnected && m_pPortComboBox->count() == 0) {
         // 使用自定义提示框（无按钮，自动消失）
-        CMessageBox* toast = new CMessageBox(this, "请选择串口", 1500); // 显示1.5秒
+        CMessageBox *toast = new CMessageBox(this, "请选择串口", 1500); // 显示1.5秒
         toast->showToast();
         toast->setAttribute(Qt::WA_DeleteOnClose); // 自动删除
         return;
     }
+    // 获取串口其他连接参数
+    const auto portInfo = m_pPortComboBox->currentData().value<QSerialPortInfo>();
+    const auto baudRate = m_pBaudRateComboBox->currentData().value<QSerialPort::BaudRate>();
+    const auto dataBits = m_pDataBitsComboBox->currentData().value<QSerialPort::DataBits>();
+    const auto stopBits = m_pStopBitsComboBox->currentData().value<QSerialPort::StopBits>();
+    const auto parity = m_pParityComboBox->currentData().value<QSerialPort::Parity>();
+    const auto flowControl = m_pFlowControlComboBox->currentData().value<QSerialPort::FlowControl>();
+    // 存储到map中
+    QMap<QString, QVariant> serialParams;
+    serialParams.insert("portInfo", QVariant::fromValue(portInfo));
+    serialParams.insert("baudRate", baudRate);
+    serialParams.insert("dataBits", dataBits);
+    serialParams.insert("stopBits", stopBits);
+    serialParams.insert("parity", parity);
+    serialParams.insert("flowControl", flowControl);
+
+    // 直接获取端口对象
+    // QSerialPortInfo portInfo = params.value("portInfo").value<QSerialPortInfo>();
+
+    qDebug() << "连接参数:"
+            << "\n  端口:" << portInfo.portName()
+            << "\n  波特率:" << baudRate
+            << "\n  数据位:" << dataBits
+            << "\n  停止位:" << stopBits
+            << "\n  校验位:" << parity
+            << "\n  流控制:" << flowControl;
+
+
     m_pConnectButton->setProperty("connected", !isConnected);
     m_pConnectButton->setText(isConnected ? "连接" : "断开");
     m_pConnectButton->style()->unpolish(m_pConnectButton);

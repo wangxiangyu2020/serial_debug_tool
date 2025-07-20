@@ -18,10 +18,13 @@
 #include <QMessageBox>
 #include "utils/StyleLoader.h"
 #include "utils/SerialPortSettings.h"
-#include "ui/WaveformTab.h"
+#include <QMetaType>
 
 #ifndef SERIALPORTCONNECTCONFIGWIDGET_H
 #define SERIALPORTCONNECTCONFIGWIDGET_H
+
+// 向qt注册自定义类型
+Q_DECLARE_METATYPE(QSerialPortInfo)
 
 class SerialPortConnectConfigWidget : public QWidget
 {
