@@ -33,6 +33,7 @@ public:
     ~CMessageBox() = default;
 
     void showToast();
+    static void showToast(const QString& message);
 
 protected:
     void paintEvent(QPaintEvent* event) override;

@@ -6,13 +6,13 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 # 公司
-#set(CMAKE_PREFIX_PATH "D:/software/Qt/6.5.3/msvc2019_64")
-#file(COPY "D:/software/Qt/6.5.3/msvc2019_64/resources" DESTINATION ${CMAKE_BINARY_DIR})
-#file(COPY "D:/software/Qt/6.5.3/msvc2019_64/translations" DESTINATION ${CMAKE_BINARY_DIR})
+set(CMAKE_PREFIX_PATH "D:/software/Qt/6.5.3/msvc2019_64")
+file(COPY "D:/software/Qt/6.5.3/msvc2019_64/resources" DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY "D:/software/Qt/6.5.3/msvc2019_64/translations" DESTINATION ${CMAKE_BINARY_DIR})
 #自己
-set(CMAKE_PREFIX_PATH "D:/Software/Qt/6.5.3/msvc2019_64")
-file(COPY "D:/Software/Qt/6.5.3/msvc2019_64/resources" DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY "D:/Software/Qt/6.5.3/msvc2019_64/translations" DESTINATION ${CMAKE_BINARY_DIR})
+#set(CMAKE_PREFIX_PATH "D:/Software/Qt/6.5.3/msvc2019_64")
+#file(COPY "D:/Software/Qt/6.5.3/msvc2019_64/resources" DESTINATION ${CMAKE_BINARY_DIR})
+#file(COPY "D:/Software/Qt/6.5.3/msvc2019_64/translations" DESTINATION ${CMAKE_BINARY_DIR})
 
 file(GLOB UI_HEADERS "include/ui/*.h")  # 收集ui所有.h文件
 file(GLOB CORE_HEADERS "include/core/*.h")  # 收集core所有.h文件
@@ -31,6 +31,7 @@ find_package(Qt6 COMPONENTS
         Svg
         SvgWidgets
         SerialPort
+        Concurrent
         REQUIRED)
 
 add_executable(${PROJECT_NAME}
@@ -74,6 +75,7 @@ target_link_libraries(${PROJECT_NAME}
         Qt::Svg
         Qt::SvgWidgets
         Qt::SerialPort
+        Qt::Concurrent
 )
 
 # 添加 Windows 部署规则

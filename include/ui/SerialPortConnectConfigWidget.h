@@ -19,6 +19,9 @@
 #include "utils/StyleLoader.h"
 #include "utils/SerialPortSettings.h"
 #include <QMetaType>
+#include "ui/CMessageBox.h"
+#include "core/SerialPortManager.h"
+#include "utils/ThreadPoolManager.h"
 
 #ifndef SERIALPORTCONNECTCONFIGWIDGET_H
 #define SERIALPORTCONNECTCONFIGWIDGET_H
@@ -33,6 +36,8 @@ class SerialPortConnectConfigWidget : public QWidget
 public:
     explicit SerialPortConnectConfigWidget(QWidget* parent = nullptr);
     ~SerialPortConnectConfigWidget() = default;
+
+    Q_INVOKABLE void detectionAvailablePorts();
 
 private:
     void setUI();
@@ -60,9 +65,11 @@ private:
     QLabel* m_pParityLabel = nullptr;
     QLabel* m_pFlowControlLabel; // 流控制标签
     // 按钮
-    QPushButton* m_pConnectButton; // 连接按钮
+    QPushButton* m_pConnectButton = nullptr; // 连接按钮
     // 布局
     QGridLayout* m_pMainLayout = nullptr;
+    // 串口管理器
+    SerialPortManager* m_pSerialPortManager = nullptr;
 };
 
 #endif //SERIALPORTCONNECTCONFIGWIDGET_H

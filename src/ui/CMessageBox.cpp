@@ -119,6 +119,13 @@ void CMessageBox::showToast()
     m_pTimer->start();
 }
 
+void CMessageBox::showToast(const QString& message)
+{
+    CMessageBox* toast = new CMessageBox(nullptr, message, 1500); // 显示1.5秒
+    toast->showToast();
+    toast->setAttribute(Qt::WA_DeleteOnClose); // 自动删除
+}
+
 void CMessageBox::fadeOut()
 {
     // 开始淡出动画
