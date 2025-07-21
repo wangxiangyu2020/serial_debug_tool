@@ -33,11 +33,31 @@ SerialPortConnectConfigWidget::SerialPortConnectConfigWidget(QWidget* parent)
 
 void SerialPortConnectConfigWidget::detectionAvailablePorts()
 {
-    // 添加端口选项 (自动检测可用串口)
+    // 1. 获取当前可用端口
     const auto ports = QSerialPortInfo::availablePorts();
+    // 2. 创建当前可用端口名称集合
+    QSet<QString> availablePortNames;
     for (const QSerialPortInfo& port : ports)
     {
-        m_pPortComboBox->addItem(port.portName(), QVariant::fromValue(port));
+        availablePortNames.insert(port.portName());
+    }
+    // 3. 移除已断开的端口（从后往前遍历避免索引问题）
+    for (int i = m_pPortComboBox->count() - 1; i >= 0; --i)
+    {
+        QString portName = m_pPortComboBox->itemText(i);
+        if (!availablePortNames.contains(portName))
+        {
+            m_pPortComboBox->removeItem(i);
+        }
+    }
+    // 4. 添加新端口（避免重复添加）
+    for (const QSerialPortInfo& port : ports)
+    {
+        QString portName = port.portName();
+        if (m_pPortComboBox->findText(portName, Qt::MatchExactly) == -1)
+        {
+            m_pPortComboBox->addItem(portName, QVariant::fromValue(port));
+        }
     }
 }
 
