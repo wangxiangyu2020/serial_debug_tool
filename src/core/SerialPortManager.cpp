@@ -98,3 +98,29 @@ void SerialPortManager::handlerError(QSerialPort::SerialPortError error)
     }
     CMessageBox::showToast(errorMsg);
 }
+
+
+// 发送数据函数
+// void SerialPortConnectConfigWidget::sendData(const QByteArray& data)
+// {
+//     ThreadPoolManager::addTask(
+//         [this, data]() {
+//             // 这里是耗时的串口发送操作
+//             m_pSerialPortManager->writeData(data);
+//         },
+//         []() {}
+//     );
+// }
+
+// // 读取数据
+// connect(m_pSerialPortManager->serialPort(), &QSerialPort::readyRead, this, [this]() {
+//     QByteArray data = m_pSerialPortManager->serialPort()->readAll();
+//     // 2. 如需后台处理
+//     ThreadPoolManager::addTask(
+//         [data]() {
+//             // 这里处理 data（如解析、存储等）
+//         },
+//         []() {}
+//     );
+//     // 或直接在主线程处理（如显示到界面）
+// });
