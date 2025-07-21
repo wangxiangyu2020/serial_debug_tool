@@ -94,6 +94,42 @@ QComboBox QAbstractItemView::item:selected {
     border: none;
 }
 
+/* === 下拉框滑动条美化，仅影响 QComboBox 下拉列表 === */
+QComboBox QAbstractItemView QScrollBar:vertical {
+    background: #f1f3f4;
+    width: 8px;
+    margin: 2px 0 2px 0;
+    border-radius: 4px;
+}
+
+QComboBox QAbstractItemView QScrollBar::handle:vertical {
+    background: #b0c4de;
+    min-height: 20px;
+    border-radius: 4px;
+}
+
+QComboBox QAbstractItemView QScrollBar::handle:vertical:hover {
+    background: #90a4ae;
+}
+
+QComboBox QAbstractItemView QScrollBar::add-line:vertical,
+QComboBox QAbstractItemView QScrollBar::sub-line:vertical {
+    background: none;
+    height: 0px;
+}
+
+QComboBox QAbstractItemView QScrollBar::up-arrow:vertical,
+QComboBox QAbstractItemView QScrollBar::down-arrow:vertical {
+    background: none;
+    width: 0px;
+    height: 0px;
+}
+
+QComboBox QAbstractItemView QScrollBar::add-page:vertical,
+QComboBox QAbstractItemView QScrollBar::sub-page:vertical {
+    background: none;
+}
+
 /* === 按钮样式 - 居中显示 === */
 QPushButton {
     background-color: #0d6efd;
