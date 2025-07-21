@@ -37,8 +37,6 @@ public:
     explicit SerialPortConnectConfigWidget(QWidget* parent = nullptr);
     ~SerialPortConnectConfigWidget() = default;
 
-    Q_INVOKABLE void detectionAvailablePorts();
-
 private:
     void setUI();
     void createComponents();
@@ -48,6 +46,10 @@ private:
 
 private slots:
     void onConnectButtonClicked();
+    void detectionAvailablePorts(QList<QSerialPortInfo> ports);
+
+signals:
+    void sigPortsDetected(QList<QSerialPortInfo> ports);
 
 private:
     // 下拉框组件
