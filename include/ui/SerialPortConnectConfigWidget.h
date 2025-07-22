@@ -22,6 +22,7 @@
 #include "ui/CMessageBox.h"
 #include "core/SerialPortManager.h"
 #include "utils/ThreadPoolManager.h"
+#include <QAbstractItemView>
 
 #ifndef SERIALPORTCONNECTCONFIGWIDGET_H
 #define SERIALPORTCONNECTCONFIGWIDGET_H
@@ -36,6 +37,9 @@ class SerialPortConnectConfigWidget : public QWidget
 public:
     explicit SerialPortConnectConfigWidget(QWidget* parent = nullptr);
     ~SerialPortConnectConfigWidget() = default;
+
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override;
 
 private:
     void setUI();

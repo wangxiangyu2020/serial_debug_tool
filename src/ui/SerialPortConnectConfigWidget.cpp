@@ -33,6 +33,21 @@ SerialPortConnectConfigWidget::SerialPortConnectConfigWidget(QWidget* parent)
     );
 }
 
+bool SerialPortConnectConfigWidget::eventFilter(QObject* watched, QEvent* event)
+{
+    if (event->type() == QEvent::Wheel)
+    {
+        if (auto* cb = qobject_cast<QComboBox*>(watched))
+        {
+            if (!cb->view()->isVisible())
+            {
+                return true;
+            }
+        }
+    }
+    return QWidget::eventFilter(watched, event);
+}
+
 void SerialPortConnectConfigWidget::setUI()
 {
     this->setAttribute(Qt::WA_StyledBackground);
@@ -79,6 +94,14 @@ void SerialPortConnectConfigWidget::createComponents()
     m_pConnectButton = new QPushButton("连接", this);
     m_pConnectButton->setObjectName("connectButton");
     m_pConnectButton->setCursor(Qt::PointingHandCursor);
+
+    // 安装事件过滤器
+    m_pPortComboBox->installEventFilter(this);
+    m_pBaudRateComboBox->installEventFilter(this);
+    m_pDataBitsComboBox->installEventFilter(this);
+    m_pStopBitsComboBox->installEventFilter(this);
+    m_pParityComboBox->installEventFilter(this);
+    m_pFlowControlComboBox->installEventFilter(this);
 
     // 属性设置
     this->componentPropertySettings();
