@@ -9,7 +9,6 @@
   */
 
 #include "ui/SerialPortSendSettingsWidget.h"
-#include "utils/StyleLoader.h"
 
 
 SerialPortSendSettingsWidget::SerialPortSendSettingsWidget(QWidget* parent)

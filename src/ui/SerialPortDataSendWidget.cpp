@@ -9,8 +9,6 @@
   */
 
 #include "ui/SerialPortDataSendWidget.h"
-#include "utils/StyleLoader.h"
-#include <QTimer>
 
 SerialPortDataSendWidget::SerialPortDataSendWidget(QWidget* parent)
     : QWidget(parent)

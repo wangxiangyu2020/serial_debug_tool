@@ -9,7 +9,6 @@
   */
 
 #include "ui/SerialPortConfigTab.h"
-#include "utils/StyleLoader.h"
 
 SerialPortConfigTab::SerialPortConfigTab(QWidget* parent)
     : QWidget(parent)

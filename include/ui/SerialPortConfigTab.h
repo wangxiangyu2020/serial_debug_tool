@@ -8,6 +8,10 @@
   ******************************************************************************
   */
 
+
+#ifndef SERIALPORTCONFIG_H
+#define SERIALPORTCONFIG_H
+
 #include <QWidget>
 #include "ui/SerialPortConnectConfigWidget.h"
 #include "ui/SerialPortReceiveSettingsWidget.h"
@@ -16,9 +20,7 @@
 #include "ui/SerialPortDataSendWidget.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-
-#ifndef SERIALPORTCONFIG_H
-#define SERIALPORTCONFIG_H
+#include "utils/StyleLoader.h"
 
 class SerialPortConfigTab : public QWidget
 {

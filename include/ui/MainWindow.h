@@ -8,12 +8,15 @@
   ******************************************************************************
   */
 
-#include "ui/FramelessBase.h"
-#include "ui/TitleBar.h"
-#include "ui/CTabWidget.h"
 
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
+
+#include "ui/FramelessBase.h"
+#include "ui/TitleBar.h"
+#include "ui/CTabWidget.h"
+#include <QVBoxLayout>
+#include "utils/StyleLoader.h"
 
 class MainWindow : public FramelessBase
 {

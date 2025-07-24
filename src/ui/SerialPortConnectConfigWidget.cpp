@@ -16,21 +16,7 @@ SerialPortConnectConfigWidget::SerialPortConnectConfigWidget(QWidget* parent)
     qRegisterMetaType<QSerialPortInfo>("QSerialPortInfo"); // 注册元类型
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/serial_port_connect_config_widget.qss");
     // 添加自动检测可用端口任务到线程池
-    ThreadPoolManager::addTask(
-        [this]()
-        {
-            while (true)
-            {
-                QThread::sleep(3);
-                const auto ports = QSerialPortInfo::availablePorts();
-                // 用事件或信号通知主线程（如自定义信号 portsDetected）
-                emit sigPortsDetected(ports);
-            }
-        },
-        []()
-        {
-        }
-    );
+    ThreadPoolManager::addTask(&SerialPortConnectConfigWidget::detectionAvailablePorts, this);
 }
 
 bool SerialPortConnectConfigWidget::eventFilter(QObject* watched, QEvent* event)
@@ -109,9 +95,6 @@ void SerialPortConnectConfigWidget::createComponents()
 
 void SerialPortConnectConfigWidget::componentPropertySettings()
 {
-    // 获取当前可用端口
-    const auto ports = QSerialPortInfo::availablePorts();
-    this->detectionAvailablePorts(ports);
     // 添加波特率选项
     SerialPortSettings::setSerialPortComboBox(m_pBaudRateComboBox, SerialPortSettings::getBaudRateOptions(),
                                               QVariant::fromValue(QSerialPort::Baud9600));
@@ -167,8 +150,6 @@ void SerialPortConnectConfigWidget::connectSignals()
 {
     this->connect(m_pConnectButton, &QPushButton::clicked, this,
                   &SerialPortConnectConfigWidget::onConnectButtonClicked);
-    this->connect(this, &SerialPortConnectConfigWidget::sigPortsDetected, this,
-                  &SerialPortConnectConfigWidget::detectionAvailablePorts);
 }
 
 void SerialPortConnectConfigWidget::onConnectButtonClicked()
@@ -205,30 +186,36 @@ void SerialPortConnectConfigWidget::onConnectButtonClicked()
     m_pConnectButton->update();
 }
 
-void SerialPortConnectConfigWidget::detectionAvailablePorts(QList<QSerialPortInfo> ports)
+void SerialPortConnectConfigWidget::detectionAvailablePorts()
 {
-    // 1. 创建当前可用端口名称集合
-    QSet<QString> availablePortNames;
-    for (const QSerialPortInfo& port : ports)
+    while (!ThreadPoolManager::isShutdownRequested())
     {
-        availablePortNames.insert(port.portName());
-    }
-    // 2. 移除已断开的端口（从后往前遍历避免索引问题）
-    for (int i = m_pPortComboBox->count() - 1; i >= 0; --i)
-    {
-        QString portName = m_pPortComboBox->itemText(i);
-        if (!availablePortNames.contains(portName))
+        // 1. 获取当前可用端口
+        const auto ports = QSerialPortInfo::availablePorts();
+        // 2. 创建当前可用端口名称集合
+        QSet<QString> availablePortNames;
+        for (const QSerialPortInfo& port : ports)
         {
-            m_pPortComboBox->removeItem(i);
+            availablePortNames.insert(port.portName());
         }
-    }
-    // 3. 添加新端口（避免重复添加）
-    for (const QSerialPortInfo& port : ports)
-    {
-        QString portName = port.portName();
-        if (m_pPortComboBox->findText(portName, Qt::MatchExactly) == -1)
+        // 3. 移除已断开的端口（从后往前遍历避免索引问题）
+        for (int i = m_pPortComboBox->count() - 1; i >= 0; --i)
         {
-            m_pPortComboBox->addItem(portName, QVariant::fromValue(port));
+            QString portName = m_pPortComboBox->itemText(i);
+            if (!availablePortNames.contains(portName))
+            {
+                m_pPortComboBox->removeItem(i);
+            }
         }
+        // 4. 添加新端口（避免重复添加）
+        for (const QSerialPortInfo& port : ports)
+        {
+            QString portName = port.portName();
+            if (m_pPortComboBox->findText(portName, Qt::MatchExactly) == -1)
+            {
+                m_pPortComboBox->addItem(portName, QVariant::fromValue(port));
+            }
+        }
+        QThread::msleep(3000);
     }
 }

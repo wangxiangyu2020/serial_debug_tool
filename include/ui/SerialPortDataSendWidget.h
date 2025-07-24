@@ -8,13 +8,16 @@
   ******************************************************************************
   */
 
+
+#ifndef SERIALPORTDATASENDWIDGET_H
+#define SERIALPORTDATASENDWIDGET_H
+
 #include <QWidget>
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QHBoxLayout>
-
-#ifndef SERIALPORTDATASENDWIDGET_H
-#define SERIALPORTDATASENDWIDGET_H
+#include "utils/StyleLoader.h"
+#include <QTimer>
 
 class SerialPortDataSendWidget : public QWidget
 {

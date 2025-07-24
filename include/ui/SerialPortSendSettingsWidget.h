@@ -8,6 +8,10 @@
   ******************************************************************************
   */
 
+
+#ifndef SERIALPORTSENDSETTINGSWIDGET_H
+#define SERIALPORTSENDSETTINGSWIDGET_H
+
 #include <QWidget>
 #include <QCheckBox>
 #include <QLineEdit>
@@ -15,9 +19,7 @@
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-
-#ifndef SERIALPORTSENDSETTINGSWIDGET_H
-#define SERIALPORTSENDSETTINGSWIDGET_H
+#include "utils/StyleLoader.h"
 
 class SerialPortSendSettingsWidget : public QWidget
 {

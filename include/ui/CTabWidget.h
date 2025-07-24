@@ -8,13 +8,19 @@
   ******************************************************************************
   */
 
+
+#ifndef TABCONTAINER_H
+#define TABCONTAINER_H
+
 #include <QTabWidget>
 #include "ui/SettingsTab.h"
 #include "ui/WaveformTab.h"
 #include "ui/SerialPortConfigTab.h"
-
-#ifndef TABCONTAINER_H
-#define TABCONTAINER_H
+#include "utils/StyleLoader.h"
+#include <QTabWidget>
+#include <QTabBar>
+#include <QHBoxLayout>
+#include <QSpacerItem>
 
 class CTabWidget : public QTabWidget
 {

@@ -9,7 +9,6 @@
   */
 
 #include "ui/SerialPortDataReceiveWidget.h"
-#include "utils/StyleLoader.h"
 
 SerialPortDataReceiveWidget::SerialPortDataReceiveWidget(QWidget* parent)
     : QWidget(parent)

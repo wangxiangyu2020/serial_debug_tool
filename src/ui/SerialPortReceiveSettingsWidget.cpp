@@ -8,7 +8,6 @@
   ******************************************************************************
   */
 #include "ui/SerialPortReceiveSettingsWidget.h"
-#include "utils/StyleLoader.h"
 
 SerialPortReceiveSettingsWidget::SerialPortReceiveSettingsWidget(QWidget* parent)
     : QWidget(parent)

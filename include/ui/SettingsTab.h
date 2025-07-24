@@ -8,10 +8,11 @@
   ******************************************************************************
   */
 
-#include <QWidget>
 
 #ifndef SETTINGSTAB_H
 #define SETTINGSTAB_H
+
+#include <QWidget>
 
 class SettingsTab : public QWidget
 {

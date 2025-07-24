@@ -8,8 +8,6 @@
   ******************************************************************************
   */
 #include "ui/MainWindow.h"
-#include <QVBoxLayout>
-#include "utils/StyleLoader.h"
 
 MainWindow::MainWindow(QWidget* parent)
     : FramelessBase(parent)
@@ -17,7 +15,6 @@ MainWindow::MainWindow(QWidget* parent)
     this->setUI();
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/main_window.qss");
 }
-
 
 void MainWindow::setUI()
 {

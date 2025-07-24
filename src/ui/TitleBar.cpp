@@ -9,7 +9,6 @@
   */
 
 #include "ui/TitleBar.h"
-#include "utils/StyleLoader.h"
 
 TitleBar::TitleBar(QWidget* parent)
     : QWidget(parent)

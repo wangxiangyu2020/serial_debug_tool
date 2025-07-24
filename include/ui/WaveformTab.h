@@ -8,10 +8,11 @@
   ******************************************************************************
   */
 
-#include <QWidget>
 
 #ifndef WAVEFORMTAB_H
 #define WAVEFORMTAB_H
+
+#include <QWidget>
 
 class WaveformTab : public QWidget
 {

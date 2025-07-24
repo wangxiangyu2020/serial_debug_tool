@@ -8,14 +8,15 @@
   ******************************************************************************
   */
 
+
+#ifndef SERIALSETTINGS_H
+#define SERIALSETTINGS_H
+
 #include <QObject>
 #include <QVariant>
 #include <QSerialPort>
 #include <QSerialPortInfo>
 #include <QComboBox>
-
-#ifndef SERIALSETTINGS_H
-#define SERIALSETTINGS_H
 
 class SerialPortSettings : public QObject
 {

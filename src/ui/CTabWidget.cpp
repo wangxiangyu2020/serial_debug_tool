@@ -9,11 +9,6 @@
   */
 
 #include "ui/CTabWidget.h"
-#include "utils/StyleLoader.h"
-#include <QTabWidget>
-#include <QTabBar>
-#include <QHBoxLayout>
-#include <QSpacerItem>
 
 CTabWidget::CTabWidget(QWidget* parent)
     : QTabWidget(parent)

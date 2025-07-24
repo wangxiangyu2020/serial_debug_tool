@@ -8,6 +8,10 @@
   ******************************************************************************
   */
 
+
+#ifndef SERIALPORTCONNECTCONFIGWIDGET_H
+#define SERIALPORTCONNECTCONFIGWIDGET_H
+
 #include <QWidget>
 #include <QComboBox>
 #include <QLabel>
@@ -23,9 +27,6 @@
 #include "core/SerialPortManager.h"
 #include "utils/ThreadPoolManager.h"
 #include <QAbstractItemView>
-
-#ifndef SERIALPORTCONNECTCONFIGWIDGET_H
-#define SERIALPORTCONNECTCONFIGWIDGET_H
 
 // 向qt注册自定义类型
 Q_DECLARE_METATYPE(QSerialPortInfo)
@@ -47,13 +48,10 @@ private:
     void componentPropertySettings();
     void createLayout();
     void connectSignals();
+    void detectionAvailablePorts();
 
 private slots:
     void onConnectButtonClicked();
-    void detectionAvailablePorts(QList<QSerialPortInfo> ports);
-
-signals:
-    void sigPortsDetected(QList<QSerialPortInfo> ports);
 
 private:
     // 下拉框组件

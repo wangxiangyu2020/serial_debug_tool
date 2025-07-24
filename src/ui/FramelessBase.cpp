@@ -9,10 +9,6 @@
   */
 
 #include "ui/FramelessBase.h"
-#include <QMouseEvent> // 提供鼠标事件处理的类
-#include <QApplication> // 提供全局应用程序对象的类
-#include <QStyle> // 提供样式相关的功能
-#include <QVBoxLayout> // 提供垂直布局管理器
 
 // 构造函数，初始化 FramelessBase 类
 FramelessBase::FramelessBase(QWidget* parent, int borderSize)

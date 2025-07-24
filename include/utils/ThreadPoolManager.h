@@ -8,51 +8,69 @@
   ******************************************************************************
   */
 
-#include <QObject>
-#include <QFutureWatcher>
-#include <QVector>
-#include <QtConcurrent>
-
 #ifndef THREADPOOLMANAGER_H
 #define THREADPOOLMANAGER_H
 
-class ThreadPoolManager : public QObject
+#include <QtConcurrent>
+#include <QThreadPool>
+#include <QFuture>
+#include <QMutex>
+#include <QList>
+#include <atomic>
+#include <functional>
+#include <memory>
+
+class ThreadPoolManager
 {
-    Q_OBJECT
-
 public:
-    explicit ThreadPoolManager(QObject* parent = nullptr);
-    ~ThreadPoolManager();
+    static void initialize(int maxThreadCount = QThread::idealThreadCount());
 
-    static QVector<QFutureWatcher<void>*> m_pWatchers;
-
-    template <typename Func, typename Callback, typename... Args>
-    static void addTask(Func&& func, Callback&& callback, Args&&... args)
+    // 添加任务（支持任意函数和参数）
+    template <typename Function, typename... Args>
+    static void addTask(Function&& func, Args&&... args)
     {
-        using ReturnType = std::invoke_result_t<Func, Args...>;
-        auto* watcher = new QFutureWatcher<ReturnType>();
-        if constexpr (std::is_void_v<ReturnType>)
+        // 确保线程池已初始化
+        initializeIfNeeded();
+
+        // 使用 std::bind 绑定函数和参数
+        auto boundTask = std::bind(std::forward<Function>(func), std::forward<Args>(args)...);
+
+        // 包装任务以支持停止检查
+        auto wrappedTask = [boundTask]()
         {
-            QObject::connect(watcher, &QFutureWatcher<ReturnType>::finished, [watcher, callback]()
-            {
-                callback();
-                watcher->deleteLater();
-            });
-        }
-        else
-        {
-            QObject::connect(watcher, &QFutureWatcher<ReturnType>::finished, [watcher, callback]()
-            {
-                callback(watcher->result());
-                watcher->deleteLater();
-            });
-        }
-        QFuture<ReturnType> future = QtConcurrent::run(std::forward<Func>(func), std::forward<Args>(args)...);
-        watcher->setFuture(future);
-        ThreadPoolManager::m_pWatchers.append(reinterpret_cast<QFutureWatcher<void>*>(watcher));
+            if (isShutdownRequested()) return;
+            boundTask();
+        };
+
+        QMutexLocker locker(&mutex());
+        futures().append(QtConcurrent::run(threadPool(), wrappedTask));
     }
 
-    static void clear();
+    // 安全停止所有线程
+    static void shutdown();
+
+    // 检查是否已请求关闭
+    static bool isShutdownRequested();
+
+private:
+    // 禁止实例化
+    ThreadPoolManager() = delete;
+    ~ThreadPoolManager() = delete;
+
+    // 单例管理
+    static void createInstance(int maxThreadCount);
+    static void resetInstance();
+    static void initializeIfNeeded();
+
+    // 内部数据结构的前向声明
+    struct InternalPool;
+
+    // 访问器函数
+    static std::unique_ptr<InternalPool>& instance();
+    static QThreadPool* threadPool();
+    static QList<QFuture<void>>& futures();
+    static std::atomic<bool>& stopFlag();
+    static QMutex& mutex();
 };
 
-#endif //THREADPOOLMANAGER_H
+#endif // THREADPOOLMANAGER_H

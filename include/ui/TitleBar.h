@@ -8,6 +8,9 @@
   ******************************************************************************
   */
 
+#ifndef TITLEBAR_H
+#define TITLEBAR_H
+
 #pragma comment(lib, "user32.lib")
 #include <qt_windows.h>
 #include <QWidget>
@@ -15,9 +18,7 @@
 #include <QHBoxLayout>
 #include <QMouseEvent>
 #include <QApplication>
-
-#ifndef TITLEBAR_H
-#define TITLEBAR_H
+#include "utils/StyleLoader.h"
 
 class TitleBar : public QWidget
 {

@@ -8,6 +8,10 @@
   ******************************************************************************
   */
 
+
+#ifndef SERIALPORTMANAGER_H
+#define SERIALPORTMANAGER_H
+
 #include <QObject>
 #include <QMap>
 #include <QVariant>
@@ -15,9 +19,6 @@
 #include <QSerialPortInfo>
 #include <QThread>
 #include "ui/CMessageBox.h"
-
-#ifndef SERIALPORTMANAGER_H
-#define SERIALPORTMANAGER_H
 
 class SerialPortManager : public QObject
 {

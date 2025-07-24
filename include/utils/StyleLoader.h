@@ -8,13 +8,14 @@
   ******************************************************************************
   */
 
+
+#ifndef STYLELOADER_H
+#define STYLELOADER_H
+
 #include <QObject>
 #include <QFile>
 #include <QTextStream>
 #include <QWidget>
-
-#ifndef STYLELOADER_H
-#define STYLELOADER_H
 
 class StyleLoader : public QObject
 {

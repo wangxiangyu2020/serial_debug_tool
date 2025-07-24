@@ -8,15 +8,17 @@
   ******************************************************************************
   */
 
+
+#ifndef SERIALPORTRECEIVESETTINGSWIDGET_H
+#define SERIALPORTRECEIVESETTINGSWIDGET_H
+
 #include <QWidget>
 #include <QCheckBox>
 #include <QPushButton>
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-
-#ifndef SERIALPORTRECEIVESETTINGSWIDGET_H
-#define SERIALPORTRECEIVESETTINGSWIDGET_H
+#include "utils/StyleLoader.h"
 
 class SerialPortReceiveSettingsWidget : public QWidget
 {

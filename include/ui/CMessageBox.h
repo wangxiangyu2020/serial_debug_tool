@@ -8,6 +8,10 @@
   ******************************************************************************
   */
 
+
+#ifndef CMESSAGEBOX_H
+#define CMESSAGEBOX_H
+
 #include <QDialog>
 #include <QLabel>
 #include <QTimer>
@@ -18,9 +22,6 @@
 #include <QPainterPath>
 #include <QApplication>
 #include <QScreen>
-
-#ifndef CMESSAGEBOX_H
-#define CMESSAGEBOX_H
 
 class CMessageBox : public QDialog
 {
