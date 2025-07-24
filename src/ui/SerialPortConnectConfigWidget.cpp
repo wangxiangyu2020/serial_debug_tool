@@ -109,7 +109,6 @@ void SerialPortConnectConfigWidget::createComponents()
 
 void SerialPortConnectConfigWidget::componentPropertySettings()
 {
-    qDebug() << QThread::currentThreadId();
     // 获取当前可用端口
     const auto ports = QSerialPortInfo::availablePorts();
     this->detectionAvailablePorts(ports);

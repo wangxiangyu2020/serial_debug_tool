@@ -8,8 +8,13 @@
   ******************************************************************************
   */
 
+#pragma comment(lib, "user32.lib")
+#include <qt_windows.h>
 #include <QWidget>
 #include <QPushButton>
+#include <QHBoxLayout>
+#include <QMouseEvent>
+#include <QApplication>
 
 #ifndef TITLEBAR_H
 #define TITLEBAR_H
@@ -25,6 +30,8 @@ public:
 private:
     void setUI();
     void mousePressEvent(QMouseEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
     void mouseDoubleClickEvent(QMouseEvent* event) override;
 
 private slots :
@@ -38,6 +45,9 @@ private:
     QPushButton* m_pMinBtn = nullptr;
     QPushButton* m_pMaxBtn = nullptr;
     QPushButton* m_pCloseBtn = nullptr;
+
+    bool m_dragging = false;
+    QPoint m_dragStartPosition;
 };
 
 #endif //TITLEBAR_H

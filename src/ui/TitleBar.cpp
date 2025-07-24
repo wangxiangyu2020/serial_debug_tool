@@ -8,12 +8,7 @@
   ******************************************************************************
   */
 
-#pragma comment(lib, "user32.lib")
-#include <qt_windows.h>
 #include "ui/TitleBar.h"
-#include <QHBoxLayout>
-#include <QMouseEvent>
-
 #include "utils/StyleLoader.h"
 
 TitleBar::TitleBar(QWidget* parent)
@@ -71,14 +66,47 @@ void TitleBar::setUI()
 
 void TitleBar::mousePressEvent(QMouseEvent* event)
 {
-    if (ReleaseCapture())
+    if (event->button() == Qt::LeftButton)
     {
-        QWidget* pWindow = this->window();
-        if (pWindow->isWindow())
+        m_dragging = true;
+        m_dragStartPosition = event->globalPosition().toPoint(); // Qt 5.15+ 使用 globalPosition()
+    }
+    QWidget::mousePressEvent(event);
+}
+
+void TitleBar::mouseMoveEvent(QMouseEvent* event)
+{
+    if (m_dragging)
+    {
+        // 检测是否达到拖动阈值（避免微移误触发）
+        const int moveThreshold = QApplication::startDragDistance();
+        QPoint delta = event->globalPosition().toPoint() - m_dragStartPosition;
+
+        if (delta.manhattanLength() >= moveThreshold)
         {
-            SendMessage(HWND(pWindow->winId()), WM_SYSCOMMAND, SC_MOVE + HTCAPTION, 0);
+            m_dragging = false; // 防止重复触发
+
+            QWidget* pWindow = this->window();
+            if (pWindow->isWindow())
+            {
+                // 触发窗口拖动
+                ReleaseCapture();
+                SendMessage(
+                    reinterpret_cast<HWND>(pWindow->winId()),
+                    WM_SYSCOMMAND,
+                    SC_MOVE | HTCAPTION,
+                    0
+                );
+            }
         }
     }
+    QWidget::mouseMoveEvent(event);
+}
+
+void TitleBar::mouseReleaseEvent(QMouseEvent* event)
+{
+    m_dragging = false;
+    QWidget::mouseReleaseEvent(event);
 }
 
 void TitleBar::mouseDoubleClickEvent(QMouseEvent* event)
