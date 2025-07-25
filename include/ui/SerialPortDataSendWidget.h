@@ -20,6 +20,7 @@
 #include <QTimer>
 #include "core/SerialPortManager.h"
 #include "ui/CMessageBox.h"
+#include "ui/SerialPortConnectConfigWidget.h"
 
 class SerialPortDataSendWidget : public QWidget
 {

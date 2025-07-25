@@ -41,7 +41,11 @@ public:
     static void handlerError(QSerialPort::SerialPortError error);
 
 private:
+    void connectSignals();
     void configureSerialPort(const QMap<QString, QVariant>& serialParams);
+
+private slots:
+    void onReadyRead();
 
 private:
     QSerialPort* m_pSerialPort = nullptr;

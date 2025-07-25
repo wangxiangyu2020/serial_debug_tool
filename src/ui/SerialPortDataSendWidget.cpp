@@ -82,7 +82,7 @@ void SerialPortDataSendWidget::connectSignals()
 
 void SerialPortDataSendWidget::onSendButtonClicked()
 {
-    SerialPortManager* serialPortManager = new SerialPortManager();
+    SerialPortManager* serialPortManager = SerialPortConnectConfigWidget::getSerialPortManager();
     auto serialPort = serialPortManager->getSerialPort();
     if (!serialPort->isOpen())
     {

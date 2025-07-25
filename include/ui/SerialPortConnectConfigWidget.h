@@ -28,6 +28,9 @@
 #include "utils/ThreadPoolManager.h"
 #include <QAbstractItemView>
 
+// 串口管理器
+static SerialPortManager* pSerialPortManager = nullptr;
+
 // 向qt注册自定义类型
 Q_DECLARE_METATYPE(QSerialPortInfo)
 
@@ -38,6 +41,8 @@ class SerialPortConnectConfigWidget : public QWidget
 public:
     explicit SerialPortConnectConfigWidget(QWidget* parent = nullptr);
     ~SerialPortConnectConfigWidget() = default;
+
+    static SerialPortManager* getSerialPortManager();
 
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
@@ -72,8 +77,6 @@ private:
     QPushButton* m_pConnectButton = nullptr; // 连接按钮
     // 布局
     QGridLayout* m_pMainLayout = nullptr;
-    // 串口管理器
-    SerialPortManager* m_pSerialPortManager = nullptr;
 };
 
 #endif //SERIALPORTCONNECTCONFIGWIDGET_H

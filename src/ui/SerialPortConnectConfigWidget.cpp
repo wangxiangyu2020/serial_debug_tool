@@ -10,12 +10,17 @@
 #include "ui/SerialPortConnectConfigWidget.h"
 
 SerialPortConnectConfigWidget::SerialPortConnectConfigWidget(QWidget* parent)
-    : QWidget(parent), m_pSerialPortManager(new SerialPortManager(this))
+    : QWidget(parent)
 {
     this->setUI();
     qRegisterMetaType<QSerialPortInfo>("QSerialPortInfo"); // 注册元类型
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/serial_port_connect_config_widget.qss");
     ThreadPoolManager::addTask(&SerialPortConnectConfigWidget::detectionAvailablePorts, this);
+}
+
+SerialPortManager* SerialPortConnectConfigWidget::getSerialPortManager()
+{
+    return pSerialPortManager;
 }
 
 bool SerialPortConnectConfigWidget::eventFilter(QObject* watched, QEvent* event)
@@ -40,6 +45,7 @@ void SerialPortConnectConfigWidget::setUI()
     this->createComponents();
     // 创建布局
     this->createLayout();
+    pSerialPortManager = new SerialPortManager(this);
     // 信号处理
     this->connectSignals();
 }
@@ -171,11 +177,11 @@ void SerialPortConnectConfigWidget::onConnectButtonClicked()
             {"parity", m_pParityComboBox->currentData().value<QSerialPort::Parity>()},
             {"flowControl", m_pFlowControlComboBox->currentData().value<QSerialPort::FlowControl>()}
         };
-        isConnected = m_pSerialPortManager->openSerialPort(serialParams);
+        isConnected = pSerialPortManager->openSerialPort(serialParams);
     }
     else
     {
-        isConnected = !m_pSerialPortManager->closeSerialPort();
+        isConnected = !pSerialPortManager->closeSerialPort();
     }
 
     m_pConnectButton->setProperty("connected", isConnected);

@@ -12,6 +12,7 @@
 SerialPortManager::SerialPortManager(QObject* parent)
     : QObject(parent), m_pSerialPort(new QSerialPort(this))
 {
+    this->connectSignals();
 }
 
 QSerialPort* SerialPortManager::getSerialPort() const
@@ -51,26 +52,38 @@ bool SerialPortManager::closeSerialPort()
 
 void SerialPortManager::serialPortWrite(const QByteArray& data, WriteCallback callback)
 {
-    ThreadPoolManager::addTask([this, data, callback]()
-    {
-        QMutexLocker locker(&m_serialMutex);
-        qint64 bytesWritten = m_pSerialPort->write(data);
-        if (bytesWritten == -1)
-        {
-            const auto error = QSerialPort::WriteError;
-            // 确保回调在主线程执行
-            QMetaObject::invokeMethod(QCoreApplication::instance(),
-                                      [callback, error]
-                                      {
-                                          callback(error);
-                                      }
-            );
-        }
-    });
+    qint64 bytesWritten = m_pSerialPort->write(data);
+    // ThreadPoolManager::addTask([this, data, callback]()
+    // {
+    //     QMutexLocker locker(&m_serialMutex);
+    //     qint64 bytesWritten = m_pSerialPort->write(data);
+    //     if (bytesWritten == -1)
+    //     {
+    //         const auto error = QSerialPort::WriteError;
+    //         // 确保回调在主线程执行
+    //         QMetaObject::invokeMethod(QCoreApplication::instance(),
+    //                                   [callback, error]
+    //                                   {
+    //                                       callback(error);
+    //                                   }
+    //         );
+    //     }
+    // });
 }
 
 void SerialPortManager::serialPortRead()
 {
+    if (!m_pSerialPort || !m_pSerialPort->isOpen())
+        return;
+    auto readByteArray = m_pSerialPort->readAll();
+    if (readByteArray.isEmpty())
+        return;
+    ThreadPoolManager::addTask([this, readByteArray]()
+    {
+        QMutexLocker locker(&m_serialMutex);
+        // 处理读取到的数据
+        qDebug() << "Read: " << readByteArray;
+    });
 }
 
 void SerialPortManager::handlerError(QSerialPort::SerialPortError error)
@@ -112,6 +125,11 @@ void SerialPortManager::handlerError(QSerialPort::SerialPortError error)
     CMessageBox::showToast(errorMsg);
 }
 
+void SerialPortManager::connectSignals()
+{
+    this->connect(m_pSerialPort, &QSerialPort::readyRead, this, &SerialPortManager::onReadyRead);
+}
+
 void SerialPortManager::configureSerialPort(const QMap<QString, QVariant>& serialParams)
 {
     const auto portInfo = serialParams.value("portInfo").value<QSerialPortInfo>();
@@ -130,3 +148,7 @@ void SerialPortManager::configureSerialPort(const QMap<QString, QVariant>& seria
     m_pSerialPort->setReadBufferSize(1024 * 1024); // 1MB缓冲区
 }
 
+void SerialPortManager::onReadyRead()
+{
+    this->serialPortRead();
+}
