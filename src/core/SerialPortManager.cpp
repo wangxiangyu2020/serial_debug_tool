@@ -14,8 +14,14 @@ SerialPortManager::SerialPortManager(QObject* parent)
 {
 }
 
+QSerialPort* SerialPortManager::getSerialPort() const
+{
+    return m_pSerialPort;
+}
+
 bool SerialPortManager::openSerialPort(const QMap<QString, QVariant>& serialParams)
 {
+    QMutexLocker locker(&m_serialMutex);
     if (m_pSerialPort->isOpen())
     {
         this->closeSerialPort();
@@ -34,6 +40,7 @@ bool SerialPortManager::openSerialPort(const QMap<QString, QVariant>& serialPara
 
 bool SerialPortManager::closeSerialPort()
 {
+    QMutexLocker locker(&m_serialMutex);
     if (m_pSerialPort->isOpen())
     {
         m_pSerialPort->close();
@@ -42,22 +49,28 @@ bool SerialPortManager::closeSerialPort()
     return false;
 }
 
-void SerialPortManager::configureSerialPort(const QMap<QString, QVariant>& serialParams)
+void SerialPortManager::serialPortWrite(const QByteArray& data, WriteCallback callback)
 {
-    const auto portInfo = serialParams.value("portInfo").value<QSerialPortInfo>();
-    const auto baudRate = serialParams.value("baudRate").value<QSerialPort::BaudRate>();
-    const auto dataBits = serialParams.value("dataBits").value<QSerialPort::DataBits>();
-    const auto stopBits = serialParams.value("stopBits").value<QSerialPort::StopBits>();
-    const auto parity = serialParams.value("parity").value<QSerialPort::Parity>();
-    const auto flowControl = serialParams.value("flowControl").value<QSerialPort::FlowControl>();
+    ThreadPoolManager::addTask([this, data, callback]()
+    {
+        QMutexLocker locker(&m_serialMutex);
+        qint64 bytesWritten = m_pSerialPort->write(data);
+        if (bytesWritten == -1)
+        {
+            const auto error = QSerialPort::WriteError;
+            // 确保回调在主线程执行
+            QMetaObject::invokeMethod(QCoreApplication::instance(),
+                                      [callback, error]
+                                      {
+                                          callback(error);
+                                      }
+            );
+        }
+    });
+}
 
-    m_pSerialPort->setPortName(portInfo.portName());
-    m_pSerialPort->setBaudRate(baudRate);
-    m_pSerialPort->setDataBits(dataBits);
-    m_pSerialPort->setParity(parity);
-    m_pSerialPort->setStopBits(stopBits);
-    m_pSerialPort->setFlowControl(flowControl);
-    m_pSerialPort->setReadBufferSize(1024 * 1024); // 1MB缓冲区
+void SerialPortManager::serialPortRead()
+{
 }
 
 void SerialPortManager::handlerError(QSerialPort::SerialPortError error)
@@ -99,28 +112,21 @@ void SerialPortManager::handlerError(QSerialPort::SerialPortError error)
     CMessageBox::showToast(errorMsg);
 }
 
+void SerialPortManager::configureSerialPort(const QMap<QString, QVariant>& serialParams)
+{
+    const auto portInfo = serialParams.value("portInfo").value<QSerialPortInfo>();
+    const auto baudRate = serialParams.value("baudRate").value<QSerialPort::BaudRate>();
+    const auto dataBits = serialParams.value("dataBits").value<QSerialPort::DataBits>();
+    const auto stopBits = serialParams.value("stopBits").value<QSerialPort::StopBits>();
+    const auto parity = serialParams.value("parity").value<QSerialPort::Parity>();
+    const auto flowControl = serialParams.value("flowControl").value<QSerialPort::FlowControl>();
 
-// 发送数据函数
-// void SerialPortConnectConfigWidget::sendData(const QByteArray& data)
-// {
-//     ThreadPoolManager::addTask(
-//         [this, data]() {
-//             // 这里是耗时的串口发送操作
-//             m_pSerialPortManager->writeData(data);
-//         },
-//         []() {}
-//     );
-// }
+    m_pSerialPort->setPortName(portInfo.portName());
+    m_pSerialPort->setBaudRate(baudRate);
+    m_pSerialPort->setDataBits(dataBits);
+    m_pSerialPort->setParity(parity);
+    m_pSerialPort->setStopBits(stopBits);
+    m_pSerialPort->setFlowControl(flowControl);
+    m_pSerialPort->setReadBufferSize(1024 * 1024); // 1MB缓冲区
+}
 
-// // 读取数据
-// connect(m_pSerialPortManager->serialPort(), &QSerialPort::readyRead, this, [this]() {
-//     QByteArray data = m_pSerialPortManager->serialPort()->readAll();
-//     // 2. 如需后台处理
-//     ThreadPoolManager::addTask(
-//         [data]() {
-//             // 这里处理 data（如解析、存储等）
-//         },
-//         []() {}
-//     );
-//     // 或直接在主线程处理（如显示到界面）
-// });

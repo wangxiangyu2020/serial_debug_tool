@@ -18,6 +18,8 @@
 #include <QHBoxLayout>
 #include "utils/StyleLoader.h"
 #include <QTimer>
+#include "core/SerialPortManager.h"
+#include "ui/CMessageBox.h"
 
 class SerialPortDataSendWidget : public QWidget
 {
@@ -32,6 +34,12 @@ protected:
 
 private:
     void setUI();
+    void createComponents();
+    void createLayout();
+    void connectSignals();
+
+private slots:
+    void onSendButtonClicked();
 
 private:
     // 组件

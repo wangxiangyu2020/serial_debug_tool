@@ -15,7 +15,6 @@ SerialPortConnectConfigWidget::SerialPortConnectConfigWidget(QWidget* parent)
     this->setUI();
     qRegisterMetaType<QSerialPortInfo>("QSerialPortInfo"); // 注册元类型
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/serial_port_connect_config_widget.qss");
-    // 添加自动检测可用端口任务到线程池
     ThreadPoolManager::addTask(&SerialPortConnectConfigWidget::detectionAvailablePorts, this);
 }
 
@@ -160,7 +159,7 @@ void SerialPortConnectConfigWidget::onConnectButtonClicked()
     {
         if (m_pPortComboBox->count() == 0)
         {
-            CMessageBox::showToast("请选择串口");
+            CMessageBox::showToast("请选择端口");
             return;
         }
         QMap<QString, QVariant> serialParams

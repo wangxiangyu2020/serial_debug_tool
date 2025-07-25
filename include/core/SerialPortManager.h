@@ -19,6 +19,11 @@
 #include <QSerialPortInfo>
 #include <QThread>
 #include "ui/CMessageBox.h"
+#include "utils/ThreadPoolManager.h"
+#include <QMutex>
+#include <functional>
+
+using WriteCallback = std::function<void(QSerialPort::SerialPortError)>;
 
 class SerialPortManager : public QObject
 {
@@ -28,15 +33,19 @@ public:
     explicit SerialPortManager(QObject* parent = nullptr);
     ~SerialPortManager() = default;
 
+    QSerialPort* getSerialPort() const;
     bool openSerialPort(const QMap<QString, QVariant>& serialParams);
     bool closeSerialPort();
+    void serialPortWrite(const QByteArray& data, WriteCallback callback = nullptr);
+    void serialPortRead();
+    static void handlerError(QSerialPort::SerialPortError error);
 
 private:
     void configureSerialPort(const QMap<QString, QVariant>& serialParams);
-    void handlerError(QSerialPort::SerialPortError error);
 
 private:
     QSerialPort* m_pSerialPort = nullptr;
+    QMutex m_serialMutex; // 保护串口操作
 };
 
 #endif //SERIALPORTMANAGER_H
