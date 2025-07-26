@@ -20,6 +20,7 @@ file(GLOB UTILS_HEADERS "include/utils/*.h")  # 收集utils所有.h文件
 file(GLOB UI_SOURCES "src/ui/*.cpp")  # 收集core所有.cpp文件
 file(GLOB CORE_SOURCES "src/core/*.cpp")  # 收集core所有.cpp文件
 file(GLOB UTILS_SOURCES "src/utils/*.cpp")  # 收集utils所有.cpp文件
+set(RC_FILE resources/version.rc) # 设置运行图标
 
 # 包含目录
 include_directories(include ${CMAKE_CURRENT_BINARY_DIR})
@@ -42,6 +43,7 @@ add_executable(${PROJECT_NAME}
         ${UI_HEADERS}
         ${CORE_HEADERS}
         ${UTILS_HEADERS}
+        ${RC_FILE}
 )
 
 # 添加资源文件
@@ -55,6 +57,7 @@ qt_add_resources(${PROJECT_NAME} "resources"
         resources/icons/down_arrow.svg
         resources/icons/checkmark_blue.svg
         resources/icons/send.svg
+        resources/icons/ikun.ico
         resources/qss/main_window.qss
         resources/qss/tab_bar.qss
         resources/qss/title_bar.qss
@@ -77,6 +80,7 @@ target_link_libraries(${PROJECT_NAME}
         Qt::SerialPort
         Qt::Concurrent
 )
+
 
 # 添加 Windows 部署规则
 if (WIN32)
