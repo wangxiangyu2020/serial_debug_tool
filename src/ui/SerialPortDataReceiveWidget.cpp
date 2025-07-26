@@ -10,11 +10,18 @@
 
 #include "ui/SerialPortDataReceiveWidget.h"
 
+static SerialPortDataReceiveWidget* pSerialPortDataReceiveWidget = nullptr;
+
 SerialPortDataReceiveWidget::SerialPortDataReceiveWidget(QWidget* parent)
-    : QWidget(parent)
+    : QWidget(parent), m_pSerialPortManager(new SerialPortManager(this))
 {
     this->setUI();
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/serial_port_data_receive_widget.qss");
+}
+
+SerialPortDataReceiveWidget* SerialPortDataReceiveWidget::getSerialPortDataReceiveWidget()
+{
+    return pSerialPortDataReceiveWidget;
 }
 
 bool SerialPortDataReceiveWidget::eventFilter(QObject* watched, QEvent* event)
@@ -35,7 +42,8 @@ bool SerialPortDataReceiveWidget::eventFilter(QObject* watched, QEvent* event)
                 keyEvent->key() == Qt::Key_Shift ||
                 keyEvent->key() == Qt::Key_Alt ||
                 keyEvent->matches(QKeySequence::Copy) ||
-                keyEvent->matches(QKeySequence::SelectAll))
+                keyEvent->matches(QKeySequence::SelectAll) ||
+                keyEvent->matches(QKeySequence::Delete))
             {
                 return false; // 放行功能键和快捷键
             }
@@ -51,6 +59,7 @@ void SerialPortDataReceiveWidget::setUI()
     this->createComponents();
     this->createLayout();
     this->connectSignals();
+    pSerialPortDataReceiveWidget = this;
 }
 
 void SerialPortDataReceiveWidget::createComponents()
@@ -80,8 +89,12 @@ void SerialPortDataReceiveWidget::createLayout()
 
 void SerialPortDataReceiveWidget::connectSignals()
 {
-    this->connect(new SerialPortManager(), &SerialPortManager::sigReceiveData, this,
+    this->connect(m_pSerialPortManager, &SerialPortManager::sigReceiveData, this,
                   &SerialPortDataReceiveWidget::showReceiveData);
+    this->connect(this, &SerialPortDataReceiveWidget::sigClearReceiveData, [this]()
+    {
+        m_pReceiveTextEdit->clear();
+    });
 }
 
 void SerialPortDataReceiveWidget::showReceiveData(const QByteArray& data)

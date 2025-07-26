@@ -19,6 +19,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include "utils/StyleLoader.h"
+#include "ui/SerialPortDataReceiveWidget.h"
 
 class SerialPortReceiveSettingsWidget : public QWidget
 {
@@ -30,6 +31,9 @@ public:
 
 private:
     void setUI();
+    void createComponents();
+    void createLayout();
+    void connectSignals();
 
 private:
     // 组件

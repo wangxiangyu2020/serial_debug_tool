@@ -19,42 +19,53 @@ SerialPortReceiveSettingsWidget::SerialPortReceiveSettingsWidget(QWidget* parent
 void SerialPortReceiveSettingsWidget::setUI()
 {
     this->setAttribute(Qt::WA_StyledBackground);
+    this->createComponents();
+    this->createLayout();
+    this->connectSignals();
+}
 
-    // 主垂直布局 - 最小间距
-    m_pMainLayout = new QVBoxLayout(this);
-    m_pMainLayout->setSpacing(2);  // 最小化间距
-    m_pMainLayout->setContentsMargins(0, 0, 0, 0);
-
+void SerialPortReceiveSettingsWidget::createComponents()
+{
     // 标题标签 - 移除所有额外边距
     m_pTitleLabel = new QLabel("接收设置", this);
     m_pTitleLabel->setObjectName("m_pTitleLabel");
     m_pTitleLabel->setContentsMargins(4, 5, 0, 0); // 移除内部边距
     m_pTitleLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-
     // 复选框 - 紧凑模式
     m_pSaveToFileCheckBox = new QCheckBox("保存数据到文件", this);
     m_pSaveToFileCheckBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-
     m_pHexDisplayCheckBox = new QCheckBox("十六进制显示", this);
     m_pHexDisplayCheckBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-
     // 按钮水平布局
     m_pButtonLayout = new QHBoxLayout();
     m_pButtonLayout->setAlignment(Qt::AlignCenter);
     m_pButtonLayout->setSpacing(8);
     m_pButtonLayout->setContentsMargins(0, 0, 0, 15); // 移除布局边距
-
     // 按钮
     m_pSaveDataButton = new QPushButton("保存数据", this);
     m_pClearDataButton = new QPushButton("清空数据", this);
+}
 
+void SerialPortReceiveSettingsWidget::createLayout()
+{
+    // 主垂直布局 - 最小间距
+    m_pMainLayout = new QVBoxLayout(this);
+    m_pMainLayout->setSpacing(2); // 最小化间距
+    m_pMainLayout->setContentsMargins(0, 0, 0, 0);
     // 添加到按钮布局
     m_pButtonLayout->addWidget(m_pSaveDataButton);
     m_pButtonLayout->addWidget(m_pClearDataButton);
-
     // 添加到主布局 - 紧凑排列
     m_pMainLayout->addWidget(m_pTitleLabel, 0, Qt::AlignTop);
     m_pMainLayout->addWidget(m_pSaveToFileCheckBox, 0, Qt::AlignTop);
     m_pMainLayout->addWidget(m_pHexDisplayCheckBox, 0, Qt::AlignTop);
     m_pMainLayout->addLayout(m_pButtonLayout);
+}
+
+void SerialPortReceiveSettingsWidget::connectSignals()
+{
+    this->connect(m_pClearDataButton, &QPushButton::clicked, [this]()
+    {
+        emit SerialPortDataReceiveWidget::getSerialPortDataReceiveWidget()->sigClearReceiveData();
+    });
 }

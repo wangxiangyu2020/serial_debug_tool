@@ -21,6 +21,7 @@
 #include "utils/ThreadPoolManager.h"
 #include "core/SerialPortManager.h"
 
+
 class SerialPortDataReceiveWidget : public QWidget
 {
     Q_OBJECT
@@ -28,6 +29,8 @@ class SerialPortDataReceiveWidget : public QWidget
 public:
     explicit SerialPortDataReceiveWidget(QWidget* parent = nullptr);
     ~SerialPortDataReceiveWidget() = default;
+
+    static SerialPortDataReceiveWidget* getSerialPortDataReceiveWidget();
 
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
@@ -39,12 +42,17 @@ private:
     void connectSignals();
 
 private slots:
-    void showReceiveData(const QByteArray& data);
+    void showReceiveData(const QByteArray& data);;
+
+signals:
+    void sigClearReceiveData();
 
 private:
     QVBoxLayout* m_pMainLayout = nullptr;
     QPlainTextEdit* m_pReceiveTextEdit = nullptr;
     QCheckBox* m_pAutoScrollCheckbox = nullptr;
+
+    SerialPortManager* m_pSerialPortManager = nullptr;
 };
 
 #endif //SERIALPORTDATARECEIVEWIDGET_H
