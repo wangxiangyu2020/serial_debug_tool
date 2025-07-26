@@ -13,6 +13,15 @@ SerialPortManager::SerialPortManager(QObject* parent)
     : QObject(parent), m_pSerialPort(new QSerialPort(this))
 {
     this->connectSignals();
+    ThreadPoolManager::addTask([this]()
+    {
+        for (int i = 0; i < 100; ++i)
+        {
+            QByteArray showByteArray = QString("SerialPortManager initialized: %1").arg(i).toUtf8();
+            this->handleReadData(showByteArray);
+            QThread::msleep(100);
+        }
+    });
 }
 
 QSerialPort* SerialPortManager::getSerialPort() const
@@ -83,6 +92,7 @@ void SerialPortManager::serialPortRead()
         QMutexLocker locker(&m_serialMutex);
         // 处理读取到的数据
         qDebug() << "Read: " << readByteArray;
+        this->handleReadData(readByteArray);
     });
 }
 
@@ -146,6 +156,15 @@ void SerialPortManager::configureSerialPort(const QMap<QString, QVariant>& seria
     m_pSerialPort->setStopBits(stopBits);
     m_pSerialPort->setFlowControl(flowControl);
     m_pSerialPort->setReadBufferSize(1024 * 1024); // 1MB缓冲区
+}
+
+void SerialPortManager::handleReadData(const QByteArray& readByteArray)
+{
+    // 获取当前时间戳
+    QString timestamp = QDateTime::currentDateTime().toString("[HH:mm:ss.zzz] ");
+    QString formattedData = QString::fromUtf8(readByteArray);
+    QByteArray showByteArray = (timestamp + formattedData).toUtf8();
+    emit sigReceiveData(showByteArray);
 }
 
 void SerialPortManager::onReadyRead()

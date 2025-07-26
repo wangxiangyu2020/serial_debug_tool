@@ -17,6 +17,9 @@
 #include <QVBoxLayout>
 #include <QCheckBox>
 #include "utils/StyleLoader.h"
+#include <QScrollBar>
+#include "utils/ThreadPoolManager.h"
+#include "core/SerialPortManager.h"
 
 class SerialPortDataReceiveWidget : public QWidget
 {
@@ -26,8 +29,17 @@ public:
     explicit SerialPortDataReceiveWidget(QWidget* parent = nullptr);
     ~SerialPortDataReceiveWidget() = default;
 
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override;
+
 private:
     void setUI();
+    void createComponents();
+    void createLayout();
+    void connectSignals();
+
+private slots:
+    void showReceiveData(const QByteArray& data);
 
 private:
     QVBoxLayout* m_pMainLayout = nullptr;

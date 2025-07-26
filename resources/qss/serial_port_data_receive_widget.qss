@@ -13,7 +13,8 @@ QPlainTextEdit {
     border: 1px solid #ced4da;  /* 与参考样式输入框边框一致 */
     border-radius: 8px;         /* 与参考样式相同圆角大小 */
     padding: 5px;
-    font-size: 11px;            /* 与参考样式输入框字体大小一致 */
+    font-size: 15px;            /* 与参考样式输入框字体大小一致 */
+    font-weight: bold;    /* 添加字体加粗 */
     color: #495057;             /* 与参考样式文本颜色一致 */
     selection-background-color: #d1e7ff;
     selection-color: #000000;

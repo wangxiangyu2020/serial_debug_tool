@@ -22,6 +22,7 @@
 #include "utils/ThreadPoolManager.h"
 #include <QMutex>
 #include <functional>
+#include <QDateTime>
 
 using WriteCallback = std::function<void(QSerialPort::SerialPortError)>;
 
@@ -43,9 +44,13 @@ public:
 private:
     void connectSignals();
     void configureSerialPort(const QMap<QString, QVariant>& serialParams);
+    void handleReadData(const QByteArray& readByteArray);
 
 private slots:
     void onReadyRead();
+
+signals:
+    void sigReceiveData(const QByteArray& data);
 
 private:
     QSerialPort* m_pSerialPort = nullptr;
