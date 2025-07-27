@@ -42,7 +42,7 @@ private:
     void connectSignals();
 
 private slots:
-    void showReceiveData(const QByteArray& data);;
+    void displayReceiveData(const QByteArray& data);;
 
 signals:
     void sigClearReceiveData();

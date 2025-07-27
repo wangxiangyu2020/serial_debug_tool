@@ -30,6 +30,8 @@ public:
     explicit SerialPortDataSendWidget(QWidget* parent = nullptr);
     ~SerialPortDataSendWidget() = default;
 
+    static QPlainTextEdit* getSendTextEdit();
+
 protected:
     void resizeEvent(QResizeEvent* event) override;
 

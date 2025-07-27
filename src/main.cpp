@@ -4,7 +4,7 @@
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
-    a.setApplicationDisplayName("ikun");
+    a.setApplicationDisplayName("IKUN");
     MainWindow w;
     w.show();
     return QApplication::exec();

@@ -36,16 +36,19 @@ public:
     ~SerialPortManager() = default;
 
     QSerialPort* getSerialPort() const;
+    void setHexSendStatus(bool status);
+    void setSendStringDisplayStatus(bool status);
     bool openSerialPort(const QMap<QString, QVariant>& serialParams);
     bool closeSerialPort();
-    void serialPortWrite(const QByteArray& data, WriteCallback callback = nullptr);
-    void serialPortRead();
+    void handleWriteData(const QByteArray& writeByteArray);
+    void handleReadData(const QByteArray& readByteArray);
     static void handlerError(QSerialPort::SerialPortError error);
 
 private:
     void connectSignals();
     void configureSerialPort(const QMap<QString, QVariant>& serialParams);
-    void handleReadData(const QByteArray& readByteArray);
+    void serialPortWrite(const QByteArray& data);
+    void serialPortRead();
 
 private slots:
     void onReadyRead();
@@ -53,11 +56,18 @@ private slots:
 signals:
     void sigReceiveData(const QByteArray& data);
     void sigHexDisplay(bool isHex);
+    void sigSendData(const QByteArray& data);
+    void sigHexSend(bool isHex);
+    void sigSendStringDisplay(bool isDisplay);
+    void sigSendData2Receive(const QByteArray& data);
+    void sigTimedSend(bool isTimed, double interval);
 
 private:
     QSerialPort* m_pSerialPort = nullptr;
     QMutex m_serialMutex; // 保护串口操作
-    std::atomic_bool m_isHexDisplay{false};  // 原子标志
+    std::atomic_bool m_isHexDisplay{false}; // 原子标志
+    bool m_isHexSend = false;
+    bool m_isSendStringDisplay = false;
 };
 
 #endif //SERIALPORTMANAGER_H

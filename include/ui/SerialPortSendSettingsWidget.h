@@ -20,6 +20,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include "utils/StyleLoader.h"
+#include "ui/SerialPortConnectConfigWidget.h"
 
 class SerialPortSendSettingsWidget : public QWidget
 {
@@ -31,6 +32,9 @@ public:
 
 private:
     void setUI();
+    void createComponents();
+    void createLayout();
+    void connectSignals();
 
 private:
     // 组件

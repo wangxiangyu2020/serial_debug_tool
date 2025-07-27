@@ -9,6 +9,8 @@
   */
 
 #include "ui/SerialPortDataReceiveWidget.h"
+#include "ui/SerialPortConnectConfigWidget.h"
+#include <QTextBlock>
 
 static SerialPortDataReceiveWidget* pSerialPortDataReceiveWidget = nullptr;
 
@@ -90,14 +92,39 @@ void SerialPortDataReceiveWidget::createLayout()
 void SerialPortDataReceiveWidget::connectSignals()
 {
     this->connect(m_pSerialPortManager, &SerialPortManager::sigReceiveData, this,
-                  &SerialPortDataReceiveWidget::showReceiveData);
+                  &SerialPortDataReceiveWidget::displayReceiveData);
     this->connect(this, &SerialPortDataReceiveWidget::sigClearReceiveData, [this]()
     {
         m_pReceiveTextEdit->clear();
     });
+    this->connect(SerialPortConnectConfigWidget::getSerialPortManager(), &SerialPortManager::sigSendData2Receive, [this
+                  ](const QByteArray& data)
+                  {
+                      this->displayReceiveData(data);
+                      // 获取最后一行（刚刚添加的数据行）
+                      QTextBlock lastBlock = m_pReceiveTextEdit->document()->lastBlock();
+                      // 创建文本光标并选中该块
+                      QTextCursor cursor(lastBlock);
+                      cursor.select(QTextCursor::BlockUnderCursor);
+                      // 设置背景颜色为浅黄色
+                      QTextCharFormat yellowFormat;
+                      yellowFormat.setBackground(QColor(230, 240, 255));
+                      cursor.setCharFormat(yellowFormat);
+                      // 重置后续所有行的背景色为白色
+                      QTextBlock nextBlock = lastBlock.next();
+                      while (nextBlock.isValid())
+                      {
+                          QTextCursor nextCursor(nextBlock);
+                          nextCursor.select(QTextCursor::BlockUnderCursor);
+                          QTextCharFormat whiteFormat;
+                          whiteFormat.setBackground(Qt::white);
+                          nextCursor.setCharFormat(whiteFormat);
+                          nextBlock = nextBlock.next();
+                      }
+                  });
 }
 
-void SerialPortDataReceiveWidget::showReceiveData(const QByteArray& data)
+void SerialPortDataReceiveWidget::displayReceiveData(const QByteArray& data)
 {
     // 暂停重绘以提高性能
     m_pReceiveTextEdit->setUpdatesEnabled(false);
