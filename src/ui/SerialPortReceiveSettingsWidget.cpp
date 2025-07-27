@@ -68,4 +68,8 @@ void SerialPortReceiveSettingsWidget::connectSignals()
     {
         emit SerialPortDataReceiveWidget::getSerialPortDataReceiveWidget()->sigClearReceiveData();
     });
+    this->connect(m_pHexDisplayCheckBox, &QCheckBox::toggled, [this](bool checked)
+    {
+        SerialPortConnectConfigWidget::getSerialPortManager()->sigHexDisplay(checked);
+    });
 }

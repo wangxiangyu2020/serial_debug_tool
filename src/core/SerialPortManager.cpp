@@ -9,6 +9,8 @@
   */
 #include "core/SerialPortManager.h"
 
+#include "ui/SerialPortConnectConfigWidget.h"
+
 SerialPortManager::SerialPortManager(QObject* parent)
     : QObject(parent), m_pSerialPort(new QSerialPort(this))
 {
@@ -137,7 +139,14 @@ void SerialPortManager::handlerError(QSerialPort::SerialPortError error)
 
 void SerialPortManager::connectSignals()
 {
+    SerialPortManager* manager = SerialPortConnectConfigWidget::getSerialPortManager();
+    if (!manager)
+        return;
     this->connect(m_pSerialPort, &QSerialPort::readyRead, this, &SerialPortManager::onReadyRead);
+    this->connect(manager, &SerialPortManager::sigHexDisplay, [this](bool isHex)
+    {
+        m_isHexDisplay.store(isHex, std::memory_order_release);
+    });
 }
 
 void SerialPortManager::configureSerialPort(const QMap<QString, QVariant>& serialParams)
@@ -160,9 +169,12 @@ void SerialPortManager::configureSerialPort(const QMap<QString, QVariant>& seria
 
 void SerialPortManager::handleReadData(const QByteArray& readByteArray)
 {
+    const bool isHex = m_isHexDisplay.load(std::memory_order_acquire);
     // 获取当前时间戳
     QString timestamp = QDateTime::currentDateTime().toString("[HH:mm:ss.zzz] ");
-    QString formattedData = QString::fromUtf8(readByteArray);
+    QString formattedData = isHex
+                                ? QString::fromLatin1(readByteArray.toHex(' ').toUpper())
+                                : QString::fromUtf8(readByteArray);
     QByteArray showByteArray = (timestamp + formattedData).toUtf8();
     emit sigReceiveData(showByteArray);
 }

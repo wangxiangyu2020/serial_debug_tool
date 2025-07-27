@@ -23,6 +23,7 @@
 #include <QMutex>
 #include <functional>
 #include <QDateTime>
+#include <atomic>  // 添加原子操作头文件
 
 using WriteCallback = std::function<void(QSerialPort::SerialPortError)>;
 
@@ -51,10 +52,12 @@ private slots:
 
 signals:
     void sigReceiveData(const QByteArray& data);
+    void sigHexDisplay(bool isHex);
 
 private:
     QSerialPort* m_pSerialPort = nullptr;
     QMutex m_serialMutex; // 保护串口操作
+    std::atomic_bool m_isHexDisplay{false};  // 原子标志
 };
 
 #endif //SERIALPORTMANAGER_H

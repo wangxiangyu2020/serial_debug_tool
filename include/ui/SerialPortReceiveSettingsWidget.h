@@ -20,6 +20,7 @@
 #include <QHBoxLayout>
 #include "utils/StyleLoader.h"
 #include "ui/SerialPortDataReceiveWidget.h"
+#include "ui/SerialPortConnectConfigWidget.h"
 
 class SerialPortReceiveSettingsWidget : public QWidget
 {
