@@ -88,6 +88,13 @@ void SerialPortSendSettingsWidget::connectSignals()
     });
     this->connect(m_pTimedSendCheckBox, &QCheckBox::toggled, [this](bool checked)
     {
+        if (!SerialPortConnectConfigWidget::getSerialPortManager()->getSerialPort()->isOpen())
+        {
+            CMessageBox::showToast(tr("请先打开串口"));
+            m_pTimedSendCheckBox->setChecked(false);
+            return;
+        }
+        this->m_pIntervalEdit->setEnabled(!checked);
         double timers = this->m_pIntervalEdit->text().toDouble();
         SerialPortConnectConfigWidget::getSerialPortManager()->sigTimedSend(checked, timers);
     });
