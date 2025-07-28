@@ -91,7 +91,7 @@ void SerialPortDataReceiveWidget::createLayout()
 
 void SerialPortDataReceiveWidget::connectSignals()
 {
-    this->connect(m_pSerialPortManager, &SerialPortManager::sigReceiveData, this,
+    this->connect(SerialPortConnectConfigWidget::getSerialPortManager(), &SerialPortManager::sigReceiveData, this,
                   &SerialPortDataReceiveWidget::displayReceiveData);
     this->connect(this, &SerialPortDataReceiveWidget::sigClearReceiveData, [this]()
     {

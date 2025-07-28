@@ -37,6 +37,7 @@ public:
 
     QSerialPort* getSerialPort() const;
     void setHexSendStatus(bool status);
+    void setHexDisplayStatus(bool status);
     void setSendStringDisplayStatus(bool status);
     bool openSerialPort(const QMap<QString, QVariant>& serialParams);
     bool closeSerialPort();

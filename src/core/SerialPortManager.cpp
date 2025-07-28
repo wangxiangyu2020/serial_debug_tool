@@ -16,15 +16,6 @@ SerialPortManager::SerialPortManager(QObject* parent)
     : QObject(parent), m_pSerialPort(new QSerialPort(this))
 {
     this->connectSignals();
-    ThreadPoolManager::addTask([this]()
-    {
-        for (int i = 0; i < 100; ++i)
-        {
-            QByteArray showByteArray = QString("SerialPortManager initialized: %1").arg(i).toUtf8();
-            this->handleReadData(showByteArray);
-            QThread::msleep(100);
-        }
-    });
 }
 
 QSerialPort* SerialPortManager::getSerialPort() const
@@ -35,6 +26,11 @@ QSerialPort* SerialPortManager::getSerialPort() const
 void SerialPortManager::setHexSendStatus(bool status)
 {
     m_isHexSend = status;
+}
+
+void SerialPortManager::setHexDisplayStatus(bool status)
+{
+    m_isHexDisplay.store(status, std::memory_order_release);
 }
 
 void SerialPortManager::setSendStringDisplayStatus(bool status)
@@ -140,18 +136,18 @@ void SerialPortManager::connectSignals()
     SerialPortManager* manager = SerialPortConnectConfigWidget::getSerialPortManager();
     if (!manager)
         return;
-    this->connect(m_pSerialPort, &QSerialPort::readyRead, this, &SerialPortManager::onReadyRead);
-    this->connect(manager, &SerialPortManager::sigHexDisplay, [this](bool isHex)
+    this->connect(manager->getSerialPort(), &QSerialPort::readyRead, manager, &SerialPortManager::onReadyRead);
+    this->connect(manager, &SerialPortManager::sigHexDisplay, [manager](bool isHex)
     {
-        m_isHexDisplay.store(isHex, std::memory_order_release);
+        manager->setHexDisplayStatus(isHex);
     });
     this->connect(manager, &SerialPortManager::sigHexSend, [manager](bool isHex)
     {
         manager->setHexSendStatus(isHex);
     });
-    this->connect(manager, &SerialPortManager::sigSendData, [this](const QByteArray& data)
+    this->connect(manager, &SerialPortManager::sigSendData, [manager](const QByteArray& data)
     {
-        this->serialPortWrite(data);
+        manager->serialPortWrite(data);
     });
     this->connect(manager, &SerialPortManager::sigSendStringDisplay, [manager](bool isDisplay)
     {
@@ -200,7 +196,6 @@ void SerialPortManager::configureSerialPort(const QMap<QString, QVariant>& seria
 
 void SerialPortManager::serialPortWrite(const QByteArray& data)
 {
-    qDebug() << "SerialPortManager::serialPortWrite" << data;
     qint64 bytesWritten = m_pSerialPort->write(data);
     if (bytesWritten == -1)
     {
@@ -219,7 +214,6 @@ void SerialPortManager::serialPortRead()
     {
         QMutexLocker locker(&m_serialMutex);
         // 处理读取到的数据
-        qDebug() << "Read: " << readByteArray;
         this->handleReadData(readByteArray);
     });
 }
