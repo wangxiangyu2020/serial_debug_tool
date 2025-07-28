@@ -72,9 +72,7 @@ void SerialPortManager::handleWriteData(const QByteArray& writeByteArray)
 {
     if (m_isSendStringDisplay)
     {
-        QString timestamp = QDateTime::currentDateTime().toString("[HH:mm:ss.zzz] ");
-        QString formattedData = QString::fromUtf8(writeByteArray);
-        QByteArray showByteArray = (timestamp + formattedData).toUtf8();
+        QByteArray showByteArray = this->generateTimestamp(QString::fromUtf8(writeByteArray));
         emit sigSendData2Receive(showByteArray);
     }
     emit sigSendData(m_isHexSend ? writeByteArray.toHex() : writeByteArray);
@@ -83,12 +81,10 @@ void SerialPortManager::handleWriteData(const QByteArray& writeByteArray)
 void SerialPortManager::handleReadData(const QByteArray& readByteArray)
 {
     const bool isHex = m_isHexDisplay.load(std::memory_order_acquire);
-    // 获取当前时间戳
-    QString timestamp = QDateTime::currentDateTime().toString("[HH:mm:ss.zzz] ");
     QString formattedData = isHex
                                 ? QString::fromLatin1(readByteArray.toHex(' ').toUpper())
                                 : QString::fromUtf8(readByteArray);
-    QByteArray showByteArray = (timestamp + formattedData).toUtf8();
+    QByteArray showByteArray = this->generateTimestamp(formattedData);
     emit sigReceiveData(showByteArray);
 }
 
@@ -222,6 +218,15 @@ void SerialPortManager::serialPortRead()
         // 处理读取到的数据
         this->handleReadData(readByteArray);
     });
+}
+
+QByteArray& SerialPortManager::generateTimestamp(const QString& data)
+{
+    static QString timestamp;
+    static QByteArray array;
+    timestamp = QDateTime::currentDateTime().toString("[HH:mm:ss.zzz] ");
+    array = (timestamp + data).toUtf8();
+    return array;
 }
 
 void SerialPortManager::onReadyRead()

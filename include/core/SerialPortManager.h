@@ -50,6 +50,7 @@ private:
     void configureSerialPort(const QMap<QString, QVariant>& serialParams);
     void serialPortWrite(const QByteArray& data);
     void serialPortRead();
+    QByteArray& generateTimestamp(const QString& data);
 
 private slots:
     void onReadyRead();
