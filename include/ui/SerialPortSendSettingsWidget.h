@@ -30,6 +30,8 @@ public:
     explicit SerialPortSendSettingsWidget(QWidget* parent = nullptr);
     ~SerialPortSendSettingsWidget() = default;
 
+    static QCheckBox* getTimedSendCheckBox();
+
 private:
     void setUI();
     void createComponents();

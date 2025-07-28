@@ -8,9 +8,9 @@
   ******************************************************************************
   */
 #include "core/SerialPortManager.h"
-
 #include "ui/SerialPortConnectConfigWidget.h"
 #include "ui/SerialPortDataSendWidget.h"
+#include "ui/SerialPortSendSettingsWidget.h"
 
 SerialPortManager::SerialPortManager(QObject* parent)
     : QObject(parent), m_pSerialPort(new QSerialPort(this))
@@ -167,6 +167,12 @@ void SerialPortManager::connectSignals()
         timedSendTimer = new QTimer(this);
         connect(timedSendTimer, &QTimer::timeout, [manager]()
         {
+            if (!manager->getSerialPort()->isOpen())
+            {
+                SerialPortSendSettingsWidget::getTimedSendCheckBox()->setChecked(false);
+                timedSendTimer->stop();
+                return;
+            }
             QByteArray sendByteArray = SerialPortDataSendWidget::getSendTextEdit()->toPlainText().toLocal8Bit();
             manager->handleWriteData(sendByteArray);
         });

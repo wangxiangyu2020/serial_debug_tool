@@ -10,12 +10,18 @@
 
 #include "ui/SerialPortSendSettingsWidget.h"
 
+static QCheckBox* timedSendCheckBox = nullptr;
 
 SerialPortSendSettingsWidget::SerialPortSendSettingsWidget(QWidget* parent)
     : QWidget(parent)
 {
     this->setUI();
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/serial_port_send_settings_widget.qss");
+}
+
+QCheckBox* SerialPortSendSettingsWidget::getTimedSendCheckBox()
+{
+    return timedSendCheckBox;
 }
 
 void SerialPortSendSettingsWidget::setUI()
@@ -46,6 +52,7 @@ void SerialPortSendSettingsWidget::createComponents()
     m_pTimedSendLayout->setContentsMargins(0, 0, 0, 0);
     m_pTimedSendCheckBox = new QCheckBox("定时发送", this);
     m_pTimedSendCheckBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    timedSendCheckBox = m_pTimedSendCheckBox;
     // 减小时间输入框尺寸
     m_pIntervalLabel = new QLabel("(秒)", this);
     m_pIntervalLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
