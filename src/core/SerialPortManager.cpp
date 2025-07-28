@@ -38,6 +38,11 @@ void SerialPortManager::setSendStringDisplayStatus(bool status)
     m_isSendStringDisplay = status;
 }
 
+void SerialPortManager::setTimestampStatus(bool status)
+{
+    m_isDisplayTimestamp = status;
+}
+
 bool SerialPortManager::openSerialPort(const QMap<QString, QVariant>& serialParams)
 {
     QMutexLocker locker(&m_serialMutex);
@@ -72,7 +77,9 @@ void SerialPortManager::handleWriteData(const QByteArray& writeByteArray)
 {
     if (m_isSendStringDisplay)
     {
-        QByteArray showByteArray = this->generateTimestamp(QString::fromUtf8(writeByteArray));
+        QByteArray showByteArray = m_isDisplayTimestamp
+                                       ? this->generateTimestamp(QString::fromUtf8(writeByteArray))
+                                       : writeByteArray;
         emit sigSendData2Receive(showByteArray);
     }
     emit sigSendData(m_isHexSend ? writeByteArray.toHex() : writeByteArray);
@@ -84,7 +91,7 @@ void SerialPortManager::handleReadData(const QByteArray& readByteArray)
     QString formattedData = isHex
                                 ? QString::fromLatin1(readByteArray.toHex(' ').toUpper())
                                 : QString::fromUtf8(readByteArray);
-    QByteArray showByteArray = this->generateTimestamp(formattedData);
+    QByteArray showByteArray = m_isDisplayTimestamp ? this->generateTimestamp(formattedData) : formattedData.toUtf8();
     emit sigReceiveData(showByteArray);
 }
 
@@ -175,6 +182,10 @@ void SerialPortManager::connectSignals()
         // 启动定时器，间隔为interval秒转换为毫秒
         int intervalMs = static_cast<int>(interval * 1000);
         timedSendTimer->start(intervalMs);
+    });
+    this->connect(manager, &SerialPortManager::sigDisplayTimestamp, [manager](bool isDisplay)
+    {
+        manager->setTimestampStatus(isDisplay);
     });
 }
 

@@ -40,6 +40,7 @@ private:
     // 组件
     QLabel* m_pTitleLabel = nullptr;
     QCheckBox* m_pSaveToFileCheckBox = nullptr;
+    QCheckBox* m_pDisplayTimestampCheckBox = nullptr;
     QCheckBox* m_pHexDisplayCheckBox = nullptr;
     QPushButton* m_pSaveDataButton = nullptr;
     QPushButton* m_pClearDataButton = nullptr;

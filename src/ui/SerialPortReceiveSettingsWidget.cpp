@@ -34,6 +34,8 @@ void SerialPortReceiveSettingsWidget::createComponents()
     // 复选框 - 紧凑模式
     m_pSaveToFileCheckBox = new QCheckBox("保存数据到文件", this);
     m_pSaveToFileCheckBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    m_pDisplayTimestampCheckBox = new QCheckBox("显示时间戳", this);
+    m_pDisplayTimestampCheckBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     m_pHexDisplayCheckBox = new QCheckBox("十六进制显示", this);
     m_pHexDisplayCheckBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     // 按钮水平布局
@@ -50,14 +52,19 @@ void SerialPortReceiveSettingsWidget::createLayout()
 {
     // 主垂直布局 - 最小间距
     m_pMainLayout = new QVBoxLayout(this);
-    m_pMainLayout->setSpacing(2); // 最小化间距
+    m_pMainLayout->setSpacing(5); // 最小化间距
     m_pMainLayout->setContentsMargins(0, 0, 0, 0);
+    // 创建水平布局用于放置保存文件和时间戳复选框
+    QHBoxLayout* pSaveAndTimestampLayout = new QHBoxLayout();
+    pSaveAndTimestampLayout->addWidget(m_pSaveToFileCheckBox);
+    pSaveAndTimestampLayout->addWidget(m_pDisplayTimestampCheckBox);
+    pSaveAndTimestampLayout->addStretch(); // 添加弹性空间
     // 添加到按钮布局
     m_pButtonLayout->addWidget(m_pSaveDataButton);
     m_pButtonLayout->addWidget(m_pClearDataButton);
     // 添加到主布局 - 紧凑排列
     m_pMainLayout->addWidget(m_pTitleLabel, 0, Qt::AlignTop);
-    m_pMainLayout->addWidget(m_pSaveToFileCheckBox, 0, Qt::AlignTop);
+    m_pMainLayout->addLayout(pSaveAndTimestampLayout); // 添加水平布局
     m_pMainLayout->addWidget(m_pHexDisplayCheckBox, 0, Qt::AlignTop);
     m_pMainLayout->addLayout(m_pButtonLayout);
 }
@@ -71,5 +78,9 @@ void SerialPortReceiveSettingsWidget::connectSignals()
     this->connect(m_pHexDisplayCheckBox, &QCheckBox::toggled, [this](bool checked)
     {
         SerialPortConnectConfigWidget::getSerialPortManager()->sigHexDisplay(checked);
+    });
+    this->connect(m_pDisplayTimestampCheckBox, &QCheckBox::toggled, [this](bool checked)
+    {
+        SerialPortConnectConfigWidget::getSerialPortManager()->sigDisplayTimestamp(checked);
     });
 }

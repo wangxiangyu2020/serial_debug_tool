@@ -39,6 +39,7 @@ public:
     void setHexSendStatus(bool status);
     void setHexDisplayStatus(bool status);
     void setSendStringDisplayStatus(bool status);
+    void setTimestampStatus(bool status);
     bool openSerialPort(const QMap<QString, QVariant>& serialParams);
     bool closeSerialPort();
     void handleWriteData(const QByteArray& writeByteArray);
@@ -63,6 +64,7 @@ signals:
     void sigSendStringDisplay(bool isDisplay);
     void sigSendData2Receive(const QByteArray& data);
     void sigTimedSend(bool isTimed, double interval);
+    void sigDisplayTimestamp(bool isDisplay);
 
 private:
     QSerialPort* m_pSerialPort = nullptr;
@@ -70,6 +72,7 @@ private:
     std::atomic_bool m_isHexDisplay{false}; // 原子标志
     bool m_isHexSend = false;
     bool m_isSendStringDisplay = false;
+    bool m_isDisplayTimestamp = false;
 };
 
 #endif //SERIALPORTMANAGER_H
