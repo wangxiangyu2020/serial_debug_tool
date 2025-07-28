@@ -19,6 +19,5 @@ WaveformTab::WaveformTab(QWidget* parent)
 void WaveformTab::setUI()
 {
     this->setAttribute(Qt::WA_StyledBackground);
-    // 设置背景颜色为红色
-    this->setStyleSheet("background-color: red;");
+    this->setStyleSheet("background-color: white;");
 }

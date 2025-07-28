@@ -14,6 +14,9 @@ file(COPY "D:/software/Qt/6.5.3/msvc2019_64/translations" DESTINATION ${CMAKE_BI
 #file(COPY "D:/Software/Qt/6.5.3/msvc2019_64/resources" DESTINATION ${CMAKE_BINARY_DIR})
 #file(COPY "D:/Software/Qt/6.5.3/msvc2019_64/translations" DESTINATION ${CMAKE_BINARY_DIR})
 
+set(PUBLISH_BIN_RELEASE ${CMAKE_CURRENT_SOURCE_DIR}/Release)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${PUBLISH_BIN_RELEASE})
+
 file(GLOB UI_HEADERS "include/ui/*.h")  # 收集ui所有.h文件
 file(GLOB CORE_HEADERS "include/core/*.h")  # 收集core所有.h文件
 file(GLOB UTILS_HEADERS "include/utils/*.h")  # 收集utils所有.h文件
@@ -58,6 +61,7 @@ qt_add_resources(${PROJECT_NAME} "resources"
         resources/icons/checkmark_blue.svg
         resources/icons/send.svg
         resources/icons/ikun.ico
+        resources/icons/un_dev.svg
         resources/qss/main_window.qss
         resources/qss/tab_bar.qss
         resources/qss/title_bar.qss
@@ -81,6 +85,11 @@ target_link_libraries(${PROJECT_NAME}
         Qt::Concurrent
 )
 
+# 设置最终生成的可执行文件名
+set_target_properties(${PROJECT_NAME} PROPERTIES
+        OUTPUT_NAME "IKUN"  # 指定输出文件名（不带扩展名）
+        WIN32_EXECUTABLE ON
+)
 
 # 添加 Windows 部署规则
 if (WIN32)
