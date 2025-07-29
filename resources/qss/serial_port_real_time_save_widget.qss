@@ -84,7 +84,7 @@ QPlainTextEdit QScrollBar::add-line:vertical:hover::before {
 
 /* 浅蓝色进度条样式 */
 #movingIconProgressBar {
-    background-color: #E6F7FF;
+    background-color: #f8f9fa;
     border: 1px solid #ced4da;  /* 与参考样式输入框边框一致 */
     border-radius: 8px;         /* 与参考样式相同圆角大小 */
     height: 20px;               /* 设置固定高度 */
@@ -92,24 +92,15 @@ QPlainTextEdit QScrollBar::add-line:vertical:hover::before {
 
 #movingIconProgressBar::chunk {
     /* 使用彩虹色渐变 */
-    background: qlineargradient(
-        x1: 0, y1: 0, x2: 1, y2: 0,
-        stop: 0 red,
-        stop: 0.17 orange,
-        stop: 0.33 yellow,
-        stop: 0.5 green,
-        stop: 0.67 blue,
-        stop: 0.83 indigo,
-        stop: 1 violet
-    );
+    background: #f8f9fa;
     border-radius: 6px;         /* 修改为较小的圆角值，与容器保持一致 */
-    border: 1px solid #40A9FF;
+    border: 1px solid #f8f9fa;
 }
 
 
 /* 进度条容器 */
 #progressContainer {
-    background-color: #F5F5F5;
+    background-color: #f8f9fa;
     border: 1px solid #ced4da;  /* 与参考样式输入框边框一致 */
     border-radius: 8px;         /* 与参考样式相同圆角大小 */
     min-height: 20px;           /* 设置最小高度 */
