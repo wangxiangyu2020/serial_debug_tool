@@ -20,6 +20,9 @@
 #include <QScrollBar>
 #include "utils/ThreadPoolManager.h"
 #include "core/SerialPortManager.h"
+#include "ui/SerialPortConnectConfigWidget.h"
+#include <QFileDialog>
+#include <QTextBlock>
 
 
 class SerialPortDataReceiveWidget : public QWidget
@@ -31,6 +34,7 @@ public:
     ~SerialPortDataReceiveWidget() = default;
 
     static SerialPortDataReceiveWidget* getSerialPortDataReceiveWidget();
+    static QPlainTextEdit* getReceiveTextEdit();
 
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
@@ -46,6 +50,7 @@ private slots:
 
 signals:
     void sigClearReceiveData();
+    void sigSaveToFile();
 
 private:
     QVBoxLayout* m_pMainLayout = nullptr;

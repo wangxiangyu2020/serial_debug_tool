@@ -9,10 +9,9 @@
   */
 
 #include "ui/SerialPortDataReceiveWidget.h"
-#include "ui/SerialPortConnectConfigWidget.h"
-#include <QTextBlock>
 
 static SerialPortDataReceiveWidget* pSerialPortDataReceiveWidget = nullptr;
+static QPlainTextEdit* pReceiveTextEdit = nullptr;
 
 SerialPortDataReceiveWidget::SerialPortDataReceiveWidget(QWidget* parent)
     : QWidget(parent), m_pSerialPortManager(new SerialPortManager(this))
@@ -24,6 +23,11 @@ SerialPortDataReceiveWidget::SerialPortDataReceiveWidget(QWidget* parent)
 SerialPortDataReceiveWidget* SerialPortDataReceiveWidget::getSerialPortDataReceiveWidget()
 {
     return pSerialPortDataReceiveWidget;
+}
+
+QPlainTextEdit* SerialPortDataReceiveWidget::getReceiveTextEdit()
+{
+    return pReceiveTextEdit;
 }
 
 bool SerialPortDataReceiveWidget::eventFilter(QObject* watched, QEvent* event)
@@ -71,6 +75,7 @@ void SerialPortDataReceiveWidget::createComponents()
     m_pReceiveTextEdit->setReadOnly(true); // 设置为只读
     m_pReceiveTextEdit->setUndoRedoEnabled(false); // 禁用撤销/重做
     m_pReceiveTextEdit->setLineWrapMode(QPlainTextEdit::WidgetWidth); // 设置自动换行模式为按窗口宽度换行
+    pReceiveTextEdit = m_pReceiveTextEdit;
     // 使用等宽字体
     QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     fixedFont.setPointSize(10);
@@ -97,8 +102,8 @@ void SerialPortDataReceiveWidget::connectSignals()
     {
         m_pReceiveTextEdit->clear();
     });
-    this->connect(SerialPortConnectConfigWidget::getSerialPortManager(), &SerialPortManager::sigSendData2Receive, [this
-                  ](const QByteArray& data)
+    this->connect(SerialPortConnectConfigWidget::getSerialPortManager(), &SerialPortManager::sigSendData2Receive,
+                  [this](const QByteArray& data)
                   {
                       this->displayReceiveData(data);
                       // 获取最后一行（刚刚添加的数据行）
@@ -122,6 +127,21 @@ void SerialPortDataReceiveWidget::connectSignals()
                           nextBlock = nextBlock.next();
                       }
                   });
+    this->connect(this, &SerialPortDataReceiveWidget::sigSaveToFile, [this]()
+    {
+        QString fileName = QFileDialog::getSaveFileName(this,
+                                                        "保存数据",
+                                                        QDir::homePath(),
+                                                        "文本文件 (*.txt)"
+        );
+        if (fileName.isEmpty()) return;
+        QFile file(fileName);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return;
+        QTextStream out(&file);
+        out << getReceiveTextEdit()->toPlainText();
+        file.close();
+        CMessageBox::showToast(this, "数据已保存至" + fileName);
+    });
 }
 
 void SerialPortDataReceiveWidget::displayReceiveData(const QByteArray& data)

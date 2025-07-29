@@ -35,6 +35,7 @@ public:
 
     void showToast();
     static void showToast(const QString& message);
+    static void showToast(QWidget* parent, const QString& message);
 
 protected:
     void paintEvent(QPaintEvent* event) override;

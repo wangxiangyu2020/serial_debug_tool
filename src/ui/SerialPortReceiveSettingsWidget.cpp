@@ -75,12 +75,16 @@ void SerialPortReceiveSettingsWidget::connectSignals()
     {
         emit SerialPortDataReceiveWidget::getSerialPortDataReceiveWidget()->sigClearReceiveData();
     });
+    this->connect(m_pSaveDataButton, &QPushButton::clicked, [this]()
+    {
+        emit SerialPortDataReceiveWidget::getSerialPortDataReceiveWidget()->sigSaveToFile();
+    });
     this->connect(m_pHexDisplayCheckBox, &QCheckBox::toggled, [this](bool checked)
     {
-        SerialPortConnectConfigWidget::getSerialPortManager()->sigHexDisplay(checked);
+        emit SerialPortConnectConfigWidget::getSerialPortManager()->sigHexDisplay(checked);
     });
     this->connect(m_pDisplayTimestampCheckBox, &QCheckBox::toggled, [this](bool checked)
     {
-        SerialPortConnectConfigWidget::getSerialPortManager()->sigDisplayTimestamp(checked);
+        emit SerialPortConnectConfigWidget::getSerialPortManager()->sigDisplayTimestamp(checked);
     });
 }

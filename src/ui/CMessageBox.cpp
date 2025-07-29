@@ -72,56 +72,70 @@ void CMessageBox::showToast()
 {
     show();
 
-    // 获取应用程序的主窗口
-    QWidget* mainWindow = nullptr;
+    // 优先使用父窗口计算位置
+    QWidget* parent = parentWidget();
+    QWidget* mainWindow = parent ? parent->window() : nullptr;
 
-    // 方式1: 通过应用程序的activeWindow获取
-    mainWindow = QApplication::activeWindow();
-
-    // 方式2: 如果activeWindow不可用，则遍历所有顶层窗口
+    // 如果父窗口无效，尝试其他方法查找主窗口
     if (!mainWindow)
     {
-        const auto topLevelWidgets = QApplication::topLevelWidgets();
-        for (QWidget* widget : topLevelWidgets)
+        // 方式1: 通过应用程序的activeWindow获取
+        mainWindow = QApplication::activeWindow();
+
+        // 方式2: 如果activeWindow不可用，则遍历所有顶层窗口
+        if (!mainWindow)
         {
-            if (widget->isWindow() && widget->objectName() == "MainWindow")
+            const auto topLevelWidgets = QApplication::topLevelWidgets();
+            for (QWidget* widget : topLevelWidgets)
             {
-                mainWindow = widget;
-                break;
+                if (widget->isWindow() && widget->isActiveWindow())
+                {
+                    mainWindow = widget;
+                    break;
+                }
             }
+        }
+
+        // 方式3: 如果仍然找不到，使用第一个顶层窗口
+        if (!mainWindow && !QApplication::topLevelWidgets().isEmpty())
+        {
+            mainWindow = QApplication::topLevelWidgets().first();
         }
     }
 
-    // 方式3: 如果仍然找不到，使用第一个顶层窗口
-    if (!mainWindow && !QApplication::topLevelWidgets().isEmpty())
-    {
-        mainWindow = QApplication::topLevelWidgets().first();
-    }
-
-    // 居中显示在主窗口上
+    // 居中显示
     if (mainWindow)
     {
+        // 使用更精确的窗口区域计算
         QRect mainRect = mainWindow->frameGeometry();
-        int x = mainRect.left() + (mainRect.width() - width()) / 2;
-        int y = mainRect.top() + (mainRect.height() - height()) / 2;
+        int x = mainRect.x() + (mainRect.width() - width()) / 2;
+        int y = mainRect.y() + (mainRect.height() - height()) / 2;
         move(x, y);
     }
-    // 如果没有主窗口，居中显示在屏幕上
     else
     {
-        QRect screenGeometry = QApplication::primaryScreen()->geometry();
+        // 屏幕居中（支持多显示器）
+        QScreen* screen = QGuiApplication::screenAt(QCursor::pos());
+        if (!screen) screen = QApplication::primaryScreen();
+        QRect screenGeometry = screen->geometry();
         int x = (screenGeometry.width() - width()) / 2;
         int y = (screenGeometry.height() - height()) / 2;
         move(x, y);
     }
 
-    // 启动定时器
     m_pTimer->start();
 }
 
 void CMessageBox::showToast(const QString& message)
 {
     CMessageBox* toast = new CMessageBox(nullptr, message, 1500); // 显示1.5秒
+    toast->showToast();
+    toast->setAttribute(Qt::WA_DeleteOnClose); // 自动删除
+}
+
+void CMessageBox::showToast(QWidget* parent, const QString& message)
+{
+    CMessageBox* toast = new CMessageBox(parent, message, 1500); // 显示1.5秒
     toast->showToast();
     toast->setAttribute(Qt::WA_DeleteOnClose); // 自动删除
 }

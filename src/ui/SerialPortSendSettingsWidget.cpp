@@ -87,11 +87,11 @@ void SerialPortSendSettingsWidget::connectSignals()
 {
     this->connect(m_pHexSendCheckBox, &QCheckBox::toggled, [this](bool checked)
     {
-        SerialPortConnectConfigWidget::getSerialPortManager()->sigHexSend(checked);
+        emit SerialPortConnectConfigWidget::getSerialPortManager()->sigHexSend(checked);
     });
     this->connect(m_pShowSendStringCheckBox, &QCheckBox::toggled, [this](bool checked)
     {
-        SerialPortConnectConfigWidget::getSerialPortManager()->sigSendStringDisplay(checked);
+        emit SerialPortConnectConfigWidget::getSerialPortManager()->sigSendStringDisplay(checked);
     });
     this->connect(m_pTimedSendCheckBox, &QCheckBox::toggled, [this](bool checked)
     {
@@ -103,6 +103,6 @@ void SerialPortSendSettingsWidget::connectSignals()
         }
         this->m_pIntervalEdit->setEnabled(!checked);
         double timers = this->m_pIntervalEdit->text().toDouble();
-        SerialPortConnectConfigWidget::getSerialPortManager()->sigTimedSend(checked, timers);
+        emit SerialPortConnectConfigWidget::getSerialPortManager()->sigTimedSend(checked, timers);
     });
 }
