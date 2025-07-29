@@ -44,6 +44,7 @@ void SerialPortConfigTab::setUI()
     m_pContentLayout->setContentsMargins(0, 0, 2, 0);
 
     m_pSerialPortRealTimeSaveWidget = new SerialPortRealTimeSaveWidget(settingsPanel);
+    m_pSerialPortRealTimeSaveWidget->hide();
     m_pSerialPortDataReceiveWidget = new SerialPortDataReceiveWidget(contentPanel);
     m_pSerialPortDataSendWidget = new SerialPortDataSendWidget(contentPanel);
     // 设置发送容器固定高度（重要！）
@@ -51,8 +52,8 @@ void SerialPortConfigTab::setUI()
     m_pContentLayout->addWidget(m_pSerialPortDataReceiveWidget);
     m_pContentLayout->addWidget(m_pSerialPortDataSendWidget);
     // 添加到布局并设置伸缩比例
-    m_pContentLayout->addWidget(m_pSerialPortRealTimeSaveWidget, 1);
-    m_pContentLayout->addWidget(m_pSerialPortDataReceiveWidget, 8); // 1: 可伸缩区域
+    m_pContentLayout->addWidget(m_pSerialPortRealTimeSaveWidget, 0);
+    m_pContentLayout->addWidget(m_pSerialPortDataReceiveWidget, 9); // 1: 可伸缩区域
     m_pContentLayout->addWidget(m_pSerialPortDataSendWidget, 1); // 0: 固定高度区域
 
     // ==== 主水平布局 ====
