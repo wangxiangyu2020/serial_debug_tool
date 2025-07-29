@@ -62,6 +62,7 @@ qt_add_resources(${PROJECT_NAME} "resources"
         resources/icons/send.svg
         resources/icons/ikun.ico
         resources/icons/un_dev.svg
+        resources/icons/ikun.svg
         resources/qss/main_window.qss
         resources/qss/tab_bar.qss
         resources/qss/title_bar.qss
@@ -71,6 +72,7 @@ qt_add_resources(${PROJECT_NAME} "resources"
         resources/qss/serial_port_send_settings_widget.qss
         resources/qss/serial_port_data_receive_widget.qss
         resources/qss/serial_port_data_send_widget.qss
+        resources/qss/serial_port_real_time_save_widget.qss
         #        resources/web/echarts.min.js
         #        resources/web/wave.html
 )

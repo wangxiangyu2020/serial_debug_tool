@@ -132,8 +132,7 @@ void SerialPortDataReceiveWidget::connectSignals()
         QString fileName = QFileDialog::getSaveFileName(this,
                                                         "保存数据",
                                                         QDir::homePath(),
-                                                        "文本文件 (*.txt)"
-        );
+                                                        "文本文件 (*.txt)");
         if (fileName.isEmpty()) return;
         QFile file(fileName);
         if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return;

@@ -21,6 +21,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include "utils/StyleLoader.h"
+#include "ui/SerialPortRealTimeSaveWidget.h"
 
 class SerialPortConfigTab : public QWidget
 {
@@ -42,6 +43,7 @@ private:
     SerialPortSendSettingsWidget* m_pSerialPortSendSettingsWidget = nullptr;
     SerialPortDataReceiveWidget* m_pSerialPortDataReceiveWidget = nullptr;
     SerialPortDataSendWidget* m_pSerialPortDataSendWidget = nullptr;
+    SerialPortRealTimeSaveWidget* m_pSerialPortRealTimeSaveWidget = nullptr;
 };
 
 #endif //SERIALPORTCONFIG_H

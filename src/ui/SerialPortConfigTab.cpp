@@ -43,20 +43,22 @@ void SerialPortConfigTab::setUI()
     m_pContentLayout->setSpacing(2);
     m_pContentLayout->setContentsMargins(0, 0, 2, 0);
 
+    m_pSerialPortRealTimeSaveWidget = new SerialPortRealTimeSaveWidget(settingsPanel);
     m_pSerialPortDataReceiveWidget = new SerialPortDataReceiveWidget(contentPanel);
     m_pSerialPortDataSendWidget = new SerialPortDataSendWidget(contentPanel);
     // 设置发送容器固定高度（重要！）
-    m_pSerialPortDataSendWidget->setMinimumHeight(100);  // 最小高度保证可见
+    m_pSerialPortDataSendWidget->setMinimumHeight(100); // 最小高度保证可见
     m_pContentLayout->addWidget(m_pSerialPortDataReceiveWidget);
     m_pContentLayout->addWidget(m_pSerialPortDataSendWidget);
     // 添加到布局并设置伸缩比例
-    m_pContentLayout->addWidget(m_pSerialPortDataReceiveWidget, 9);  // 1: 可伸缩区域
-    m_pContentLayout->addWidget(m_pSerialPortDataSendWidget, 1);  // 0: 固定高度区域
+    m_pContentLayout->addWidget(m_pSerialPortRealTimeSaveWidget, 1);
+    m_pContentLayout->addWidget(m_pSerialPortDataReceiveWidget, 8); // 1: 可伸缩区域
+    m_pContentLayout->addWidget(m_pSerialPortDataSendWidget, 1); // 0: 固定高度区域
 
     // ==== 主水平布局 ====
     m_pMainLayout = new QHBoxLayout(this); // 关键：设置this的顶层布局
     m_pMainLayout->setContentsMargins(0, 1, 0, 1); // 移除窗口边距
     m_pMainLayout->setSpacing(2);
-    m_pMainLayout->addWidget(settingsPanel, 1);    // 左侧占1份空间
-    m_pMainLayout->addWidget(contentPanel, 3);     // 右侧占3份空间（比例可调）
+    m_pMainLayout->addWidget(settingsPanel, 1); // 左侧占1份空间
+    m_pMainLayout->addWidget(contentPanel, 3); // 右侧占3份空间（比例可调）
 }

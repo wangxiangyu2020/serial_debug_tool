@@ -1,0 +1,116 @@
+/* styles/serial_port_real_time_save_widget.qss */
+SerialPortRealTimeSaveWidget {
+    background-color: #f8f9fa;  /* 与参考样式完全一致 */
+    border-radius: 8px;        /* 与参考样式相同圆角大小 */
+    border: 1px solid #dee2e6; /* 与参考样式相同边框 */
+    padding: 8px 12px 8px 12px; /* 与参考样式相同内边距 */
+    font-family: 'Segoe UI', 'Microsoft YaHei UI', sans-serif;
+}
+
+/* 文本编辑框样式 */
+QPlainTextEdit {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;  /* 与参考样式输入框边框一致 */
+    border-radius: 8px;         /* 与参考样式相同圆角大小 */
+    padding: 5px;
+    font-size: 15px;            /* 与参考样式输入框字体大小一致 */
+    font-weight: bold;    /* 添加字体加粗 */
+    color: #495057;             /* 与参考样式文本颜色一致 */
+    selection-background-color: #d1e7ff;
+    selection-color: #000000;
+}
+
+/* 文本框滚动条样式 */
+QPlainTextEdit QScrollBar:vertical {
+    background-color: #f8f9fa;
+    width: 16px;
+    border-radius: 4px;
+    margin: 0px;
+}
+
+QPlainTextEdit QScrollBar::handle:vertical {
+    background-color: #adb5bd;
+    border-radius: 4px;
+    min-height: 20px;
+}
+
+QPlainTextEdit QScrollBar::handle:vertical:hover {
+    background-color: #868e96;
+}
+
+QPlainTextEdit QScrollBar::sub-line:vertical,
+QPlainTextEdit QScrollBar::add-line:vertical {
+    height: 16px;
+    width: 16px;
+    background-color: #E6F7FF;  /* 改为浅蓝色背景 */
+    border-radius: 2px;
+    subcontrol-origin: margin;
+    subcontrol-position: top center;
+}
+
+QPlainTextEdit QScrollBar::add-line:vertical {
+    subcontrol-position: bottom center;
+}
+
+QPlainTextEdit QScrollBar::sub-line:vertical::before {
+    content: "▲";
+    color: #1890FF;             /* 改为蓝色箭头 */
+    font-size: 10px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+QPlainTextEdit QScrollBar::add-line:vertical::before {
+    content: "▼";
+    color: #1890FF;             /* 改为蓝色箭头 */
+    font-size: 10px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+QPlainTextEdit QScrollBar::sub-line:vertical:hover,
+QPlainTextEdit QScrollBar::add-line:vertical:hover {
+    background-color: #d1e7ff;  /* 悬停时加深颜色 */
+}
+
+QPlainTextEdit QScrollBar::sub-line:vertical:hover::before,
+QPlainTextEdit QScrollBar::add-line:vertical:hover::before {
+    color: #096DD9;             /* 悬停时加深箭头颜色 */
+}
+
+/* 浅蓝色进度条样式 */
+#movingIconProgressBar {
+    background-color: #E6F7FF;
+    border: 1px solid #ced4da;  /* 与参考样式输入框边框一致 */
+    border-radius: 8px;         /* 与参考样式相同圆角大小 */
+    height: 20px;               /* 设置固定高度 */
+}
+
+#movingIconProgressBar::chunk {
+    /* 使用彩虹色渐变 */
+    background: qlineargradient(
+        x1: 0, y1: 0, x2: 1, y2: 0,
+        stop: 0 red,
+        stop: 0.17 orange,
+        stop: 0.33 yellow,
+        stop: 0.5 green,
+        stop: 0.67 blue,
+        stop: 0.83 indigo,
+        stop: 1 violet
+    );
+    border-radius: 6px;         /* 修改为较小的圆角值，与容器保持一致 */
+    border: 1px solid #40A9FF;
+}
+
+
+/* 进度条容器 */
+#progressContainer {
+    background-color: #F5F5F5;
+    border: 1px solid #ced4da;  /* 与参考样式输入框边框一致 */
+    border-radius: 8px;         /* 与参考样式相同圆角大小 */
+    min-height: 20px;           /* 设置最小高度 */
+}
