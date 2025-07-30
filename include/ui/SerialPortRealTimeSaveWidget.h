@@ -31,15 +31,13 @@ public:
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
 
-private slots:
-    void moveIcon();
-
 private:
     void setUI();
     void createComponents();
     void createLayout();
-    void setupProgressBar();
-    void setupIcon();
+
+private slots:
+    void moveIcon();
 
 private:
     QVBoxLayout* m_pMainLayout = nullptr;
@@ -52,7 +50,7 @@ private:
     QTimer* m_pTimer;
     int currentPosition;
     bool movingRight;
-    const int iconSize = 25;
+    const int iconSize = 20;
     const int moveStep = 5;
 };
 

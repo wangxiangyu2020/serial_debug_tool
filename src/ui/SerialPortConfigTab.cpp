@@ -44,7 +44,7 @@ void SerialPortConfigTab::setUI()
     m_pContentLayout->setContentsMargins(0, 0, 2, 0);
 
     m_pSerialPortRealTimeSaveWidget = new SerialPortRealTimeSaveWidget(settingsPanel);
-    m_pSerialPortRealTimeSaveWidget->hide();
+    // m_pSerialPortRealTimeSaveWidget->hide();
     m_pSerialPortDataReceiveWidget = new SerialPortDataReceiveWidget(contentPanel);
     m_pSerialPortDataSendWidget = new SerialPortDataSendWidget(contentPanel);
     // 设置发送容器固定高度（重要！）
