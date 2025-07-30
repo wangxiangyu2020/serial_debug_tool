@@ -35,9 +35,13 @@ private:
     void setUI();
     void createComponents();
     void createLayout();
+    void connectSignals();
 
 private slots:
     void moveIcon();
+
+signals:
+    void sigDisplaySavePath(const QString& path);
 
 private:
     QVBoxLayout* m_pMainLayout = nullptr;

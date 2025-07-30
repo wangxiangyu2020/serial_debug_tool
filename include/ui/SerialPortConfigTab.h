@@ -22,6 +22,7 @@
 #include <QHBoxLayout>
 #include "utils/StyleLoader.h"
 #include "ui/SerialPortRealTimeSaveWidget.h"
+#include <QFileDialog>
 
 class SerialPortConfigTab : public QWidget
 {
@@ -33,17 +34,24 @@ public:
 
 private:
     void setUI();
+    void createComponents();
+    void createLayout();
+    void connectSignals();
+    void readySaveFile(bool status);
 
 private:
     QHBoxLayout* m_pMainLayout = nullptr;
     QVBoxLayout* m_pSettingsLayout = nullptr;
     QVBoxLayout* m_pContentLayout = nullptr;
+    QWidget* m_pSettingsPanel = nullptr;
+    QWidget* m_pContentPanel = nullptr;
     SerialPortConnectConfigWidget* m_pSerialPortConfigWidget = nullptr;
     SerialPortReceiveSettingsWidget* m_pSerialPortReceiveSettingsWidget = nullptr;
     SerialPortSendSettingsWidget* m_pSerialPortSendSettingsWidget = nullptr;
     SerialPortDataReceiveWidget* m_pSerialPortDataReceiveWidget = nullptr;
     SerialPortDataSendWidget* m_pSerialPortDataSendWidget = nullptr;
     SerialPortRealTimeSaveWidget* m_pSerialPortRealTimeSaveWidget = nullptr;
+    QFile* m_pSaveFile = nullptr;
 };
 
 #endif //SERIALPORTCONFIG_H

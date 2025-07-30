@@ -9,11 +9,17 @@
   */
 #include "ui/SerialPortReceiveSettingsWidget.h"
 
+
 SerialPortReceiveSettingsWidget::SerialPortReceiveSettingsWidget(QWidget* parent)
     : QWidget(parent)
 {
     this->setUI();
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/serial_port_receive_settings_widget.qss");
+}
+
+QCheckBox* SerialPortReceiveSettingsWidget::getSaveToFileCheckBox()
+{
+    return m_pSaveToFileCheckBox;
 }
 
 void SerialPortReceiveSettingsWidget::setUI()
@@ -32,7 +38,7 @@ void SerialPortReceiveSettingsWidget::createComponents()
     m_pTitleLabel->setContentsMargins(4, 5, 0, 0); // 移除内部边距
     m_pTitleLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     // 复选框 - 紧凑模式
-    m_pSaveToFileCheckBox = new QCheckBox("保存数据到文件", this);
+    m_pSaveToFileCheckBox = new QCheckBox("读取数据至文件", this);
     m_pSaveToFileCheckBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     m_pDisplayTimestampCheckBox = new QCheckBox("显示时间戳", this);
     m_pDisplayTimestampCheckBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
@@ -86,5 +92,9 @@ void SerialPortReceiveSettingsWidget::connectSignals()
     this->connect(m_pDisplayTimestampCheckBox, &QCheckBox::toggled, [this](bool checked)
     {
         emit SerialPortConnectConfigWidget::getSerialPortManager()->sigDisplayTimestamp(checked);
+    });
+    this->connect(m_pSaveToFileCheckBox, &QCheckBox::toggled, [this](bool checked)
+    {
+        emit sigSaveToFile(checked);
     });
 }

@@ -30,11 +30,16 @@ public:
     explicit SerialPortReceiveSettingsWidget(QWidget* parent = nullptr);
     ~SerialPortReceiveSettingsWidget() = default;
 
+    QCheckBox* getSaveToFileCheckBox();
+
 private:
     void setUI();
     void createComponents();
     void createLayout();
     void connectSignals();
+
+signals:
+    void sigSaveToFile(bool status);
 
 private:
     // 组件

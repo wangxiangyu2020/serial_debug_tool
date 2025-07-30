@@ -22,6 +22,7 @@ void SerialPortRealTimeSaveWidget::setUI()
     this->setAttribute(Qt::WA_StyledBackground);
     this->createComponents();
     this->createLayout();
+    this->connectSignals();
 }
 
 bool SerialPortRealTimeSaveWidget::eventFilter(QObject* watched, QEvent* event)
@@ -68,8 +69,6 @@ void SerialPortRealTimeSaveWidget::createComponents()
     // 关键修改：使用任意位置换行而不是在单词边界换行
     m_pSavePathDisplayTextEdit->setLineWrapMode(QPlainTextEdit::WidgetWidth);
     m_pSavePathDisplayTextEdit->setWordWrapMode(QTextOption::WrapAnywhere);
-    m_pSavePathDisplayTextEdit->setPlainText(
-        "保存至->C:\\Users\\19877\\Desktop\\Serial Debug 2025-07-29 141203.txt");
     QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     fixedFont.setPointSize(10);
     m_pSavePathDisplayTextEdit->setFont(fixedFont);
@@ -116,6 +115,14 @@ void SerialPortRealTimeSaveWidget::createLayout()
     m_pMainLayout->setContentsMargins(0, 0, 0, 0);
     m_pMainLayout->setSpacing(0);
     m_pMainLayout->addWidget(m_pPanel);
+}
+
+void SerialPortRealTimeSaveWidget::connectSignals()
+{
+    this->connect(this, &SerialPortRealTimeSaveWidget::sigDisplaySavePath, [this](const QString& path)
+    {
+        m_pSavePathDisplayTextEdit->setPlainText(path);
+    });
 }
 
 void SerialPortRealTimeSaveWidget::moveIcon()
