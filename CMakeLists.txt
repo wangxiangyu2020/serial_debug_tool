@@ -36,6 +36,7 @@ find_package(Qt6 COMPONENTS
         SvgWidgets
         SerialPort
         Concurrent
+        WebEngineWidgets
         REQUIRED)
 
 add_executable(${PROJECT_NAME}
@@ -73,8 +74,9 @@ qt_add_resources(${PROJECT_NAME} "resources"
         resources/qss/serial_port_data_receive_widget.qss
         resources/qss/serial_port_data_send_widget.qss
         resources/qss/serial_port_real_time_save_widget.qss
-        #        resources/web/echarts.min.js
-        #        resources/web/wave.html
+        resources/qss/wave_form_tab.qss
+        resources/web/echarts.min.js
+        resources/web/wave.html
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -85,12 +87,13 @@ target_link_libraries(${PROJECT_NAME}
         Qt::SvgWidgets
         Qt::SerialPort
         Qt::Concurrent
+        Qt::WebEngineWidgets
 )
 
 # 设置最终生成的可执行文件名
 set_target_properties(${PROJECT_NAME} PROPERTIES
         OUTPUT_NAME "IKUN"  # 指定输出文件名（不带扩展名）
-        WIN32_EXECUTABLE ON
+#        WIN32_EXECUTABLE ON
 )
 
 # 添加 Windows 部署规则
@@ -103,33 +106,50 @@ if (WIN32)
     set(QT_INSTALL_PATH "${CMAKE_PREFIX_PATH}")
 
     # 部署核心 DLL
-    foreach (QT_LIB Core Gui Widgets Svg)
+    foreach (QT_LIB Core Gui Widgets Svg SvgWidgets SerialPort Concurrent WebEngineWidgets WebEngineCore)
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 "${QT_INSTALL_PATH}/bin/Qt6${QT_LIB}${DEBUG_SUFFIX}.dll"
                 "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
         )
     endforeach ()
 
-    # 部署 SVG 插件 (关键!)
-    set(PLUGINS_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins")
+    # 部署 WebEngine 进程文件 (关键!)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E make_directory "${PLUGINS_DIR}/imageformats"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${QT_INSTALL_PATH}/bin/QtWebEngineProcess${DEBUG_SUFFIX}.exe"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
     )
 
+    # 部署 WebEngine 资源
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${QT_INSTALL_PATH}/resources"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/resources"
+    )
+
+    # 部署 WebEngine 翻译文件
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${QT_INSTALL_PATH}/translations"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/translations"
+    )
+
+    # 部署插件
+    set(PLUGINS_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins")
+
+    # SVG 插件
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${PLUGINS_DIR}/imageformats"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${QT_INSTALL_PATH}/plugins/imageformats/qsvg${DEBUG_SUFFIX}.dll"
             "${PLUGINS_DIR}/imageformats/"
     )
 
-    # 部署平台插件
+    # 平台插件
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E make_directory "${PLUGINS_DIR}/platforms"
-    )
-
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${QT_INSTALL_PATH}/plugins/platforms/qwindows${DEBUG_SUFFIX}.dll"
             "${PLUGINS_DIR}/platforms/"
     )

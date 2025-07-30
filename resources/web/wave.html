@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script src="qrc:/resources/web/echarts.min.js"></script>
+</head>
+<body>
+<div id="chart" style="width: 100%; height: 100vh;"></div>
+<script>
+    console.log('开始初始化ECharts...');
+    
+    var myChart = echarts.init(document.getElementById('chart'));
+    var chartData = {}; // 存储所有通道数据
+    
+    // 默认配置
+    var option = {
+        title: { 
+            text: '串口数据波形',
+            left: 'center'
+        },
+        tooltip: { 
+            trigger: 'axis',
+            formatter: function(params) {
+                var result = '时间: ' + params[0].data[0] + 'ms<br/>';
+                params.forEach(function(item) {
+                    result += item.seriesName + ': ' + item.data[1].toFixed(2) + '<br/>';
+                });
+                return result;
+            }
+        },
+        legend: { 
+            data: [],
+            top: 30
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '10%',
+            top: '15%',
+            containLabel: true
+        },
+        toolbox: {
+            feature: {
+                saveAsImage: {},
+                dataZoom: { yAxisIndex: 'none' },
+                restore: {},
+                magicType: { type: ['line', 'bar'] }
+            }
+        },
+        xAxis: { 
+            type: 'value', 
+            name: '时间(ms)',
+            nameLocation: 'middle',
+            nameGap: 30
+        },
+        yAxis: { 
+            type: 'value', 
+            name: '数值',
+            nameLocation: 'middle',
+            nameGap: 50
+        },
+        dataZoom: [
+            {
+                type: 'inside',
+                xAxisIndex: [0],
+                start: 0,
+                end: 100,
+                zoomOnMouseWheel: true,
+                moveOnMouseMove: true
+            },
+            {
+                show: true,
+                xAxisIndex: [0],
+                type: 'slider',
+                top: '90%',
+                start: 0,
+                end: 100
+            }
+        ],
+        series: []
+    };
+
+    myChart.setOption(option);
+    console.log('ECharts初始化完成');
+
+    // 窗口大小调整
+    window.addEventListener('resize', function() {
+        myChart.resize();
+    });
+
+    // Qt调用的接口 - 添加新的数据系列
+    function addSeries(name, color) {
+        console.log('添加系列:', name, color);
+        
+        if (!chartData[name]) {
+            chartData[name] = [];
+        }
+        
+        var currentOption = myChart.getOption();
+        
+        // 检查是否已存在该系列
+        var seriesExists = currentOption.series.some(function(series) {
+            return series.name === name;
+        });
+        
+        if (!seriesExists) {
+            currentOption.legend[0].data.push(name);
+            currentOption.series.push({
+                name: name,
+                type: 'line',
+                data: [],
+                lineStyle: { color: color, width: 2 },
+                symbol: 'circle',
+                symbolSize: 4,
+                smooth: true,
+                animation: false
+            });
+            myChart.setOption(currentOption);
+            console.log('系列添加成功:', name);
+        }
+    }
+
+    // 设置指定系列的完整数据
+    function setSeriesData(seriesName, data) {
+        console.log('setSeriesData 被调用:', seriesName, '数据类型:', typeof data, '数据长度:', data.length);
+        console.log('前3个数据点:', data.slice(0, 3));
+        
+        chartData[seriesName] = data;
+        
+        var currentOption = myChart.getOption();
+        
+        // 更新指定系列的数据
+        var updated = false;
+        currentOption.series.forEach(function(series) {
+            if (series.name === seriesName) {
+                series.data = data;
+                updated = true;
+                console.log('更新系列数据:', seriesName, '数据点数:', data.length);
+            }
+        });
+        
+        if (!updated) {
+            console.error('未找到系列:', seriesName);
+            console.log('当前系列列表:', currentOption.series.map(s => s.name));
+        }
+        
+        myChart.setOption(currentOption, false, false);
+        console.log('图表更新完成，当前系列数:', currentOption.series.length);
+    }
+
+    // 添加数据点到指定系列
+    function addDataPoint(seriesName, timestamp, value) {
+        if (!chartData[seriesName]) {
+            chartData[seriesName] = [];
+        }
+        chartData[seriesName].push([timestamp, value]);
+        updateChart();
+    }
+
+    // 批量添加多个数据点
+    function addDataPoints(seriesName, points) {
+        if (!chartData[seriesName]) {
+            chartData[seriesName] = [];
+        }
+        chartData[seriesName] = chartData[seriesName].concat(points);
+        updateChart();
+    }
+
+    // 更新图表显示
+    function updateChart() {
+        var currentOption = myChart.getOption();
+        
+        // 更新每个系列的数据
+        currentOption.series.forEach(function(series) {
+            if (chartData[series.name]) {
+                series.data = chartData[series.name];
+            }
+        });
+        
+        myChart.setOption(currentOption, false, false);
+    }
+
+    // 清除所有数据
+    function clearAllData() {
+        chartData = {};
+        var currentOption = myChart.getOption();
+        currentOption.series.forEach(function(series) {
+            series.data = [];
+        });
+        myChart.setOption(currentOption, false, false);
+    }
+
+    // 清除指定系列数据
+    function clearSeriesData(seriesName) {
+        if (chartData[seriesName]) {
+            chartData[seriesName] = [];
+        }
+        updateChart();
+    }
+
+    // 移除系列
+    function removeSeries(seriesName) {
+        delete chartData[seriesName];
+        
+        var currentOption = myChart.getOption();
+        
+        // 从图例中移除
+        var legendIndex = currentOption.legend[0].data.indexOf(seriesName);
+        if (legendIndex > -1) {
+            currentOption.legend[0].data.splice(legendIndex, 1);
+        }
+        
+        // 从系列中移除
+        currentOption.series = currentOption.series.filter(function(series) {
+            return series.name !== seriesName;
+        });
+        
+        myChart.setOption(currentOption);
+    }
+
+    // 获取数据统计信息
+    function getDataStats() {
+        var stats = {};
+        for (var seriesName in chartData) {
+            var data = chartData[seriesName];
+            if (data.length > 0) {
+                var values = data.map(function(point) { return point[1]; });
+                stats[seriesName] = {
+                    count: data.length,
+                    min: Math.min.apply(Math, values),
+                    max: Math.max.apply(Math, values),
+                    avg: values.reduce(function(a, b) { return a + b; }, 0) / values.length
+                };
+            }
+        }
+        return stats;
+    }
+
+    // 设置图表标题
+    function setChartTitle(title) {
+        var currentOption = myChart.getOption();
+        currentOption.title[0].text = title;
+        myChart.setOption(currentOption);
+    }
+
+    // 导出数据为JSON
+    function exportData() {
+        return JSON.stringify(chartData);
+    }
+
+    // 从JSON导入数据
+    function importData(jsonData) {
+        try {
+            chartData = JSON.parse(jsonData);
+            updateChart();
+            return true;
+        } catch (error) {
+            console.error('导入数据失败:', error);
+            return false;
+        }
+    }
+
+    console.log('波形图表初始化完成');
+</script>
+</body>
+</html>
