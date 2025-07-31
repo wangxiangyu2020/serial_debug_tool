@@ -1,0 +1,185 @@
+WaveformCtrlWidget {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', 'Microsoft YaHei UI', sans-serif;
+}
+
+/* === 质感工具提示样式 === */
+QToolTip {
+    background-color: #f8f9fa;
+    color: #212529;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'Segoe UI', 'Microsoft YaHei UI', sans-serif;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+/* === 添加通道按钮 === */
+QPushButton#m_pAddChannelButton {
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    min-height: 24px;
+    qproperty-icon: url(:/resources/icons/add_series.svg);
+    qproperty-iconSize: 24px;
+}
+
+QPushButton#m_pAddChannelButton:hover {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+
+QPushButton#m_pAddChannelButton:pressed {
+    background-color: #dee2e6;
+    border-color: #ced4da;
+}
+
+/* === 隐藏通道按钮 === */
+QPushButton#m_pHideChannelButton {
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    min-height: 24px;
+    qproperty-icon: url(:/resources/icons/hide_series.svg);
+    qproperty-iconSize: 24px;
+}
+
+QPushButton#m_pHideChannelButton:hover {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+
+QPushButton#m_pHideChannelButton:pressed {
+    background-color: #dee2e6;
+    border-color: #ced4da;
+}
+
+/* === 移除通道按钮 === */
+QPushButton#m_pRemoveChannelButton {
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    min-height: 24px;
+    qproperty-icon: url(:/resources/icons/remove_series.svg);
+    qproperty-iconSize: 24px;
+}
+
+QPushButton#m_pRemoveChannelButton:hover {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+
+QPushButton#m_pRemoveChannelButton:pressed {
+    background-color: #dee2e6;
+    border-color: #ced4da;
+}
+
+/* === 清除按钮 === */
+QPushButton#m_pClearButton {
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    min-height: 24px;
+    qproperty-icon: url(:/resources/icons/clear_series.svg);
+    qproperty-iconSize: 24px;
+}
+
+QPushButton#m_pClearButton:hover {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+
+QPushButton#m_pClearButton:pressed {
+    background-color: #dee2e6;
+    border-color: #ced4da;
+}
+
+/* === 导入按钮 === */
+QPushButton#m_pImportButton {
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    min-height: 24px;
+    qproperty-icon: url(:/resources/icons/import_series.svg);
+    qproperty-iconSize: 24px;
+}
+
+QPushButton#m_pImportButton:hover {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+
+QPushButton#m_pImportButton:pressed {
+    background-color: #dee2e6;
+    border-color: #ced4da;
+}
+
+/* === 导出按钮 === */
+QPushButton#m_pExportButton {
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    min-height: 24px;
+    qproperty-icon: url(:/resources/icons/export_series.svg);
+    qproperty-iconSize: 24px;
+}
+
+QPushButton#m_pExportButton:hover {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+
+QPushButton#m_pExportButton:pressed {
+    background-color: #dee2e6;
+    border-color: #ced4da;
+}
+
+/* === 动作按钮 === */
+QPushButton#m_pActionButton {
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    min-height: 24px;
+    qproperty-icon: url(:/resources/icons/start_series.svg);
+    qproperty-iconSize: 24px;
+}
+
+QPushButton#m_pActionButton:hover {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+
+QPushButton#m_pActionButton:pressed {
+    background-color: #dee2e6;
+    border-color: #ced4da;
+}
