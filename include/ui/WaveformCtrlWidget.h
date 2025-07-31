@@ -33,7 +33,6 @@ private:
 private:
     QHBoxLayout* m_pMainLayout = nullptr;
     QPushButton* m_pAddChannelButton = nullptr;
-    QPushButton* m_pHideChannelButton = nullptr;
     QPushButton* m_pRemoveChannelButton = nullptr;
     QPushButton* m_pClearButton = nullptr;
     QPushButton* m_pImportButton = nullptr;

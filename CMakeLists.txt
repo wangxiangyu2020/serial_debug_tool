@@ -71,7 +71,6 @@ qt_add_resources(${PROJECT_NAME} "resources"
         resources/icons/export_series.svg
         resources/icons/start_series.svg
         resources/icons/stop_series.svg
-        resources/icons/hide_series.svg
         resources/qss/main_window.qss
         resources/qss/tab_bar.qss
         resources/qss/title_bar.qss

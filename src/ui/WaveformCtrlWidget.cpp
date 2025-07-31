@@ -28,8 +28,6 @@ void WaveformCtrlWidget::createComponents()
 {
     m_pAddChannelButton = new QPushButton(this);
     m_pAddChannelButton->setObjectName("m_pAddChannelButton");
-    m_pHideChannelButton = new QPushButton(this);
-    m_pHideChannelButton->setObjectName("m_pHideChannelButton");
     m_pRemoveChannelButton = new QPushButton(this);
     m_pRemoveChannelButton->setObjectName("m_pRemoveChannelButton");
     m_pClearButton = new QPushButton(this);
@@ -42,7 +40,6 @@ void WaveformCtrlWidget::createComponents()
     m_pActionButton->setObjectName("m_pActionButton");
 
     m_pAddChannelButton->setToolTip("添加新的数据通道");
-    m_pHideChannelButton->setToolTip("隐藏/显示通道");
     m_pRemoveChannelButton->setToolTip("移除通道");
     m_pClearButton->setToolTip("清除所有数据");
     m_pImportButton->setToolTip("从文件导入数据");
@@ -55,7 +52,6 @@ void WaveformCtrlWidget::createLayout()
     m_pMainLayout = new QHBoxLayout(this);
     m_pMainLayout->addStretch();
     m_pMainLayout->addWidget(m_pAddChannelButton);
-    m_pMainLayout->addWidget(m_pHideChannelButton);
     m_pMainLayout->addWidget(m_pRemoveChannelButton);
     m_pMainLayout->addWidget(m_pClearButton);
     m_pMainLayout->addWidget(m_pImportButton);

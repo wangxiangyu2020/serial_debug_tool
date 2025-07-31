@@ -39,30 +39,6 @@ QPushButton#m_pAddChannelButton:pressed {
     border-color: #ced4da;
 }
 
-/* === 隐藏通道按钮 === */
-QPushButton#m_pHideChannelButton {
-    background-color: #f8f9fa;
-    color: #495057;
-    border: 1px solid #e9ecef;
-    border-radius: 4px;
-    padding: 4px 8px;
-    font-size: 12px;
-    font-weight: 500;
-    min-height: 24px;
-    qproperty-icon: url(:/resources/icons/hide_series.svg);
-    qproperty-iconSize: 24px;
-}
-
-QPushButton#m_pHideChannelButton:hover {
-    background-color: #e9ecef;
-    border-color: #dee2e6;
-}
-
-QPushButton#m_pHideChannelButton:pressed {
-    background-color: #dee2e6;
-    border-color: #ced4da;
-}
-
 /* === 移除通道按钮 === */
 QPushButton#m_pRemoveChannelButton {
     background-color: #f8f9fa;
