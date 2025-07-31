@@ -61,4 +61,25 @@ void WaveformCtrlWidget::createLayout()
 
 void WaveformCtrlWidget::connectSignals()
 {
+    this->connect(m_pAddChannelButton, &QPushButton::clicked, this, &WaveformCtrlWidget::onAddChannelClicked);
+}
+
+void WaveformCtrlWidget::onAddChannelClicked()
+{
+    m_pAddChannelDialog = new AddChannelDialog(this);
+    // 设置已有通道列表（这里需要从实际数据源获取）
+    QList<ChannelInfo> existingChannels = {
+        ChannelInfo("通道1", "红色"),
+        ChannelInfo("通道2", "蓝色"),
+        ChannelInfo("通道3", "绿色")
+    };
+    m_pAddChannelDialog->setExistingChannels(existingChannels);
+
+    if (m_pAddChannelDialog->exec() == QDialog::Accepted)
+    {
+        QString name = m_pAddChannelDialog->getChannelName();
+        QString color = m_pAddChannelDialog->getChannelColor();
+        // emit channelAdded(name, color);
+    }
+    m_pAddChannelDialog->deleteLater();
 }

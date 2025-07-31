@@ -15,6 +15,9 @@
 #include "utils/StyleLoader.h"
 #include <QHBoxLayout>
 #include <QPushButton>
+#include "ui/AddChannelDialog.h"
+
+class AddChannelDialog;
 
 class WaveformCtrlWidget : public QWidget
 {
@@ -30,6 +33,9 @@ private:
     void createLayout();
     void connectSignals();
 
+private slots:
+    void onAddChannelClicked();
+
 private:
     QHBoxLayout* m_pMainLayout = nullptr;
     QPushButton* m_pAddChannelButton = nullptr;
@@ -38,6 +44,7 @@ private:
     QPushButton* m_pImportButton = nullptr;
     QPushButton* m_pExportButton = nullptr;
     QPushButton* m_pActionButton = nullptr;
+    AddChannelDialog* m_pAddChannelDialog = nullptr;
 };
 
 #endif //WAVEFORMCTRLWIDGET_H

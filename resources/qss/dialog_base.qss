@@ -1,0 +1,51 @@
+/* CDialogBase 通用样式 */
+CDialogBase {
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid #dee2e6;
+    font-family: 'Segoe UI', 'Microsoft YaHei UI', sans-serif;
+}
+
+/* === 标题样式 === */
+CDialogBase QLabel#titleLabel {
+    color: #212529;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 12px 0 8px 0;
+    background-color: transparent;
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 16px;
+}
+
+/* === 按钮区域样式 === */
+CDialogBase QPushButton {
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    min-height: 16px;
+    min-width: 80px;
+}
+
+CDialogBase QPushButton:hover {
+    background-color: #0b5ed7;
+}
+
+CDialogBase QPushButton:pressed {
+    background-color: #0a58ca;
+}
+
+CDialogBase QPushButton#cancelButton {
+    background-color: #6c757d;
+}
+
+CDialogBase QPushButton#cancelButton:hover {
+    background-color: #5c636a;
+}
+
+CDialogBase QPushButton#cancelButton:pressed {
+    background-color: #545b62;
+}

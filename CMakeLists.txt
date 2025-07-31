@@ -83,6 +83,8 @@ qt_add_resources(${PROJECT_NAME} "resources"
         resources/qss/serial_port_real_time_save_widget.qss
         resources/qss/wave_form_tab.qss
         resources/qss/wave_form_ctrl_widget.qss
+        resources/qss/add_channel_dialog.qss
+        resources/qss/dialog_base.qss
         resources/web/echarts.min.js
         resources/web/wave.html
 )

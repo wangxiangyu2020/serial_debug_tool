@@ -1,0 +1,265 @@
+/* AddChannelDialog 样式 */
+AddChannelDialog {
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid #dee2e6;
+    font-family: 'Segoe UI', 'Microsoft YaHei UI', sans-serif;
+}
+
+/* === 标题标签样式 === */
+AddChannelDialog QLabel#titleLabel {
+    color: #212529;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 8px 0;
+    background-color: transparent;
+}
+
+/* === 输入区域标签样式 === */
+AddChannelDialog QLabel {
+    color: #495057;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 2px 0;
+    background-color: transparent;
+    margin-bottom: 2px;
+}
+
+/* === 输入框样式 === */
+AddChannelDialog QLineEdit {
+    background-color: white;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #495057;
+    min-height: 20px;
+    margin-bottom: 8px;
+}
+
+AddChannelDialog QLineEdit:focus {
+    border-color: #80bdff;
+    outline: none;
+}
+
+AddChannelDialog QLineEdit:hover {
+    border-color: #adb5bd;
+}
+
+/* === 下拉框样式 === */
+AddChannelDialog QComboBox {
+    background-color: white;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    padding: 8px 12px;
+    min-height: 28px;
+    font-size: 13px;
+    color: #495057;
+    margin-bottom: 8px;
+}
+
+AddChannelDialog QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 20px;
+    border-left: 1px solid #ced4da;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+    background-color: #f8f9fa;
+}
+
+AddChannelDialog QComboBox::down-arrow {
+    image: url(:/resources/icons/down_arrow.svg);
+    width: 10px;
+    height: 10px;
+}
+
+AddChannelDialog QComboBox:hover {
+    border-color: #adb5bd;
+}
+
+AddChannelDialog QComboBox:focus {
+    border-color: #80bdff;
+}
+
+AddChannelDialog QComboBox QAbstractItemView {
+    background-color: white;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 13px;
+    selection-background-color: #e3f2fd;
+    selection-color: #0d6efd;
+    outline: none;
+    padding: 4px;
+}
+
+AddChannelDialog QComboBox QAbstractItemView::item {
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin: 2px 0;
+    min-height: 28px;
+}
+
+AddChannelDialog QComboBox QAbstractItemView::item:hover {
+    background-color: #f8f9fa;
+}
+
+AddChannelDialog QComboBox QAbstractItemView::item:selected {
+    background-color: #e3f2fd;
+    color: #0d6efd;
+}
+
+/* === 分隔线样式 === */
+AddChannelDialog QFrame[frameShape="4"] {
+    color: #dee2e6;
+    background-color: #dee2e6;
+    border: none;
+    max-height: 1px;
+    margin: 12px 0;
+}
+
+/* === 列表控件样式 - 单行显示 === */
+AddChannelDialog QListWidget {
+    background-color: white;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    padding: 4px;
+    font-size: 13px;
+    color: #495057;
+    selection-background-color: #e3f2fd;
+    selection-color: #0d6efd;
+    outline: none;
+    show-decoration-selected: 1;
+}
+
+AddChannelDialog QListWidget::item {
+    padding: 0px;
+    border-radius: 4px;
+    margin: 0px;
+    border: none;
+}
+
+AddChannelDialog QListWidget::item:hover {
+    background-color: #f8f9fa;
+}
+
+AddChannelDialog QListWidget::item:selected {
+    background-color: #e3f2fd;
+    color: #0d6efd;
+}
+
+/* === 紧凑型滚动条样式 === */
+AddChannelDialog QListWidget QScrollBar:vertical {
+    background-color: #f8f9fa;
+    width: 8px;
+    border-radius: 4px;
+    margin: 0px;
+    border: none;
+}
+
+AddChannelDialog QListWidget QScrollBar::handle:vertical {
+    background-color: #ced4da;
+    border-radius: 4px;
+    min-height: 15px;
+    margin: 0px;
+}
+
+AddChannelDialog QListWidget QScrollBar::handle:vertical:hover {
+    background-color: #adb5bd;
+}
+
+AddChannelDialog QListWidget QScrollBar::handle:vertical:pressed {
+    background-color: #868e96;
+}
+
+AddChannelDialog QListWidget QScrollBar::add-line:vertical,
+AddChannelDialog QListWidget QScrollBar::sub-line:vertical {
+    height: 0px;
+    background: none;
+    border: none;
+}
+
+AddChannelDialog QListWidget QScrollBar::add-page:vertical,
+AddChannelDialog QListWidget QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+AddChannelDialog QListWidget QScrollBar:horizontal {
+    height: 0px;
+    background: none;
+}
+
+/* === 按钮样式 === */
+AddChannelDialog QPushButton {
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    min-height: 16px;
+    min-width: 80px;
+}
+
+AddChannelDialog QPushButton:hover {
+    background-color: #0b5ed7;
+}
+
+AddChannelDialog QPushButton:pressed {
+    background-color: #0a58ca;
+}
+
+/* 取消按钮样式 */
+AddChannelDialog QPushButton#cancelButton {
+    background-color: #6c757d;
+    color: white;
+}
+
+AddChannelDialog QPushButton#cancelButton:hover {
+    background-color: #5c636a;
+}
+
+AddChannelDialog QPushButton#cancelButton:pressed {
+    background-color: #545b62;
+}
+
+/* === 通道列表项自定义样式 === */
+AddChannelDialog QWidget[objectName="channelItem"] {
+    background-color: transparent;
+    border-radius: 4px;
+    padding: 0px;
+    min-height: 32px;
+    max-height: 32px;
+}
+
+AddChannelDialog QWidget[objectName="channelItem"]:hover {
+    background-color: rgba(0, 123, 255, 0.08);
+}
+
+/* === 颜色指示器样式 - 矩形条样式 === */
+AddChannelDialog QLabel[objectName="colorIndicator"] {
+    border: none;
+    border-radius: 2px;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 20px;
+    max-height: 20px;
+}
+
+/* === 通道名称标签样式 === */
+AddChannelDialog QLabel[objectName="channelName"] {
+    font-weight: 500;
+    color: #495057;
+    padding: 0;
+    background-color: transparent;
+    border: none;
+}
+
+/* === 空状态提示样式 === */
+AddChannelDialog QListWidget::item[objectName="emptyHint"] {
+    color: #6c757d;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}

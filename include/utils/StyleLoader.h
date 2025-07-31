@@ -26,6 +26,8 @@ public:
   ~StyleLoader() =  default;
   // 从文件路径加载样式
   static void loadStyleFromFile(QWidget* widget, const QString& filePath);
+  // 颜色指示器
+  static QString getColorHex(const QString& colorName);
 };
 
 #endif //STYLELOADER_H
