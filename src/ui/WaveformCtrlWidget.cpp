@@ -67,19 +67,20 @@ void WaveformCtrlWidget::connectSignals()
 void WaveformCtrlWidget::onAddChannelClicked()
 {
     m_pAddChannelDialog = new AddChannelDialog(this);
-    // 设置已有通道列表（这里需要从实际数据源获取）
-    QList<ChannelInfo> existingChannels = {
-        ChannelInfo("通道1", "红色"),
-        ChannelInfo("通道2", "蓝色"),
-        ChannelInfo("通道3", "绿色")
-    };
-    m_pAddChannelDialog->setExistingChannels(existingChannels);
+    // 从单例管理器获取已有通道
+    ChannelManager* manager = ChannelManager::getInstance();
+    m_pAddChannelDialog->setExistingChannels(manager->getAllChannels());
 
     if (m_pAddChannelDialog->exec() == QDialog::Accepted)
     {
         QString name = m_pAddChannelDialog->getChannelName();
         QString color = m_pAddChannelDialog->getChannelColor();
-        // emit channelAdded(name, color);
+        // 添加到管理器
+        if (manager->addChannel(name, color))
+        {
+            QString message = tr("通道%1添加成功").arg(name);
+            CMessageBox::showToast(this, message);
+        }
     }
     m_pAddChannelDialog->deleteLater();
 }

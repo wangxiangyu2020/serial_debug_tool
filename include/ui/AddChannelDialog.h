@@ -20,18 +20,7 @@
 #include <QMap>
 #include "CDialogBase.h"
 #include "ui/CMessageBox.h"
-
-struct ChannelInfo
-{
-    QString name;
-    QString color;
-
-    ChannelInfo() = default;
-
-    ChannelInfo(const QString& n, const QString& c) : name(n), color(c)
-    {
-    }
-};
+#include "core/ChannelManager.h"
 
 class AddChannelDialog : public CDialogBase
 {

@@ -16,6 +16,7 @@
 #include <QHBoxLayout>
 #include <QPushButton>
 #include "ui/AddChannelDialog.h"
+#include "core/ChannelManager.h"
 
 class AddChannelDialog;
 

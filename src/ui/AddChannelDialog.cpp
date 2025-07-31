@@ -141,23 +141,6 @@ void AddChannelDialog::onConfirmClicked()
         CMessageBox::showToast(this, tr("请输入通道名称"));
         return;
     }
-    // 检查通道名称是否重复
-    QString newName = m_pNameEdit->text().trimmed();
-    for (int i = 0; i < m_pChannelListWidget->count(); ++i)
-    {
-        QListWidgetItem* item = m_pChannelListWidget->item(i);
-        QWidget* widget = m_pChannelListWidget->itemWidget(item);
-        if (widget)
-        {
-            QLabel* nameLabel = widget->findChild<QLabel*>();
-            if (nameLabel && nameLabel->text() == newName)
-            {
-                // 可以添加提示：通道名称已存在
-                CMessageBox::showToast(this, "通道名称已存在");
-                return;
-            }
-        }
-    }
     CDialogBase::onConfirmClicked();
 }
 
