@@ -104,6 +104,40 @@
     myChart.setOption(option);
     console.log('ECharts初始化完成');
 
+    // 添加示例数据标志
+    var hasRealData = false;
+    
+    // 显示示例坐标轴数据
+    function showExampleData() {
+        if (hasRealData) return;
+        
+        var exampleOption = {
+            xAxis: {
+                type: 'value',
+                name: '时间(ms)',
+                nameLocation: 'middle',
+                nameGap: 30,
+                min: 0,
+                max: 1000,
+                interval: 200
+            },
+            yAxis: {
+                type: 'value',
+                name: '数值',
+                nameLocation: 'middle',
+                nameGap: 50,
+                min: -100,
+                max: 100,
+                interval: 50
+            }
+        };
+        myChart.setOption(exampleOption);
+        console.log('显示示例坐标轴');
+    }
+
+    // 初始显示示例
+    setTimeout(showExampleData, 100);
+
     // 增强的尺寸监控逻辑
     function checkSizeChange() {
         const chartDiv = document.getElementById('chart');
@@ -166,14 +200,29 @@
     // Qt调用的接口 - 添加新的数据系列
     function addSeries(name, color) {
         console.log('添加系列:', name, color);
+        
+        // 标记有真实数据，清除示例
+        if (!hasRealData) {
+            hasRealData = true;
+            // 重置坐标轴为自动模式
+            var resetOption = {
+                xAxis: { min: null, max: null, interval: null },
+                yAxis: { min: null, max: null, interval: null }
+            };
+            myChart.setOption(resetOption);
+        }
 
         if (!chartData[name]) {
             chartData[name] = [];
+            
+            // 生成示例数据
+            for (let i = 0; i < 50; i++) {
+                let time = i * 20;
+                chartData[name].push([time, 0]);
+            }
         }
 
         var currentOption = myChart.getOption();
-
-        // 检查是否已存在该系列
         var seriesExists = currentOption.series.some(function (series) {
             return series.name === name;
         });
@@ -183,7 +232,7 @@
             currentOption.series.push({
                 name: name,
                 type: 'line',
-                data: [],
+                data: chartData[name], // 使用生成的示例数据
                 lineStyle: {color: color, width: 2},
                 symbol: 'circle',
                 symbolSize: 4,
@@ -219,7 +268,8 @@
             console.log('当前系列列表:', currentOption.series.map(s => s.name));
         }
 
-        myChart.setOption(currentOption, false, false);
+        // 强制刷新图表
+        myChart.setOption(currentOption, true);
         console.log('图表更新完成，当前系列数:', currentOption.series.length);
     }
 
@@ -258,11 +308,17 @@
     // 清除所有数据
     function clearAllData() {
         chartData = {};
+        hasRealData = false;
         var currentOption = myChart.getOption();
         currentOption.series.forEach(function (series) {
             series.data = [];
         });
+        currentOption.series = [];
+        currentOption.legend[0].data = [];
         myChart.setOption(currentOption, false, false);
+        
+        // 重新显示示例
+        setTimeout(showExampleData, 100);
     }
 
     // 清除指定系列数据

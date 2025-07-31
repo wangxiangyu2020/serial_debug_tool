@@ -74,15 +74,12 @@ void WaveformWidget::createLayout()
 
 void WaveformWidget::connectSignals()
 {
+    ChannelManager* manager = ChannelManager::getInstance();
+    if (!manager) return;
     this->connect(m_pWebEngineView, &QWebEngineView::loadFinished, this, &WaveformWidget::onPageLoadFinished);
+    this->connect(manager, &ChannelManager::channelAdded, this, &WaveformWidget::onAddSeries);
 }
 
-void WaveformWidget::addSeries(const QString& name, const QString& color)
-{
-    if (!m_pageLoaded) return;
-    QString jsCode = QString("addSeries('%1', '%2')").arg(name, color);
-    this->executeJS(jsCode);
-}
 
 void WaveformWidget::executeJS(const QString& jsCode)
 {
@@ -116,41 +113,43 @@ void WaveformWidget::setSeriesData(const QString& seriesName, const QVariantList
     this->executeJS(jsCode);
 }
 
+void WaveformWidget::updateSeriesData(const QString& seriesName, const QVariantList& newData)
+{
+    if (!m_pageLoaded) return;
+    // 先设置数据
+    this->setSeriesData(seriesName, newData);
+    // 强制刷新图表
+    this->executeJS("myChart.resize(); console.log('强制刷新图表');");
+}
+
 void WaveformWidget::onPageLoadFinished(bool status)
 {
     if (!status) return;
     m_pageLoaded = true;
-    QTimer::singleShot(1000, this, [this]
+}
+
+void WaveformWidget::onAddSeries(const QString& name, const QString& color)
+{
+    if (!m_pageLoaded) return;
+    QString jsCode = QString("addSeries('%1', '%2')").arg(name, StyleLoader::getColorHex(color));
+    this->executeJS(jsCode);
+
+    // 只为当前添加的通道生成模拟数据
+    QVariantList simulatedData;
+    for (int i = 0; i < 50; ++i)
     {
-        // 添加通道 示例数据
-        this->addSeries("通道1", "#FF0000");
-        this->addSeries("通道2", "#00FF00");
-        this->addSeries("通道3", "#0000FF");
+        double time = i * 20.0; // 时间间隔20ms
+        double value = std::sin(i * 0.1) * 50 + (rand() % 20 - 10); // 正弦波 + 随机噪声
 
-        QVariantList sampleData1, sampleData2, sampleData3;
-        for (int i = 0; i < 100; ++i)
-        {
-            double time = i * 10.0;
+        QVariantList point;
+        point.append(time);
+        point.append(value);
+        simulatedData.append(QVariant(point));
+    }
 
-            // 创建数据点 - 确保正确的格式
-            QVariantList point1;
-            point1.append(time);
-            point1.append(std::sin(i * 0.1) * 50 + (rand() % 20 - 10));
-
-            QVariantList point2;
-            point2.append(time);
-            point2.append(std::cos(i * 0.1) * 40 + (rand() % 15 - 7));
-
-            QVariantList point3;
-            point3.append(time);
-            point3.append(std::sin(i * 0.15) * 30 + (rand() % 25 - 12));
-
-            sampleData1.append(QVariant(point1));
-            sampleData2.append(QVariant(point2));
-            sampleData3.append(QVariant(point3));
-        }
-        this->setSeriesData("通道1", sampleData1);
-        this->setSeriesData("通道2", sampleData2);
-        this->setSeriesData("通道3", sampleData3);
+    // 使用延迟更新避免阻塞
+    QTimer::singleShot(100, this, [this, name, simulatedData]()
+    {
+        this->updateSeriesData(name, simulatedData);
     });
 }

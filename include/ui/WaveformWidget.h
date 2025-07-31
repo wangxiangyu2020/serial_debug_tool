@@ -23,6 +23,7 @@
 #include <QTimer>
 #include <QUrl>
 #include <cmath>
+#include "core/ChannelManager.h"
 
 class WaveformWidget : public QWidget
 {
@@ -40,12 +41,13 @@ private:
     void createComponents();
     void createLayout();
     void connectSignals();
-    void addSeries(const QString& name, const QString& color);
     void executeJS(const QString& jsCode);
     void setSeriesData(const QString& seriesName, const QVariantList& data);
+    void updateSeriesData(const QString& seriesName, const QVariantList& newData);
 
 private slots:
     void onPageLoadFinished(bool success);
+    void onAddSeries(const QString& name, const QString& color);
 
 private:
     QVBoxLayout* m_pMainLayout = nullptr;
