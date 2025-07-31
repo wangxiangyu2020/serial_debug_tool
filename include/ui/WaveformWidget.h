@@ -32,6 +32,9 @@ public:
     explicit WaveformWidget(QWidget* parent = nullptr);
     ~WaveformWidget() = default;
 
+protected:
+    void resizeEvent(QResizeEvent* event) override;
+
 private:
     void setUI();
     void createComponents();
@@ -48,6 +51,7 @@ private:
     QVBoxLayout* m_pMainLayout = nullptr;
     QWebEngineView* m_pWebEngineView = nullptr;
     bool m_pageLoaded = false;
+    bool m_resizePending = false;
 };
 
 #endif //WAVEFORMWIDGET_H

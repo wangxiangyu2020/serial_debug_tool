@@ -3,22 +3,45 @@
 <head>
     <meta charset="utf-8">
     <script src="qrc:/resources/web/echarts.min.js"></script>
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: transparent !important;
+        }
+        #chart {
+            width: 100%;
+            height: 100%;
+            min-width: 100px;
+            min-height: 100px;
+            background-color: #FFFFFF;
+        }
+    </style>
 </head>
 <body>
-<div id="chart" style="width: 100%; height: 100vh;"></div>
+<div id="chart"></div>
 <script>
     console.log('开始初始化ECharts...');
-    
+
     var myChart = echarts.init(document.getElementById('chart'));
-    var chartData = {}; // 存储所有通道数据
-    
+    var chartData = {};
+
+    // 添加尺寸监控变量
+    let lastWidth = 0;
+    let lastHeight = 0;
+    let resizeScheduled = false;
+
     // 默认配置
     var option = {
-        title: { 
+        animation: false, // 禁用动画以提高重绘性能
+        title: {
             text: '串口数据波形',
             left: 'center'
         },
-        tooltip: { 
+        tooltip: {
             trigger: 'axis',
             formatter: function(params) {
                 var result = '时间: ' + params[0].data[0] + 'ms<br/>';
@@ -28,7 +51,7 @@
                 return result;
             }
         },
-        legend: { 
+        legend: {
             data: [],
             top: 30
         },
@@ -45,14 +68,14 @@
                 magicType: { type: ['line', 'bar'] }
             }
         },
-        xAxis: { 
-            type: 'value', 
+        xAxis: {
+            type: 'value',
             name: '时间(ms)',
             nameLocation: 'middle',
             nameGap: 30
         },
-        yAxis: { 
-            type: 'value', 
+        yAxis: {
+            type: 'value',
             name: '数值',
             nameLocation: 'middle',
             nameGap: 50
@@ -81,33 +104,87 @@
     myChart.setOption(option);
     console.log('ECharts初始化完成');
 
-    // 窗口大小调整
+    // 增强的尺寸监控逻辑
+    function checkSizeChange() {
+        const chartDiv = document.getElementById('chart');
+        if (!chartDiv) return;
+
+        const currentWidth = chartDiv.clientWidth;
+        const currentHeight = chartDiv.clientHeight;
+
+        // 尺寸未变化或变化过小则忽略
+        if (Math.abs(currentWidth - lastWidth) < 2 &&
+            Math.abs(currentHeight - lastHeight) < 2) {
+            return;
+        }
+
+        lastWidth = currentWidth;
+        lastHeight = currentHeight;
+
+        if (myChart && !myChart.isDisposed()) {
+            try {
+                myChart.resize();
+                console.log(`图表重绘完成 (${currentWidth}x${currentHeight})`);
+            } catch (e) {
+                console.error('重绘失败:', e);
+            }
+        }
+    }
+
+    // 使用requestAnimationFrame进行高效监控
+    function monitorSizeChanges() {
+        if (!document.hidden) {
+            checkSizeChange();
+        }
+        requestAnimationFrame(monitorSizeChanges);
+    }
+
+    // 启动尺寸监控
+    requestAnimationFrame(monitorSizeChanges);
+
+    // 保留窗口resize监听作为备用
     window.addEventListener('resize', function() {
-        myChart.resize();
+        if (!resizeScheduled) {
+            resizeScheduled = true;
+            requestAnimationFrame(function() {
+                checkSizeChange();
+                resizeScheduled = false;
+            });
+        }
     });
+
+    // 初始尺寸记录
+    setTimeout(() => {
+        const chartDiv = document.getElementById('chart');
+        if (chartDiv) {
+            lastWidth = chartDiv.clientWidth;
+            lastHeight = chartDiv.clientHeight;
+            console.log('初始尺寸:', lastWidth, 'x', lastHeight);
+        }
+    }, 500);
 
     // Qt调用的接口 - 添加新的数据系列
     function addSeries(name, color) {
         console.log('添加系列:', name, color);
-        
+
         if (!chartData[name]) {
             chartData[name] = [];
         }
-        
+
         var currentOption = myChart.getOption();
-        
+
         // 检查是否已存在该系列
-        var seriesExists = currentOption.series.some(function(series) {
+        var seriesExists = currentOption.series.some(function (series) {
             return series.name === name;
         });
-        
+
         if (!seriesExists) {
             currentOption.legend[0].data.push(name);
             currentOption.series.push({
                 name: name,
                 type: 'line',
                 data: [],
-                lineStyle: { color: color, width: 2 },
+                lineStyle: {color: color, width: 2},
                 symbol: 'circle',
                 symbolSize: 4,
                 smooth: true,
@@ -122,26 +199,26 @@
     function setSeriesData(seriesName, data) {
         console.log('setSeriesData 被调用:', seriesName, '数据类型:', typeof data, '数据长度:', data.length);
         console.log('前3个数据点:', data.slice(0, 3));
-        
+
         chartData[seriesName] = data;
-        
+
         var currentOption = myChart.getOption();
-        
+
         // 更新指定系列的数据
         var updated = false;
-        currentOption.series.forEach(function(series) {
+        currentOption.series.forEach(function (series) {
             if (series.name === seriesName) {
                 series.data = data;
                 updated = true;
                 console.log('更新系列数据:', seriesName, '数据点数:', data.length);
             }
         });
-        
+
         if (!updated) {
             console.error('未找到系列:', seriesName);
             console.log('当前系列列表:', currentOption.series.map(s => s.name));
         }
-        
+
         myChart.setOption(currentOption, false, false);
         console.log('图表更新完成，当前系列数:', currentOption.series.length);
     }
@@ -167,14 +244,14 @@
     // 更新图表显示
     function updateChart() {
         var currentOption = myChart.getOption();
-        
+
         // 更新每个系列的数据
-        currentOption.series.forEach(function(series) {
+        currentOption.series.forEach(function (series) {
             if (chartData[series.name]) {
                 series.data = chartData[series.name];
             }
         });
-        
+
         myChart.setOption(currentOption, false, false);
     }
 
@@ -182,7 +259,7 @@
     function clearAllData() {
         chartData = {};
         var currentOption = myChart.getOption();
-        currentOption.series.forEach(function(series) {
+        currentOption.series.forEach(function (series) {
             series.data = [];
         });
         myChart.setOption(currentOption, false, false);
@@ -199,20 +276,20 @@
     // 移除系列
     function removeSeries(seriesName) {
         delete chartData[seriesName];
-        
+
         var currentOption = myChart.getOption();
-        
+
         // 从图例中移除
         var legendIndex = currentOption.legend[0].data.indexOf(seriesName);
         if (legendIndex > -1) {
             currentOption.legend[0].data.splice(legendIndex, 1);
         }
-        
+
         // 从系列中移除
-        currentOption.series = currentOption.series.filter(function(series) {
+        currentOption.series = currentOption.series.filter(function (series) {
             return series.name !== seriesName;
         });
-        
+
         myChart.setOption(currentOption);
     }
 
@@ -222,12 +299,16 @@
         for (var seriesName in chartData) {
             var data = chartData[seriesName];
             if (data.length > 0) {
-                var values = data.map(function(point) { return point[1]; });
+                var values = data.map(function (point) {
+                    return point[1];
+                });
                 stats[seriesName] = {
                     count: data.length,
                     min: Math.min.apply(Math, values),
                     max: Math.max.apply(Math, values),
-                    avg: values.reduce(function(a, b) { return a + b; }, 0) / values.length
+                    avg: values.reduce(function (a, b) {
+                        return a + b;
+                    }, 0) / values.length
                 };
             }
         }

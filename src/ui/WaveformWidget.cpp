@@ -16,6 +16,27 @@ WaveformWidget::WaveformWidget(QWidget* parent)
     this->setUI();
 }
 
+void WaveformWidget::resizeEvent(QResizeEvent* event)
+{
+    QWidget::resizeEvent(event);
+    // 立即更新Web视图尺寸
+    m_pWebEngineView->resize(this->size());
+    if (m_pageLoaded && !m_resizePending)
+    {
+        m_resizePending = true;
+        // 使用短延迟确保布局完成
+        QTimer::singleShot(20, this, [this]()
+        {
+            if (m_pageLoaded)
+            {
+                // 触发JavaScript中的尺寸检查
+                this->executeJS("if (typeof checkSizeChange === 'function') checkSizeChange();");
+            }
+            m_resizePending = false;
+        });
+    }
+}
+
 void WaveformWidget::setUI()
 {
     this->setAttribute(Qt::WA_StyledBackground);
@@ -27,11 +48,19 @@ void WaveformWidget::setUI()
 void WaveformWidget::createComponents()
 {
     m_pWebEngineView = new QWebEngineView(this);
+    // 启用透明背景
+    QPalette pal = m_pWebEngineView->palette();
+    pal.setColor(QPalette::Window, Qt::transparent);
+    m_pWebEngineView->setPalette(pal);
+    // 设置背景透明
+    m_pWebEngineView->setAttribute(Qt::WA_TranslucentBackground);
+    m_pWebEngineView->page()->setBackgroundColor(Qt::transparent);
     // 性能优化设置
     auto settings = m_pWebEngineView->settings();
     settings->setAttribute(QWebEngineSettings::JavascriptEnabled, true);
     settings->setAttribute(QWebEngineSettings::Accelerated2dCanvasEnabled, true);
     settings->setAttribute(QWebEngineSettings::WebGLEnabled, true);
+    settings->setAttribute(QWebEngineSettings::ScrollAnimatorEnabled, false);
 
     m_pWebEngineView->load(QUrl("qrc:/resources/web/wave.html"));
 }
@@ -40,7 +69,7 @@ void WaveformWidget::createLayout()
 {
     m_pMainLayout = new QVBoxLayout(this);
     m_pMainLayout->addWidget(m_pWebEngineView);
-    m_pMainLayout->setContentsMargins(5, 5, 5, 5);
+    m_pMainLayout->setContentsMargins(0, 0, 0, 0); // 移除所有边距
 }
 
 void WaveformWidget::connectSignals()
