@@ -31,44 +31,44 @@ ChannelManager* ChannelManager::getInstance()
     return m_instance;
 }
 
-bool ChannelManager::addChannel(const QString& name, const QString& id, const QString& color)
+bool ChannelManager::addChannel(const QString& id, const QString& name, const QString& color)
 {
     QMutexLocker locker(&m_dataMutex);
 
-    if (name.isEmpty() || id.isEmpty() || m_channels.contains(name))
+    if (name.isEmpty() || id.isEmpty() || m_channels.contains(id))
     {
         return false;
     }
 
-    m_channels.insert(name, ChannelInfo(name, id, color));
+    m_channels.insert(id, ChannelInfo(id, name, color));
     emit channelAdded(name, color);
     return true;
 }
 
-bool ChannelManager::removeChannel(const QString& name)
+bool ChannelManager::removeChannel(const QString& id)
 {
     QMutexLocker locker(&m_dataMutex);
 
-    if (!m_channels.contains(name))
+    if (!m_channels.contains(id))
     {
         return false;
     }
-
-    m_channels.remove(name);
-    emit channelRemoved(name);
+    const auto& channel = m_channels.value(id);
+    m_channels.remove(id);
+    emit channelRemoved(channel.name);
     return true;
 }
 
-bool ChannelManager::updateChannel(const QString& name, const QString& id, const QString& newColor)
+bool ChannelManager::updateChannel(const QString& id, const QString& name, const QString& newColor)
 {
     QMutexLocker locker(&m_dataMutex);
 
-    if (!m_channels.contains(name))
+    if (!m_channels.contains(id))
     {
         return false;
     }
 
-    m_channels[name] = ChannelInfo(name, id, newColor);
+    m_channels[id] = ChannelInfo(id, name, newColor);
     emit channelUpdated(name, newColor);
     return true;
 }
@@ -86,22 +86,22 @@ QList<ChannelInfo> ChannelManager::getAllChannels() const
     return m_channels.values();
 }
 
-ChannelInfo ChannelManager::getChannel(const QString& name) const
+ChannelInfo ChannelManager::getChannel(const QString& id) const
 {
     QMutexLocker locker(&m_dataMutex);
 
-    if (m_channels.contains(name))
+    if (m_channels.contains(id))
     {
-        return m_channels.value(name);
+        return m_channels.value(id);
     }
 
     return ChannelInfo();
 }
 
-bool ChannelManager::hasChannel(const QString& name) const
+bool ChannelManager::hasChannel(const QString& id) const
 {
     QMutexLocker locker(&m_dataMutex);
-    return m_channels.contains(name);
+    return m_channels.contains(id);
 }
 
 int ChannelManager::getChannelCount() const

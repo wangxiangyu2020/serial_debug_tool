@@ -77,10 +77,16 @@ void WaveformCtrlWidget::onAddChannelClicked()
         QString id = m_pAddChannelDialog->getChannelId();
         QString color = m_pAddChannelDialog->getChannelColor();
         // 添加到管理器
-        if (manager->addChannel(name, id, color))
+        if (manager->addChannel(id, name, color))
         {
             QString message = tr("通道%1添加成功").arg(name);
             CMessageBox::showToast(this, message);
+        }
+        else
+        {
+            CMessageBox::showToast(this, tr("标识%1已存在").arg(id));
+            m_pAddChannelDialog->deleteLater();
+            return;
         }
     }
     m_pAddChannelDialog->deleteLater();

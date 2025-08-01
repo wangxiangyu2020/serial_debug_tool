@@ -62,7 +62,12 @@ void AddChannelDialog::setExistingChannels(const QList<ChannelInfo>& channels)
         nameLabel->setWordWrap(false);
         nameLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
+        // 通道标识
+        QLabel* idLabel = new QLabel(channel.id);
+        idLabel->setObjectName("channelName");
+
         layout->addWidget(colorIndicator);
+        layout->addWidget(idLabel);
         layout->addWidget(nameLabel);
         layout->addStretch();
 
@@ -137,7 +142,7 @@ void AddChannelDialog::createContentLayout()
     m_pContentLayout->addWidget(m_pIdEdit);
     m_pContentLayout->addWidget(m_pColorLabel);
     m_pContentLayout->addWidget(m_pColorCombo);
-    m_pContentLayout->addSpacing(8);             // 增加间距
+    m_pContentLayout->addSpacing(8); // 增加间距
     m_pContentLayout->addWidget(m_pExistingLabel);
     m_pContentLayout->addWidget(m_pChannelListWidget);
 }

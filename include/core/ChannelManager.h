@@ -18,13 +18,13 @@
 
 struct ChannelInfo
 {
-    QString name;
     QString id;
+    QString name;
     QString color;
 
     ChannelInfo() = default;
 
-    ChannelInfo(const QString& n, const QString& i, const QString& c) : name(n), id(i), color(c)
+    ChannelInfo(const QString& i, const QString& n, const QString& c) : id(i), name(n), color(c)
     {
     }
 };
@@ -37,15 +37,15 @@ public:
     static ChannelManager* getInstance();
 
     // 通道操作
-    bool addChannel(const QString& name, const QString& id, const QString& color);
-    bool removeChannel(const QString& name);
-    bool updateChannel(const QString& name, const QString& id, const QString& newColor);
+    bool addChannel(const QString& id, const QString& name, const QString& color);
+    bool removeChannel(const QString& id);
+    bool updateChannel(const QString& id, const QString& name, const QString& newColor);
     void clearChannels();
 
     // 查询操作
     QList<ChannelInfo> getAllChannels() const;
-    ChannelInfo getChannel(const QString& name) const;
-    bool hasChannel(const QString& name) const;
+    ChannelInfo getChannel(const QString& id) const;
+    bool hasChannel(const QString& id) const;
     int getChannelCount() const;
 
 signals:
