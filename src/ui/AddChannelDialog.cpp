@@ -12,7 +12,7 @@
 #include "utils/StyleLoader.h"
 
 AddChannelDialog::AddChannelDialog(QWidget* parent)
-    : CDialogBase(parent, "添加通道", QSize(450, 350))
+    : CDialogBase(parent, "添加通道", QSize(450, 400))
 {
     this->setUI();
     // 加载专用样式
@@ -22,6 +22,11 @@ AddChannelDialog::AddChannelDialog(QWidget* parent)
 QString AddChannelDialog::getChannelName() const
 {
     return m_pNameEdit->text();
+}
+
+QString AddChannelDialog::getChannelId() const
+{
+    return m_pIdEdit->text();
 }
 
 QString AddChannelDialog::getChannelColor() const
@@ -84,9 +89,19 @@ void AddChannelDialog::createComponents()
 {
     // 输入区域组件
     m_pNameLabel = new QLabel("名称", this);
+    m_pIdLabel = new QLabel("标识", this);
     m_pColorLabel = new QLabel("颜色", this);
+
     m_pNameEdit = new QLineEdit(this);
     m_pNameEdit->setPlaceholderText("请输入通道名称");
+
+    // 新增：ID输入框，限制只能输入英文
+    m_pIdEdit = new QLineEdit(this);
+    m_pIdEdit->setPlaceholderText("请输入英文标识，如: CH1");
+    QRegularExpression idRegex("^[a-zA-Z0-9_]+$");
+    QRegularExpressionValidator* idValidator = new QRegularExpressionValidator(idRegex, this);
+    m_pIdEdit->setValidator(idValidator);
+
     m_pColorCombo = new QComboBox(this);
     // 添加颜色选项，使用颜色指示器
     QStringList colors = {"红色", "蓝色", "绿色", "橙色", "紫色", "青色", "黄色", "粉色"};
@@ -114,17 +129,15 @@ void AddChannelDialog::createComponents()
 
 void AddChannelDialog::createContentLayout()
 {
-    // 确保 m_pContentLayout 已经在基类中初始化
     if (!m_pContentLayout) return;
-    // 设置更紧凑的间距
     m_pContentLayout->setSpacing(4);
     m_pContentLayout->addWidget(m_pNameLabel);
     m_pContentLayout->addWidget(m_pNameEdit);
+    m_pContentLayout->addWidget(m_pIdLabel);
+    m_pContentLayout->addWidget(m_pIdEdit);
     m_pContentLayout->addWidget(m_pColorLabel);
     m_pContentLayout->addWidget(m_pColorCombo);
-    // 添加一点间距分隔输入区域和列表区域
-    m_pContentLayout->addSpacing(8);
-    // 已添加通道列表
+    m_pContentLayout->addSpacing(8);             // 增加间距
     m_pContentLayout->addWidget(m_pExistingLabel);
     m_pContentLayout->addWidget(m_pChannelListWidget);
 }
@@ -139,6 +152,11 @@ void AddChannelDialog::onConfirmClicked()
     {
         // 可以添加提示：请输入通道名称
         CMessageBox::showToast(this, tr("请输入通道名称"));
+        return;
+    }
+    if (m_pIdEdit->text().isEmpty())
+    {
+        CMessageBox::showToast(this, tr("请输入通道标识"));
         return;
     }
     CDialogBase::onConfirmClicked();

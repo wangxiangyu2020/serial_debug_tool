@@ -19,10 +19,14 @@
 struct ChannelInfo
 {
     QString name;
+    QString id;
     QString color;
 
     ChannelInfo() = default;
-    ChannelInfo(const QString& n, const QString& c) : name(n), color(c) {}
+
+    ChannelInfo(const QString& n, const QString& i, const QString& c) : name(n), id(i), color(c)
+    {
+    }
 };
 
 class ChannelManager : public QObject
@@ -31,19 +35,19 @@ class ChannelManager : public QObject
 
 public:
     static ChannelManager* getInstance();
-    
+
     // 通道操作
-    bool addChannel(const QString& name, const QString& color);
+    bool addChannel(const QString& name, const QString& id, const QString& color);
     bool removeChannel(const QString& name);
-    bool updateChannel(const QString& name, const QString& newColor);
+    bool updateChannel(const QString& name, const QString& id, const QString& newColor);
     void clearChannels();
-    
+
     // 查询操作
     QList<ChannelInfo> getAllChannels() const;
     ChannelInfo getChannel(const QString& name) const;
     bool hasChannel(const QString& name) const;
     int getChannelCount() const;
-    
+
 signals:
     void channelAdded(const QString& name, const QString& color);
     void channelRemoved(const QString& name);
@@ -53,14 +57,14 @@ signals:
 private:
     explicit ChannelManager(QObject* parent = nullptr);
     ~ChannelManager() = default;
-    
+
     ChannelManager(const ChannelManager&) = delete;
     ChannelManager& operator=(const ChannelManager&) = delete;
 
 private:
     static ChannelManager* m_instance;
     static QMutex m_mutex;
-    QMap<QString, QString> m_channels;
+    QMap<QString, ChannelInfo> m_channels; // 改为存储完整的ChannelInfo
     mutable QMutex m_dataMutex;
 };
 

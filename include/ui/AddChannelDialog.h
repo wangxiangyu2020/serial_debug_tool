@@ -30,6 +30,7 @@ public:
     explicit AddChannelDialog(QWidget* parent = nullptr);
 
     QString getChannelName() const;
+    QString getChannelId() const;
     QString getChannelColor() const;
     void setExistingChannels(const QList<ChannelInfo>& channels);
 
@@ -41,12 +42,13 @@ protected:
 
 private:
     void setUI();
-    QString getColorHex(const QString& colorName) const;
 
 private:
     QLabel* m_pNameLabel = nullptr;
+    QLabel* m_pIdLabel = nullptr;
     QLabel* m_pColorLabel = nullptr;
     QLineEdit* m_pNameEdit = nullptr;
+    QLineEdit* m_pIdEdit = nullptr;
     QComboBox* m_pColorCombo = nullptr;
     // 已添加通道列表
     QLabel* m_pExistingLabel = nullptr;

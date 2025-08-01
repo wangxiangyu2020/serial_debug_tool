@@ -31,16 +31,16 @@ ChannelManager* ChannelManager::getInstance()
     return m_instance;
 }
 
-bool ChannelManager::addChannel(const QString& name, const QString& color)
+bool ChannelManager::addChannel(const QString& name, const QString& id, const QString& color)
 {
     QMutexLocker locker(&m_dataMutex);
-    
-    if (name.isEmpty() || m_channels.contains(name))
+
+    if (name.isEmpty() || id.isEmpty() || m_channels.contains(name))
     {
         return false;
     }
-    
-    m_channels.insert(name, color);
+
+    m_channels.insert(name, ChannelInfo(name, id, color));
     emit channelAdded(name, color);
     return true;
 }
@@ -48,27 +48,27 @@ bool ChannelManager::addChannel(const QString& name, const QString& color)
 bool ChannelManager::removeChannel(const QString& name)
 {
     QMutexLocker locker(&m_dataMutex);
-    
+
     if (!m_channels.contains(name))
     {
         return false;
     }
-    
+
     m_channels.remove(name);
     emit channelRemoved(name);
     return true;
 }
 
-bool ChannelManager::updateChannel(const QString& name, const QString& newColor)
+bool ChannelManager::updateChannel(const QString& name, const QString& id, const QString& newColor)
 {
     QMutexLocker locker(&m_dataMutex);
-    
+
     if (!m_channels.contains(name))
     {
         return false;
     }
-    
-    m_channels[name] = newColor;
+
+    m_channels[name] = ChannelInfo(name, id, newColor);
     emit channelUpdated(name, newColor);
     return true;
 }
@@ -83,25 +83,18 @@ void ChannelManager::clearChannels()
 QList<ChannelInfo> ChannelManager::getAllChannels() const
 {
     QMutexLocker locker(&m_dataMutex);
-    QList<ChannelInfo> channels;
-    
-    for (auto it = m_channels.begin(); it != m_channels.end(); ++it)
-    {
-        channels.append(ChannelInfo(it.key(), it.value()));
-    }
-    
-    return channels;
+    return m_channels.values();
 }
 
 ChannelInfo ChannelManager::getChannel(const QString& name) const
 {
     QMutexLocker locker(&m_dataMutex);
-    
+
     if (m_channels.contains(name))
     {
-        return ChannelInfo(name, m_channels.value(name));
+        return m_channels.value(name);
     }
-    
+
     return ChannelInfo();
 }
 
