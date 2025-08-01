@@ -24,6 +24,7 @@
 #include <QUrl>
 #include <cmath>
 #include "core/ChannelManager.h"
+#include <memory>
 
 class WaveformWidget : public QWidget
 {
@@ -51,7 +52,7 @@ private slots:
 
 private:
     QVBoxLayout* m_pMainLayout = nullptr;
-    QWebEngineView* m_pWebEngineView = nullptr;
+    std::unique_ptr<QWebEngineView> m_pWebEngineView;
     bool m_pageLoaded = false;
     bool m_resizePending = false;
 };

@@ -24,8 +24,6 @@
 <body>
 <div id="chart"></div>
 <script>
-    console.log('开始初始化ECharts...');
-
     var myChart = echarts.init(document.getElementById('chart'));
     var chartData = {};
 
@@ -102,7 +100,6 @@
     };
 
     myChart.setOption(option);
-    console.log('ECharts初始化完成');
 
     // 添加示例数据标志
     var hasRealData = false;
@@ -123,7 +120,7 @@
             },
             yAxis: {
                 type: 'value',
-                name: '数值',
+                name: '',
                 nameLocation: 'middle',
                 nameGap: 50,
                 min: -100,
@@ -132,7 +129,6 @@
             }
         };
         myChart.setOption(exampleOption);
-        console.log('显示示例坐标轴');
     }
 
     // 初始显示示例
@@ -193,14 +189,11 @@
         if (chartDiv) {
             lastWidth = chartDiv.clientWidth;
             lastHeight = chartDiv.clientHeight;
-            console.log('初始尺寸:', lastWidth, 'x', lastHeight);
         }
     }, 500);
 
     // Qt调用的接口 - 添加新的数据系列
     function addSeries(name, color) {
-        console.log('添加系列:', name, color);
-        
         // 标记有真实数据，清除示例
         if (!hasRealData) {
             hasRealData = true;
@@ -240,15 +233,11 @@
                 animation: false
             });
             myChart.setOption(currentOption);
-            console.log('系列添加成功:', name);
         }
     }
 
     // 设置指定系列的完整数据
     function setSeriesData(seriesName, data) {
-        console.log('setSeriesData 被调用:', seriesName, '数据类型:', typeof data, '数据长度:', data.length);
-        console.log('前3个数据点:', data.slice(0, 3));
-
         chartData[seriesName] = data;
 
         var currentOption = myChart.getOption();
@@ -259,7 +248,6 @@
             if (series.name === seriesName) {
                 series.data = data;
                 updated = true;
-                console.log('更新系列数据:', seriesName, '数据点数:', data.length);
             }
         });
 
@@ -270,7 +258,6 @@
 
         // 强制刷新图表
         myChart.setOption(currentOption, true);
-        console.log('图表更新完成，当前系列数:', currentOption.series.length);
     }
 
     // 添加数据点到指定系列

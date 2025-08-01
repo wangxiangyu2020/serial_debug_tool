@@ -47,7 +47,7 @@ void WaveformWidget::setUI()
 
 void WaveformWidget::createComponents()
 {
-    m_pWebEngineView = new QWebEngineView(this);
+    m_pWebEngineView = std::make_unique<QWebEngineView>(this);
     // 启用透明背景
     QPalette pal = m_pWebEngineView->palette();
     pal.setColor(QPalette::Window, Qt::transparent);
@@ -68,7 +68,7 @@ void WaveformWidget::createComponents()
 void WaveformWidget::createLayout()
 {
     m_pMainLayout = new QVBoxLayout(this);
-    m_pMainLayout->addWidget(m_pWebEngineView);
+    m_pMainLayout->addWidget(m_pWebEngineView.get());
     m_pMainLayout->setContentsMargins(0, 0, 0, 0); // 移除所有边距
 }
 
@@ -76,7 +76,7 @@ void WaveformWidget::connectSignals()
 {
     ChannelManager* manager = ChannelManager::getInstance();
     if (!manager) return;
-    this->connect(m_pWebEngineView, &QWebEngineView::loadFinished, this, &WaveformWidget::onPageLoadFinished);
+    this->connect(m_pWebEngineView.get(), &QWebEngineView::loadFinished, this, &WaveformWidget::onPageLoadFinished);
     this->connect(manager, &ChannelManager::channelAdded, this, &WaveformWidget::onAddSeries);
 }
 
@@ -134,22 +134,22 @@ void WaveformWidget::onAddSeries(const QString& name, const QString& color)
     QString jsCode = QString("addSeries('%1', '%2')").arg(name, StyleLoader::getColorHex(color));
     this->executeJS(jsCode);
 
-    // 只为当前添加的通道生成模拟数据
-    QVariantList simulatedData;
-    for (int i = 0; i < 50; ++i)
-    {
-        double time = i * 20.0; // 时间间隔20ms
-        double value = std::sin(i * 0.1) * 50 + (rand() % 20 - 10); // 正弦波 + 随机噪声
-
-        QVariantList point;
-        point.append(time);
-        point.append(value);
-        simulatedData.append(QVariant(point));
-    }
-
-    // 使用延迟更新避免阻塞
-    QTimer::singleShot(100, this, [this, name, simulatedData]()
-    {
-        this->updateSeriesData(name, simulatedData);
-    });
+    // // 只为当前添加的通道生成模拟数据
+    // QVariantList simulatedData;
+    // for (int i = 0; i < 50; ++i)
+    // {
+    //     double time = i * 20.0; // 时间间隔20ms
+    //     double value = std::sin(i * 0.1) * 50 + (rand() % 20 - 10); // 正弦波 + 随机噪声
+    //
+    //     QVariantList point;
+    //     point.append(time);
+    //     point.append(value);
+    //     simulatedData.append(QVariant(point));
+    // }
+    //
+    // // 使用延迟更新避免阻塞
+    // QTimer::singleShot(100, this, [this, name, simulatedData]()
+    // {
+    //     this->updateSeriesData(name, simulatedData);
+    // });
 }
