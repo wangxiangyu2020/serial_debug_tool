@@ -20,7 +20,7 @@ void WaveformWidget::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
     // 立即更新Web视图尺寸
-    m_pWebEngineView->resize(this->size());
+    // m_pWebEngineView->resize(this->size());
     if (m_pageLoaded && !m_resizePending)
     {
         m_resizePending = true;
@@ -69,7 +69,7 @@ void WaveformWidget::createLayout()
 {
     m_pMainLayout = new QVBoxLayout(this);
     m_pMainLayout->addWidget(m_pWebEngineView.get());
-    m_pMainLayout->setContentsMargins(0, 0, 0, 0); // 移除所有边距
+    m_pMainLayout->setContentsMargins(0, 0, 0, 5); // 移除所有边距
 }
 
 void WaveformWidget::connectSignals()

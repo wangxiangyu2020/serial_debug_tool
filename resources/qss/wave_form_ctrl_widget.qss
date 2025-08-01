@@ -135,8 +135,8 @@ QPushButton#m_pExportButton:pressed {
     border-color: #ced4da;
 }
 
-/* === 动作按钮 === */
-QPushButton#m_pActionButton {
+/* === 开始样式 === */
+QPushButton#m_pActionButton[actionClicked="false"] {
     background-color: #f8f9fa;
     color: #495057;
     border: 1px solid #e9ecef;
@@ -149,12 +149,35 @@ QPushButton#m_pActionButton {
     qproperty-iconSize: 24px;
 }
 
-QPushButton#m_pActionButton:hover {
+QPushButton#m_pActionButton[actionClicked="false"]:hover {
     background-color: #e9ecef;
     border-color: #dee2e6;
 }
 
-QPushButton#m_pActionButton:pressed {
+QPushButton#m_pActionButton[actionClicked="false"]:pressed {
+    background-color: #dee2e6;
+    border-color: #ced4da;
+}
+/* === 停止样式 === */
+QPushButton#m_pActionButton[actionClicked="true"] {
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    min-height: 24px;
+    qproperty-icon: url(:/resources/icons/stop_series.svg);
+    qproperty-iconSize: 24px;
+}
+
+QPushButton#m_pActionButton[actionClicked="true"]:hover {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+
+QPushButton#m_pActionButton[actionClicked="true"]:pressed {
     background-color: #dee2e6;
     border-color: #ced4da;
 }

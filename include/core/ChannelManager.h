@@ -15,6 +15,7 @@
 #include <QMap>
 #include <QString>
 #include <QMutex>
+#include <QVariant>
 
 struct ChannelInfo
 {
@@ -41,12 +42,16 @@ public:
     bool removeChannel(const QString& id);
     bool updateChannel(const QString& id, const QString& name, const QString& newColor);
     void clearChannels();
-
     // 查询操作
     QList<ChannelInfo> getAllChannels() const;
     ChannelInfo getChannel(const QString& id) const;
     bool hasChannel(const QString& id) const;
     int getChannelCount() const;
+    // 通道数据crud操作
+    bool addChannelData(const QString& channelId, const QVariant& data);
+    QVariantList getChannelData(const QString& channelId) const;
+    QMap<QString, QVariantList> getAllChannelData() const;
+    bool removeChannelData(const QString& channelId, int index);
 
 signals:
     void channelAdded(const QString& name, const QString& color);
@@ -66,6 +71,9 @@ private:
     static QMutex m_mutex;
     QMap<QString, ChannelInfo> m_channels; // 改为存储完整的ChannelInfo
     mutable QMutex m_dataMutex;
+    // 通道数据相关
+    mutable QMutex m_channelDataMutex;
+    QMap<QString, QVariantList> m_channelData;
 };
 
 #endif // CHANNELMANAGER_H

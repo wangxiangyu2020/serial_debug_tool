@@ -38,6 +38,7 @@ void WaveformCtrlWidget::createComponents()
     m_pExportButton->setObjectName("m_pExportButton");
     m_pActionButton = new QPushButton(this);
     m_pActionButton->setObjectName("m_pActionButton");
+    m_pActionButton->setProperty("actionClicked", false);
 
     m_pAddChannelButton->setToolTip("添加新的数据通道");
     m_pRemoveChannelButton->setToolTip("移除通道");
@@ -61,10 +62,11 @@ void WaveformCtrlWidget::createLayout()
 
 void WaveformCtrlWidget::connectSignals()
 {
-    this->connect(m_pAddChannelButton, &QPushButton::clicked, this, &WaveformCtrlWidget::onAddChannelClicked);
+    this->connect(m_pAddChannelButton, &QPushButton::clicked, this, &WaveformCtrlWidget::onAddChannelBtnClicked);
+    this->connect(m_pActionButton, &QPushButton::clicked, this, &WaveformCtrlWidget::onActionBtnClicked);
 }
 
-void WaveformCtrlWidget::onAddChannelClicked()
+void WaveformCtrlWidget::onAddChannelBtnClicked()
 {
     m_pAddChannelDialog = new AddChannelDialog(this);
     // 从单例管理器获取已有通道
@@ -90,4 +92,14 @@ void WaveformCtrlWidget::onAddChannelClicked()
         }
     }
     m_pAddChannelDialog->deleteLater();
+}
+
+void WaveformCtrlWidget::onActionBtnClicked()
+{
+    bool actionClicked = m_pActionButton->property("actionClicked").toBool();
+    m_pActionButton->setProperty("actionClicked", !actionClicked);
+    m_pActionButton->setToolTip("结束数据采集");
+    m_pActionButton->style()->unpolish(m_pActionButton);
+    m_pActionButton->style()->polish(m_pActionButton);
+    m_pActionButton->update();
 }

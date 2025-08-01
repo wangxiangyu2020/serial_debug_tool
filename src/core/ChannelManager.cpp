@@ -109,3 +109,35 @@ int ChannelManager::getChannelCount() const
     QMutexLocker locker(&m_dataMutex);
     return m_channels.size();
 }
+
+bool ChannelManager::addChannelData(const QString& channelId, const QVariant& data)
+{
+    QMutexLocker locker(&m_channelDataMutex);
+    if (!m_channelData.contains(channelId))
+        m_channelData.insert(channelId, QList<QVariant>());
+    m_channelData[channelId].append(data);
+    return true;
+}
+
+QVariantList ChannelManager::getChannelData(const QString& channelId) const
+{
+    QMutexLocker locker(&m_channelDataMutex);
+    if (!m_channelData.contains(channelId))
+        return QVariantList();
+    return m_channelData.value(channelId);
+}
+
+QMap<QString, QVariantList> ChannelManager::getAllChannelData() const
+{
+    QMutexLocker locker(&m_channelDataMutex);
+    return m_channelData;
+}
+
+bool ChannelManager::removeChannelData(const QString& channelId, int index)
+{
+    QMutexLocker locker(&m_channelDataMutex);
+    if (!m_channelData.contains(channelId))
+        return false;
+    m_channelData[channelId].removeAt(index);
+    return true;
+}

@@ -35,7 +35,8 @@ private:
     void connectSignals();
 
 private slots:
-    void onAddChannelClicked();
+    void onAddChannelBtnClicked();
+    void onActionBtnClicked();
 
 private:
     QHBoxLayout* m_pMainLayout = nullptr;
