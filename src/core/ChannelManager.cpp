@@ -110,34 +110,10 @@ int ChannelManager::getChannelCount() const
     return m_channels.size();
 }
 
-bool ChannelManager::addChannelData(const QString& channelId, const QVariant& data)
+void ChannelManager::addChannelData(const QString& channelId, const QVariant& data)
 {
     QMutexLocker locker(&m_channelDataMutex);
-    if (!m_channelData.contains(channelId))
-        m_channelData.insert(channelId, QList<QVariant>());
-    m_channelData[channelId].append(data);
-    return true;
+    // 发射信号通知数据更新
+    emit channelDataAdded(channelId, std::move(data));
 }
 
-QVariantList ChannelManager::getChannelData(const QString& channelId) const
-{
-    QMutexLocker locker(&m_channelDataMutex);
-    if (!m_channelData.contains(channelId))
-        return QVariantList();
-    return m_channelData.value(channelId);
-}
-
-QMap<QString, QVariantList> ChannelManager::getAllChannelData() const
-{
-    QMutexLocker locker(&m_channelDataMutex);
-    return m_channelData;
-}
-
-bool ChannelManager::removeChannelData(const QString& channelId, int index)
-{
-    QMutexLocker locker(&m_channelDataMutex);
-    if (!m_channelData.contains(channelId))
-        return false;
-    m_channelData[channelId].removeAt(index);
-    return true;
-}

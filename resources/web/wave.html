@@ -12,6 +12,7 @@
             overflow: hidden;
             background-color: transparent !important;
         }
+
         #chart {
             width: 100%;
             height: 100%;
@@ -27,10 +28,26 @@
     var myChart = echarts.init(document.getElementById('chart'));
     var chartData = {};
 
+    // 系列索引映射表（用于增量渲染）
+    var seriesIndexMap = {};
+
+    // 用户交互状态
+    var userInteracted = false;
+    var currentView = { xStart: 0, xEnd: 100 };
+
+    // 初始坐标轴范围
+    var initialXAxisMin = 0;
+    var initialXAxisMax = 10000; // 初始X轴范围：0-10秒
+    var initialYAxisMin = -1000;
+    var initialYAxisMax = 1000;  // 初始Y轴范围：-1000到1000
+
     // 添加尺寸监控变量
     let lastWidth = 0;
     let lastHeight = 0;
     let resizeScheduled = false;
+
+    // Y轴是否已调整过范围
+    var yAxisAdjusted = false;
 
     // 默认配置
     var option = {
@@ -41,9 +58,9 @@
         },
         tooltip: {
             trigger: 'axis',
-            formatter: function(params) {
+            formatter: function (params) {
                 var result = '时间: ' + params[0].data[0] + 'ms<br/>';
-                params.forEach(function(item) {
+                params.forEach(function (item) {
                     result += item.seriesName + ': ' + item.data[1].toFixed(2) + '<br/>';
                 });
                 return result;
@@ -62,21 +79,31 @@
         },
         toolbox: {
             feature: {
-                dataZoom: { yAxisIndex: 'none' },
-                magicType: { type: ['line', 'bar'] }
+                dataZoom: {yAxisIndex: 'none'},
+                magicType: {type: ['line', 'bar']}
             }
         },
         xAxis: {
             type: 'value',
             name: '时间(ms)',
             nameLocation: 'middle',
-            nameGap: 30
+            nameGap: 30,
+            min: initialXAxisMin,
+            max: initialXAxisMax
         },
         yAxis: {
             type: 'value',
             name: '',
             nameLocation: 'middle',
-            nameGap: 50
+            nameGap: 50,
+            min: initialYAxisMin,
+            max: initialYAxisMax,
+            axisLabel: {
+                formatter: function(value) {
+                    // 整数化Y轴标签
+                    return Math.round(value) === value ? value : value.toFixed(1);
+                }
+            }
         },
         dataZoom: [
             {
@@ -101,31 +128,54 @@
 
     myChart.setOption(option);
 
+    // 监听缩放事件
+    myChart.on('dataZoom', function(params) {
+        userInteracted = true;
+        if (params.batch) {
+            currentView.xStart = params.batch[0].start;
+            currentView.xEnd = params.batch[0].end;
+        } else {
+            currentView.xStart = params.start;
+            currentView.xEnd = params.end;
+        }
+    });
+
+    // 监听还原事件
+    myChart.on('restore', function() {
+        userInteracted = false;
+    });
+
     // 添加示例数据标志
     var hasRealData = false;
-    
+
     // 显示示例坐标轴数据
     function showExampleData() {
         if (hasRealData) return;
-        
+
         var exampleOption = {
             xAxis: {
                 type: 'value',
                 name: '时间(ms)',
                 nameLocation: 'middle',
                 nameGap: 30,
-                min: 0,
-                max: 1000,
-                interval: 200
+                min: initialXAxisMin,
+                max: initialXAxisMax,
+                interval: 2000
             },
             yAxis: {
                 type: 'value',
                 name: '',
                 nameLocation: 'middle',
                 nameGap: 50,
-                min: -100,
-                max: 100,
-                interval: 50
+                min: initialYAxisMin,
+                max: initialYAxisMax,
+                interval: 200,
+                axisLabel: {
+                    formatter: function(value) {
+                        // 整数化Y轴标签
+                        return Math.round(value) === value ? value : value.toFixed(1);
+                    }
+                }
             }
         };
         myChart.setOption(exampleOption);
@@ -173,10 +223,10 @@
     requestAnimationFrame(monitorSizeChanges);
 
     // 保留窗口resize监听作为备用
-    window.addEventListener('resize', function() {
+    window.addEventListener('resize', function () {
         if (!resizeScheduled) {
             resizeScheduled = true;
-            requestAnimationFrame(function() {
+            requestAnimationFrame(function () {
                 checkSizeChange();
                 resizeScheduled = false;
             });
@@ -197,19 +247,13 @@
         // 标记有真实数据，清除示例
         if (!hasRealData) {
             hasRealData = true;
-            // 重置坐标轴为自动模式
-            var resetOption = {
-                xAxis: { min: null, max: null, interval: null },
-                yAxis: { min: null, max: null, interval: null }
-            };
-            myChart.setOption(resetOption);
         }
 
         if (!chartData[name]) {
             chartData[name] = [];
-            
+
             // 生成示例数据
-            for (let i = 0; i < 50; i++) {
+            for (let i = 0; i < 1; i++) {
                 let time = i * 20;
                 chartData[name].push([time, 0]);
             }
@@ -222,16 +266,25 @@
 
         if (!seriesExists) {
             currentOption.legend[0].data.push(name);
-            currentOption.series.push({
+
+            // 创建新系列配置（启用增量渲染）
+            const newSeries = {
                 name: name,
                 type: 'line',
-                data: chartData[name], // 使用生成的示例数据
+                data: chartData[name],
                 lineStyle: {color: color, width: 2},
-                symbol: 'circle',
-                symbolSize: 4,
-                smooth: true,
-                animation: false
-            });
+                symbol: 'none', // 隐藏数据点符号提高性能
+                smooth: false, // 禁用平滑曲线提高性能
+                animation: false,
+                progressive: 1000, // 增量渲染阈值
+                progressiveThreshold: 2000 // 超过2000点启用增量渲染
+            };
+
+            currentOption.series.push(newSeries);
+
+            // 记录系列索引
+            seriesIndexMap[name] = currentOption.series.length - 1;
+
             myChart.setOption(currentOption);
         }
     }
@@ -260,50 +313,266 @@
         myChart.setOption(currentOption, true);
     }
 
-    // 添加数据点到指定系列
+    // 添加数据点到指定系列 - 优化为增量渲染
     function addDataPoint(seriesName, timestamp, value) {
         if (!chartData[seriesName]) {
             chartData[seriesName] = [];
         }
+
+        // 确保时间戳非负
+        timestamp = Math.max(0, timestamp);
+
         chartData[seriesName].push([timestamp, value]);
-        updateChart();
+
+        // 使用增量渲染API
+        const seriesIndex = seriesIndexMap[seriesName];
+        if (seriesIndex !== undefined) {
+            try {
+                myChart.appendData({
+                    seriesIndex: seriesIndex,
+                    data: [[timestamp, value]]
+                });
+            } catch (e) {
+                console.error('增量渲染失败，回退到全量更新:', e);
+                updateChart();
+            }
+        } else {
+            updateChart();
+        }
+
+        // 自动调整视图（仅在超出初始范围时）
+        autoAdjustView(seriesName);
     }
 
-    // 批量添加多个数据点
+    // 批量添加多个数据点 - 优化为增量渲染
     function addDataPoints(seriesName, points) {
         if (!chartData[seriesName]) {
             chartData[seriesName] = [];
         }
+
+        // 确保时间戳非负
+        points = points.map(p => [Math.max(0, p[0]), p[1]]);
+
+        // 添加数据点
         chartData[seriesName] = chartData[seriesName].concat(points);
-        updateChart();
+
+        // 限制数据点数量（最多5000点）
+        const MAX_POINTS = 5000;
+        if (chartData[seriesName].length > MAX_POINTS) {
+            chartData[seriesName] = chartData[seriesName].slice(-MAX_POINTS);
+        }
+
+        // 使用增量渲染API
+        const seriesIndex = seriesIndexMap[seriesName];
+        if (seriesIndex !== undefined) {
+            try {
+                myChart.appendData({
+                    seriesIndex: seriesIndex,
+                    data: points
+                });
+            } catch (e) {
+                console.error('增量渲染失败，回退到全量更新:', e);
+                updateChart();
+            }
+        } else {
+            updateChart();
+        }
+
+        // 自动调整视图（仅在超出初始范围时）
+        autoAdjustView(seriesName);
     }
 
-    // 更新图表显示
-    function updateChart() {
-        var currentOption = myChart.getOption();
+    // 批量添加多个系列的数据点
+    function batchAddDataPoints(seriesData) {
+        // 批量更新系列数据
+        for (const seriesName in seriesData) {
+            if (seriesData.hasOwnProperty(seriesName)) {
+                let points = seriesData[seriesName];
 
-        // 更新每个系列的数据
-        currentOption.series.forEach(function (series) {
-            if (chartData[series.name]) {
-                series.data = chartData[series.name];
+                // 确保时间戳非负
+                points = points.map(p => [Math.max(0, p[0]), p[1]]);
+
+                // 确保系列存在
+                if (!chartData[seriesName]) {
+                    chartData[seriesName] = [];
+                }
+
+                // 添加数据点
+                chartData[seriesName] = chartData[seriesName].concat(points);
+
+                // 限制数据点数量（最多5000点）
+                const MAX_POINTS = 5000;
+                if (chartData[seriesName].length > MAX_POINTS) {
+                    chartData[seriesName] = chartData[seriesName].slice(-MAX_POINTS);
+                }
+
+                // 使用增量渲染API
+                const seriesIndex = seriesIndexMap[seriesName];
+                if (seriesIndex !== undefined) {
+                    try {
+                        myChart.appendData({
+                            seriesIndex: seriesIndex,
+                            data: points
+                        });
+                    } catch (e) {
+                        console.error('增量渲染失败，回退到全量更新:', e);
+                        updateChart();
+                    }
+                }
+
+                // 自动调整视图（仅在超出初始范围时）
+                autoAdjustView(seriesName);
             }
-        });
+        }
+    }
 
-        myChart.setOption(currentOption, false, false);
+    // 自动调整视图范围（仅在数据超出初始范围时）
+    function autoAdjustView(seriesName) {
+        if (userInteracted) return; // 用户手动交互时不调整
+
+        const data = chartData[seriesName];
+        if (!data || data.length === 0) return;
+
+        // 计算X轴范围
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minY = Infinity;
+        let maxY = -Infinity;
+
+        for (const point of data) {
+            if (point[0] < minX) minX = point[0];
+            if (point[0] > maxX) maxX = point[0];
+            if (point[1] < minY) minY = point[1];
+            if (point[1] > maxY) maxY = point[1];
+        }
+
+        // 确保X轴从0开始
+        minX = Math.max(0, minX);
+
+        // 检查是否需要更新X轴
+        let needUpdateX = false;
+        let needUpdateY = false;
+
+        // 检查是否超出初始X轴范围
+        if (maxX > initialXAxisMax || minX < initialXAxisMin) {
+            needUpdateX = true;
+            // 扩展X轴范围
+            const xRange = maxX - minX;
+            initialXAxisMin = Math.max(0, minX - xRange * 0.1);
+            initialXAxisMax = maxX + xRange * 0.1;
+        }
+
+        // 检查是否需要更新Y轴 (只有当数据超出当前Y轴范围时才更新)
+        if (!yAxisAdjusted && (maxY > initialYAxisMax || minY < initialYAxisMin)) {
+            needUpdateY = true;
+            yAxisAdjusted = true; // 标记Y轴已被调整过
+
+            // 扩展Y轴范围
+            const yRange = maxY - minY;
+            initialYAxisMin = minY - yRange * 0.1;
+            initialYAxisMax = maxY + yRange * 0.1;
+        }
+        // 如果Y轴已调整过，只有当数据超出当前范围时才更新
+        else if (yAxisAdjusted && (maxY > initialYAxisMax || minY < initialYAxisMin)) {
+            needUpdateY = true;
+
+            // 扩展Y轴范围
+            const yRange = maxY - minY;
+            initialYAxisMin = minY - yRange * 0.1;
+            initialYAxisMax = maxY + yRange * 0.1;
+        }
+
+        // 确保只显示第一和第四象限
+        if (minY >= 0 && maxY >= 0) {
+            // 所有值都为正，只显示第一象限
+            initialYAxisMin = Math.max(0, initialYAxisMin);
+        } else if (minY < 0 && maxY < 0) {
+            // 所有值都为负，只显示第四象限
+            initialYAxisMax = Math.min(0, initialYAxisMax);
+        }
+
+        // 调整Y轴范围，确保刻度值为整数
+        initialYAxisMin = Math.floor(initialYAxisMin);
+        initialYAxisMax = Math.ceil(initialYAxisMax);
+
+        // 确保Y轴有合理的范围
+        if (initialYAxisMax - initialYAxisMin < 1) {
+            initialYAxisMax = initialYAxisMin + 1;
+        }
+
+        // 如果有需要更新坐标轴
+        if (needUpdateX || needUpdateY) {
+            const updateOption = {};
+
+            if (needUpdateX) {
+                updateOption.xAxis = {
+                    min: initialXAxisMin,
+                    max: initialXAxisMax
+                };
+            }
+
+            if (needUpdateY) {
+                updateOption.yAxis = {
+                    min: initialYAxisMin,
+                    max: initialYAxisMax
+                };
+            }
+
+            // 更新坐标轴范围
+            myChart.setOption(updateOption);
+        }
+    }
+
+    // 更新图表显示（保留原有逻辑，但添加防抖机制）
+    let updateTimer = null;
+    function updateChart() {
+        // 使用防抖机制减少更新频率
+        if (updateTimer) clearTimeout(updateTimer);
+
+        updateTimer = setTimeout(() => {
+            var currentOption = myChart.getOption();
+
+            // 更新每个系列的数据
+            currentOption.series.forEach(function (series) {
+                if (chartData[series.name]) {
+                    series.data = chartData[series.name];
+                }
+            });
+
+            myChart.setOption(currentOption, false, false);
+            updateTimer = null;
+        }, 20); // 约50FPS
     }
 
     // 清除所有数据
     function clearAllData() {
         chartData = {};
         hasRealData = false;
+        seriesIndexMap = {};
+        userInteracted = false;
+        yAxisAdjusted = false; // 重置Y轴调整标志
+
+        // 重置初始坐标轴范围
+        initialXAxisMin = 0;
+        initialXAxisMax = 10000;
+        initialYAxisMin = -1000;
+        initialYAxisMax = 1000;
+
         var currentOption = myChart.getOption();
         currentOption.series.forEach(function (series) {
             series.data = [];
         });
         currentOption.series = [];
         currentOption.legend[0].data = [];
+
+        // 重置坐标轴范围
+        currentOption.xAxis.min = initialXAxisMin;
+        currentOption.xAxis.max = initialXAxisMax;
+        currentOption.yAxis.min = initialYAxisMin;
+        currentOption.yAxis.max = initialYAxisMax;
+
         myChart.setOption(currentOption, false, false);
-        
+
         // 重新显示示例
         setTimeout(showExampleData, 100);
     }
@@ -312,13 +581,29 @@
     function clearSeriesData(seriesName) {
         if (chartData[seriesName]) {
             chartData[seriesName] = [];
+
+            // 使用增量渲染API清除数据
+            const seriesIndex = seriesIndexMap[seriesName];
+            if (seriesIndex !== undefined) {
+                try {
+                    myChart.dispatchAction({
+                        type: 'seriesDataReset',
+                        seriesIndex: seriesIndex
+                    });
+                } catch (e) {
+                    console.error('清除系列数据失败:', e);
+                    updateChart();
+                }
+            } else {
+                updateChart();
+            }
         }
-        updateChart();
     }
 
     // 移除系列
     function removeSeries(seriesName) {
         delete chartData[seriesName];
+        delete seriesIndexMap[seriesName];
 
         var currentOption = myChart.getOption();
 
@@ -382,7 +667,7 @@
         }
     }
 
-    console.log('波形图表初始化完成');
+    console.log('波形图表初始化完成（优化版）');
 </script>
 </body>
 </html>

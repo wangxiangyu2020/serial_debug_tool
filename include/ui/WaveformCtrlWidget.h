@@ -17,6 +17,7 @@
 #include <QPushButton>
 #include "ui/AddChannelDialog.h"
 #include "core/ChannelManager.h"
+#include <QRandomGenerator>
 
 class AddChannelDialog;
 
@@ -37,6 +38,7 @@ private:
 private slots:
     void onAddChannelBtnClicked();
     void onActionBtnClicked();
+    void generateTestData();         // 生成测试数据
 
 private:
     QHBoxLayout* m_pMainLayout = nullptr;
@@ -47,6 +49,11 @@ private:
     QPushButton* m_pExportButton = nullptr;
     QPushButton* m_pActionButton = nullptr;
     AddChannelDialog* m_pAddChannelDialog = nullptr;
+
+    QTimer* m_pTestDataTimer;        // 测试数据生成定时器
+    quint64 m_testDataTimestamp;     // 测试数据时间戳
+    bool m_isGeneratingTestData;     // 是否正在生成测试数据
+    QRandomGenerator m_randomGenerator;  // 添加随机数生成器
 };
 
 #endif //WAVEFORMCTRLWIDGET_H

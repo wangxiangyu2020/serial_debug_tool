@@ -45,16 +45,23 @@ private:
     void executeJS(const QString& jsCode);
     void setSeriesData(const QString& seriesName, const QVariantList& data);
     void updateSeriesData(const QString& seriesName, const QVariantList& newData);
+    void addDataPoint(const QString& seriesName, double timestamp, double value);
 
 private slots:
     void onPageLoadFinished(bool success);
     void onAddSeries(const QString& name, const QString& color);
+    void onChannelDataAdded(const QString& channelId, const QVariant& data);
+    void onProcessPendingData();
 
 private:
     QVBoxLayout* m_pMainLayout = nullptr;
     std::unique_ptr<QWebEngineView> m_pWebEngineView;
     bool m_pageLoaded = false;
     bool m_resizePending = false;
+
+    QTimer* m_updateTimer;
+    QHash<QString, QList<QPair<double, double>>> m_pendingData;
+    bool m_updateScheduled = false;
 };
 
 #endif //WAVEFORMWIDGET_H

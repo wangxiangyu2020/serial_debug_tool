@@ -48,16 +48,15 @@ public:
     bool hasChannel(const QString& id) const;
     int getChannelCount() const;
     // 通道数据crud操作
-    bool addChannelData(const QString& channelId, const QVariant& data);
-    QVariantList getChannelData(const QString& channelId) const;
-    QMap<QString, QVariantList> getAllChannelData() const;
-    bool removeChannelData(const QString& channelId, int index);
+    void addChannelData(const QString& channelId, const QVariant& data);
 
 signals:
     void channelAdded(const QString& name, const QString& color);
     void channelRemoved(const QString& name);
     void channelUpdated(const QString& name, const QString& color);
     void channelsCleared();
+
+    void channelDataAdded(const QString& channelId, const QVariant& data);
 
 private:
     explicit ChannelManager(QObject* parent = nullptr);
@@ -73,7 +72,6 @@ private:
     mutable QMutex m_dataMutex;
     // 通道数据相关
     mutable QMutex m_channelDataMutex;
-    QMap<QString, QVariantList> m_channelData;
 };
 
 #endif // CHANNELMANAGER_H
