@@ -46,6 +46,7 @@ private:
     void executeJS(const QString& jsCode);
     void checkAndScheduleUpdate();
     void checkAndUpdateData();
+    void flushPendingJSCommands();
 
 private slots:
     void onPageLoadFinished(bool success);
@@ -65,6 +66,7 @@ private:
     bool m_isResizing = false;
     QTimer* m_renderTimer = nullptr;
     QTimer* m_updateCheckTimer = nullptr;
+    QStringList m_pendingJSCommands;  // 缓存被跳过的JS命令
 };
 
 #endif //WAVEFORMWIDGET_H

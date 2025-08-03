@@ -31,6 +31,8 @@ void WaveformWidget::resizeEvent(QResizeEvent* event)
     QTimer::singleShot(200, this, [this]()
     {
         m_isResizing = false;
+        // 执行缓存的JS命令
+        this->flushPendingJSCommands();
         // 强制检查并安排更新，确保图表恢复更新
         if (!m_pendingData.isEmpty())
         {
@@ -146,7 +148,8 @@ void WaveformWidget::executeJS(const QString& jsCode)
 
     if (m_isResizing && (currentTime - lastExecTime) < 50)
     {
-        // 在resize过程中跳过高频JS调用
+        // 在resize过程中缓存高频JS调用，而不是直接丢弃
+        m_pendingJSCommands.append(jsCode);
         return;
     }
 
@@ -177,6 +180,22 @@ void WaveformWidget::checkAndUpdateData()
         m_updateScheduled = true;
         m_updateTimer->start(16);
     }
+}
+
+void WaveformWidget::flushPendingJSCommands()
+{
+    if (!m_pageLoaded || m_pendingJSCommands.isEmpty()) return;
+
+    // 执行所有缓存的JS命令
+    for (const QString& jsCode : m_pendingJSCommands)
+    {
+        m_pWebEngineView->page()->runJavaScript(jsCode, [](const QVariant& result)
+        {
+            // qDebug() << "缓存的JavaScript执行结果:" << result;
+        });
+    }
+
+    m_pendingJSCommands.clear();
 }
 
 void WaveformWidget::onPageLoadFinished(bool status)
