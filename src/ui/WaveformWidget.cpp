@@ -34,14 +34,17 @@ void WaveformWidget::resizeEvent(QResizeEvent* event)
         // 执行缓存的JS命令
         this->flushPendingJSCommands();
         // 强制检查并安排更新，确保图表恢复更新
-        if (!m_pendingData.isEmpty())
         {
-            m_updateScheduled = true;
-            m_updateTimer->start(16);
-        }
-        else
-        {
-            if (m_updateTimer->isActive()) m_updateTimer->stop();
+            QMutexLocker locker(&m_dataMutex);
+            if (!m_pendingData.isEmpty())
+            {
+                m_updateScheduled = true;
+                m_updateTimer->start(16);
+            }
+            else
+            {
+                if (m_updateTimer->isActive()) m_updateTimer->stop();
+            }
         }
     });
 
@@ -166,6 +169,7 @@ void WaveformWidget::checkAndScheduleUpdate()
 {
     if (!m_pageLoaded) return;
 
+    QMutexLocker locker(&m_dataMutex);
     // 如果有待处理数据且没有计划更新，则安排一次更新
     if (!m_pendingData.isEmpty() && !m_updateScheduled)
     {
@@ -176,6 +180,7 @@ void WaveformWidget::checkAndScheduleUpdate()
 
 void WaveformWidget::checkAndUpdateData()
 {
+    QMutexLocker locker(&m_dataMutex);
     if (!m_isResizing && !m_updateScheduled && !m_pendingData.isEmpty() && m_pageLoaded)
     {
         m_updateScheduled = true;
@@ -229,16 +234,20 @@ void WaveformWidget::onChannelDataAdded(const QString& channelId, const QVariant
     QVariantList pointList = data.toList();
     if (pointList.size() < 2) return;
 
-    // 将数据添加到待处理队列
-    m_pendingData[channel.name].append(qMakePair(pointList[0].toDouble(), pointList[1].toDouble()));
+    // 使用互斥锁保护数据访问
+    {
+        QMutexLocker locker(&m_dataMutex);
+        // 将数据添加到待处理队列
+        m_pendingData[channel.name].append(qMakePair(pointList[0].toDouble(), pointList[1].toDouble()));
 
-    // 如果没有计划更新，则安排一次更新
-    if (m_updateScheduled) return;
+        // 如果没有计划更新，则安排一次更新
+        if (m_updateScheduled) return;
 
-    m_updateScheduled = true;
-    // 只有不在 resize 过程中才启动定时器
-    if (!m_isResizing) m_updateTimer->start(16); // 约60FPS
-    // 如果在 resize 过程中，数据会被保留，等待 resize 结束后处理
+        m_updateScheduled = true;
+        // 只有不在 resize 过程中才启动定时器
+        if (!m_isResizing) m_updateTimer->start(16); // 约60FPS
+        // 如果在 resize 过程中，数据会被保留，等待 resize 结束后处理
+    }
 }
 
 // 新增处理待处理数据的函数
@@ -248,44 +257,51 @@ void WaveformWidget::onProcessPendingData()
     if (m_isResizing)
     {
         // 只有在有待处理数据时才重新调度
+        QMutexLocker locker(&m_dataMutex);
         if (!m_pendingData.isEmpty() && !m_updateTimer->isActive()) m_updateTimer->start(50);
         return;
     }
 
-    // 正常处理数据更新
-    if (!m_pageLoaded || m_pendingData.isEmpty())
-    {
-        m_updateScheduled = false;
-        // 显式停止定时器，确保没有无谓的定时器运行
-        if (m_updateTimer->isActive()) m_updateTimer->stop();
-        return;
-    }
-
-    // 使用JSON格式批量传递数据
+    // 正常处理数据更新 - 获取数据副本
     QJsonObject seriesDataObject;
-    for (auto it = m_pendingData.begin(); it != m_pendingData.end(); ++it)
     {
-        const QString& seriesName = it.key();
-        const QList<QPair<double, double>>& dataPoints = it.value();
-
-        QJsonArray pointsArray;
-        for (const auto& point : dataPoints)
+        QMutexLocker locker(&m_dataMutex);
+        if (!m_pageLoaded || m_pendingData.isEmpty())
         {
-            QJsonArray p;
-            p.append(point.first);
-            p.append(point.second);
-            pointsArray.append(p);
+            m_updateScheduled = false;
+            // 显式停止定时器，确保没有无谓的定时器运行
+            if (m_updateTimer->isActive()) m_updateTimer->stop();
+            return;
         }
-        seriesDataObject[seriesName] = pointsArray;
+
+        // 构建要发送的数据
+        for (auto it = m_pendingData.begin(); it != m_pendingData.end(); ++it)
+        {
+            const QString& seriesName = it.key();
+            const QList<QPair<double, double>>& dataPoints = it.value();
+
+            QJsonArray pointsArray;
+            for (const auto& point : dataPoints)
+            {
+                QJsonArray p;
+                p.append(point.first);
+                p.append(point.second);
+                pointsArray.append(p);
+            }
+            seriesDataObject[seriesName] = pointsArray;
+        }
+
+        // 清空原始数据并更新状态
+        m_pendingData.clear();
+        m_updateScheduled = false;
+        // 锁在这里自动释放（QMutexLocker作用域结束
     }
 
+    // 在无锁状态下执行耗时操作
     QJsonDocument doc(seriesDataObject);
     QString jsonStr = QString::fromUtf8(doc.toJson(QJsonDocument::Compact));
 
     // 单次JavaScript调用传递所有数据
     QString jsCode = QString("batchAddDataPoints(%1);").arg(jsonStr);
     this->executeJS(jsCode);
-
-    m_pendingData.clear();
-    m_updateScheduled = false;
 }

@@ -62,6 +62,7 @@ private:
     // 图表加载优化相关
     QTimer* m_updateTimer;
     QHash<QString, QList<QPair<double, double>>> m_pendingData;
+    mutable QMutex m_dataMutex; // 保护 m_pendingData 的互斥锁
     bool m_updateScheduled = false;
     bool m_isResizing = false;
     QTimer* m_renderTimer = nullptr;
