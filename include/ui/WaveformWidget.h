@@ -42,10 +42,10 @@ private:
     void createComponents();
     void createLayout();
     void connectSignals();
+    void webEngineViewSettings();
     void executeJS(const QString& jsCode);
-    void setSeriesData(const QString& seriesName, const QVariantList& data);
-    void updateSeriesData(const QString& seriesName, const QVariantList& newData);
-    void addDataPoint(const QString& seriesName, double timestamp, double value);
+    void checkAndScheduleUpdate();
+    void checkAndUpdateData();
 
 private slots:
     void onPageLoadFinished(bool success);
@@ -58,10 +58,13 @@ private:
     std::unique_ptr<QWebEngineView> m_pWebEngineView;
     bool m_pageLoaded = false;
     bool m_resizePending = false;
-
+    // 图表加载优化相关
     QTimer* m_updateTimer;
     QHash<QString, QList<QPair<double, double>>> m_pendingData;
     bool m_updateScheduled = false;
+    bool m_isResizing = false;
+    QTimer* m_renderTimer = nullptr;
+    QTimer* m_updateCheckTimer = nullptr;
 };
 
 #endif //WAVEFORMWIDGET_H

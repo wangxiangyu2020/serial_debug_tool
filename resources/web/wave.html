@@ -33,7 +33,7 @@
 
     // 用户交互状态
     var userInteracted = false;
-    var currentView = { xStart: 0, xEnd: 100 };
+    var currentView = {xStart: 0, xEnd: 100};
 
     // 初始坐标轴范围
     var initialXAxisMin = 0;
@@ -48,6 +48,8 @@
 
     // Y轴是否已调整过范围
     var yAxisAdjusted = false;
+
+    var symbolVisible = false; // 默认不显示数据点符号
 
     // 默认配置
     var option = {
@@ -79,6 +81,16 @@
         },
         toolbox: {
             feature: {
+                // 添加自定义工具用于控制数据点符号显示
+                mySymbolTool: {
+                    show: true,
+                    title: '切换数据点符号',
+                    // 替换为更形象的图标
+                    icon: 'path://M12,2C8.13,2 5,5.13 5,9c0,5.25 7,13 7,13s7,-7.75 7,-13C19,5.13 15.87,2 12,2zM12,11.5c-1.38,0 -2.5,-1.12 -2.5,-2.5s1.12,-2.5 2.5,-2.5 2.5,1.12 2.5,2.5 -1.12,2.5 -2.5,2.5z',
+                    onclick: function () {
+                        toggleSymbolVisibility();
+                    }
+                },
                 dataZoom: {yAxisIndex: 'none'},
                 magicType: {type: ['line', 'bar']}
             }
@@ -99,11 +111,13 @@
             min: initialYAxisMin,
             max: initialYAxisMax,
             axisLabel: {
-                formatter: function(value) {
+                formatter: function (value) {
                     // 整数化Y轴标签
                     return Math.round(value) === value ? value : value.toFixed(1);
                 }
-            }
+            },
+            // 添加刻度间隔设置
+            interval: 200  // 初始刻度间隔
         },
         dataZoom: [
             {
@@ -112,7 +126,9 @@
                 start: 0,
                 end: 100,
                 zoomOnMouseWheel: true,
-                moveOnMouseMove: true
+                moveOnMouseMove: true,
+                preventDefaultMouseMove: false, // 允许鼠标移动事件
+                throttle: 50 // 添加节流控制
             },
             {
                 show: true,
@@ -120,7 +136,8 @@
                 type: 'slider',
                 top: '90%',
                 start: 0,
-                end: 100
+                end: 100,
+                throttle: 50 // 添加节流控制
             }
         ],
         series: []
@@ -128,9 +145,22 @@
 
     myChart.setOption(option);
 
-    // 监听缩放事件
-    myChart.on('dataZoom', function(params) {
+    let lastZoomTime = 0;
+    const ZOOM_THROTTLE_TIME = 100; // 100ms节流
+
+    // 修改dataZoom事件监听器，添加一个标志表示用户当前是否正在交互
+    let isUserZooming = false;
+
+    myChart.on('dataZoom', function (params) {
+        const now = Date.now();
+        if (now - lastZoomTime < ZOOM_THROTTLE_TIME) {
+            return;
+        }
+        lastZoomTime = now;
+
         userInteracted = true;
+        isUserZooming = true; // 标记用户正在进行缩放操作
+
         if (params.batch) {
             currentView.xStart = params.batch[0].start;
             currentView.xEnd = params.batch[0].end;
@@ -138,12 +168,182 @@
             currentView.xStart = params.start;
             currentView.xEnd = params.end;
         }
+
+        // 使用requestAnimationFrame进行异步更新
+        requestAnimationFrame(() => {
+            updateYAxisBasedOnVisibleData();
+            // 用户操作完成后重置标志
+            setTimeout(() => {
+                isUserZooming = false;
+            }, 100);
+        });
     });
 
     // 监听还原事件
-    myChart.on('restore', function() {
+    myChart.on('restore', function () {
         userInteracted = false;
+        // 还原时重置Y轴到初始范围
+        resetYAxisToInitial();
     });
+
+
+    // 添加切换符号显示的函数
+    function toggleSymbolVisibility() {
+        symbolVisible = !symbolVisible;
+
+        var currentOption = myChart.getOption();
+
+        // 更新所有系列的symbol设置
+        currentOption.series.forEach(function (series, index) {
+            series.symbol = symbolVisible ? 'circle' : 'none';
+            series.symbolSize = symbolVisible ? 3 : 0;
+        });
+
+        // 更新图表配置
+        myChart.setOption(currentOption);
+
+        // 更新工具箱图标状态（可选）
+        var toolIcon = document.querySelector('.toolbox-symbol-tool');
+        if (toolIcon) {
+            toolIcon.style.opacity = symbolVisible ? '1' : '0.5';
+        }
+    }
+
+    // 根据当前可见数据更新Y轴范围 - 优化版本
+    function updateYAxisBasedOnVisibleData() {
+        try {
+            // 获取当前视图的X轴范围
+            const xAxisModel = myChart.getModel().getComponent('xAxis', 0);
+            if (!xAxisModel) return;
+
+            const axis = xAxisModel.axis;
+            if (!axis || !axis.scale) return;
+
+            const visibleMinX = axis.scale.getExtent()[0];
+            const visibleMaxX = axis.scale.getExtent()[1];
+
+            // 计算当前可见区域内的Y值范围
+            let minY = Infinity;
+            let maxY = -Infinity;
+            let hasVisibleData = false;
+
+            // 使用高效算法：只检查最近的点
+            for (const seriesName in chartData) {
+                const data = chartData[seriesName];
+                if (!data || data.length === 0) continue;
+
+                // 使用二分查找确定可见范围内的起始索引
+                let startIdx = 0;
+                let endIdx = data.length - 1;
+
+                // 二分查找下限
+                let low = 0;
+                let high = data.length - 1;
+                while (low <= high) {
+                    const mid = Math.floor((low + high) / 2);
+                    if (data[mid][0] < visibleMinX) {
+                        low = mid + 1;
+                    } else {
+                        startIdx = mid;
+                        high = mid - 1;
+                    }
+                }
+
+                // 二分查找上限
+                low = startIdx;
+                high = data.length - 1;
+                while (low <= high) {
+                    const mid = Math.floor((low + high) / 2);
+                    if (data[mid][0] > visibleMaxX) {
+                        high = mid - 1;
+                    } else {
+                        endIdx = mid;
+                        low = mid + 1;
+                    }
+                }
+
+                // 检查可见范围内的点
+                for (let i = startIdx; i <= endIdx; i++) {
+                    const yValue = data[i][1];
+                    if (yValue < minY) minY = yValue;
+                    if (yValue > maxY) maxY = yValue;
+                    hasVisibleData = true;
+                }
+            }
+
+            // 如果没有可见数据，则返回
+            if (!hasVisibleData) return;
+
+            // 扩展Y轴范围10%，以便显示完整波形
+            const yRange = maxY - minY;
+            const padding = yRange * 0.1;
+            let newMinY = minY - padding;
+            let newMaxY = maxY + padding;
+
+            // 确保只显示第一和第四象限
+            if (minY >= 0 && maxY >= 0) {
+                // 所有值都为正，只显示第一象限
+                newMinY = Math.max(0, newMinY);
+            } else if (minY < 0 && maxY < 0) {
+                // 所有值都为负，只显示第四象限
+                newMaxY = Math.min(0, newMaxY);
+            }
+
+            // 调整Y轴范围，确保刻度值为整数
+            newMinY = Math.floor(newMinY);
+            newMaxY = Math.ceil(newMaxY);
+
+            // 确保Y轴有合理的范围
+            if (newMaxY - newMinY < 1) {
+                newMaxY = newMinY + 1;
+            }
+
+            // 计算合适的刻度间隔
+            const range = newMaxY - newMinY;
+            let interval = 1;
+
+            // 根据范围动态计算刻度间隔
+            if (range > 1000) {
+                interval = 200;
+            } else if (range > 500) {
+                interval = 100;
+            } else if (range > 200) {
+                interval = 50;
+            } else if (range > 100) {
+                interval = 20;
+            } else if (range > 50) {
+                interval = 10;
+            } else if (range > 20) {
+                interval = 5;
+            } else if (range > 10) {
+                interval = 2;
+            } else {
+                interval = 1;
+            }
+
+            // 更新Y轴范围
+            myChart.setOption({
+                yAxis: {
+                    min: newMinY,
+                    max: newMaxY,
+                    interval: interval  // 设置动态计算的刻度间隔
+                }
+            });
+        } catch (e) {
+            console.error('更新Y轴时出错:', e);
+        }
+    }
+
+    // 重置Y轴到初始范围
+    function resetYAxisToInitial() {
+        myChart.setOption({
+            yAxis: {
+                min: initialYAxisMin,
+                max: initialYAxisMax,
+                interval: 200  // 重置为初始刻度间隔
+            }
+        });
+    }
 
     // 添加示例数据标志
     var hasRealData = false;
@@ -171,7 +371,7 @@
                 max: initialYAxisMax,
                 interval: 200,
                 axisLabel: {
-                    formatter: function(value) {
+                    formatter: function (value) {
                         // 整数化Y轴标签
                         return Math.round(value) === value ? value : value.toFixed(1);
                     }
@@ -243,6 +443,7 @@
     }, 500);
 
     // Qt调用的接口 - 添加新的数据系列
+    // 修改Qt调用的接口 - 添加新的数据系列函数
     function addSeries(name, color) {
         // 标记有真实数据，清除示例
         if (!hasRealData) {
@@ -273,9 +474,11 @@
                 type: 'line',
                 data: chartData[name],
                 lineStyle: {color: color, width: 2},
-                symbol: 'none', // 隐藏数据点符号提高性能
+                symbol: symbolVisible ? 'circle' : 'none', // 根据当前状态设置
+                symbolSize: 3, // 设置数据点大小
                 smooth: false, // 禁用平滑曲线提高性能
                 animation: false,
+                large: true,   // 启用大数据优化模式
                 progressive: 1000, // 增量渲染阈值
                 progressiveThreshold: 2000 // 超过2000点启用增量渲染
             };
@@ -382,7 +585,7 @@
         autoAdjustView(seriesName);
     }
 
-    // 批量添加多个系列的数据点
+    // 修改batchAddDataPoints函数
     function batchAddDataPoints(seriesData) {
         // 批量更新系列数据
         for (const seriesName in seriesData) {
@@ -420,26 +623,54 @@
                     }
                 }
 
-                // 自动调整视图（仅在超出初始范围时）
+                checkAndUpdateXAxisRange(seriesName, points);
+
+                // 自动调整视图（现在即使用户交互过也会更新坐标轴范围）
                 autoAdjustView(seriesName);
             }
         }
     }
 
-    // 自动调整视图范围（仅在数据超出初始范围时）
+    // 添加一个专门用于检查和更新X轴范围的函数
+    function checkAndUpdateXAxisRange(seriesName, points) {
+        // 如果用户没有手动交互，检查是否有数据点超出当前X轴范围
+        if (!userInteracted && points.length > 0) {
+            // 找到这批数据中的最大时间戳
+            const maxTimestamp = Math.max(...points.map(p => p[0]));
+
+            // 如果最大时间戳超出当前X轴最大值，则更新X轴范围
+            if (maxTimestamp > initialXAxisMax) {
+                const xRange = initialXAxisMax - initialXAxisMin;
+                // 扩展X轴范围，增加20%的边距
+                initialXAxisMax = maxTimestamp + xRange * 0.2;
+
+                // 立即更新X轴范围
+                myChart.setOption({
+                    xAxis: {
+                        max: initialXAxisMax
+                    }
+                });
+            }
+        }
+    }
+
+    // 修改自动调整视图范围函数，使其在有新数据时总是更新坐标轴
     function autoAdjustView(seriesName) {
-        if (userInteracted) return; // 用户手动交互时不调整
+        // 移除 userInteracted 的检查，或者添加一个强制更新的条件
+        // 用户交互后只锁定视图范围，但不妨碍根据新数据更新坐标轴范围
 
         const data = chartData[seriesName];
         if (!data || data.length === 0) return;
 
-        // 计算X轴范围
+        // 只检查最近的点（优化性能）
+        const startIdx = Math.max(0, data.length - 500);
         let minX = Infinity;
         let maxX = -Infinity;
         let minY = Infinity;
         let maxY = -Infinity;
 
-        for (const point of data) {
+        for (let i = startIdx; i < data.length; i++) {
+            const point = data[i];
             if (point[0] < minX) minX = point[0];
             if (point[0] > maxX) maxX = point[0];
             if (point[1] < minY) minY = point[1];
@@ -453,13 +684,18 @@
         let needUpdateX = false;
         let needUpdateY = false;
 
-        // 检查是否超出初始X轴范围
+        // 检查是否超出当前X轴范围（无论用户是否交互过）
         if (maxX > initialXAxisMax || minX < initialXAxisMin) {
             needUpdateX = true;
             // 扩展X轴范围
             const xRange = maxX - minX;
-            initialXAxisMin = Math.max(0, minX - xRange * 0.1);
-            initialXAxisMax = maxX + xRange * 0.1;
+            // 如果是新数据导致的范围扩展，只扩展最大值
+            if (maxX > initialXAxisMax) {
+                initialXAxisMax = maxX + xRange * 0.1;
+            }
+            if (minX < initialXAxisMin) {
+                initialXAxisMin = Math.max(0, minX - xRange * 0.1);
+            }
         }
 
         // 检查是否需要更新Y轴 (只有当数据超出当前Y轴范围时才更新)
@@ -500,6 +736,29 @@
             initialYAxisMax = initialYAxisMin + 1;
         }
 
+        // 计算合适的刻度间隔
+        const range = initialYAxisMax - initialYAxisMin;
+        let interval = 1;
+
+        // 根据范围动态计算刻度间隔
+        if (range > 1000) {
+            interval = 200;
+        } else if (range > 500) {
+            interval = 100;
+        } else if (range > 200) {
+            interval = 50;
+        } else if (range > 100) {
+            interval = 20;
+        } else if (range > 50) {
+            interval = 10;
+        } else if (range > 20) {
+            interval = 5;
+        } else if (range > 10) {
+            interval = 2;
+        } else {
+            interval = 1;
+        }
+
         // 如果有需要更新坐标轴
         if (needUpdateX || needUpdateY) {
             const updateOption = {};
@@ -514,7 +773,8 @@
             if (needUpdateY) {
                 updateOption.yAxis = {
                     min: initialYAxisMin,
-                    max: initialYAxisMax
+                    max: initialYAxisMax,
+                    interval: interval  // 设置动态计算的刻度间隔
                 };
             }
 
@@ -525,6 +785,7 @@
 
     // 更新图表显示（保留原有逻辑，但添加防抖机制）
     let updateTimer = null;
+
     function updateChart() {
         // 使用防抖机制减少更新频率
         if (updateTimer) clearTimeout(updateTimer);
@@ -570,6 +831,7 @@
         currentOption.xAxis.max = initialXAxisMax;
         currentOption.yAxis.min = initialYAxisMin;
         currentOption.yAxis.max = initialYAxisMax;
+        currentOption.yAxis.interval = 200; // 重置刻度间隔
 
         myChart.setOption(currentOption, false, false);
 
@@ -668,6 +930,12 @@
     }
 
     console.log('波形图表初始化完成（优化版）');
+
+    // 强制初始化图表事件处理
+    setTimeout(() => {
+        myChart.resize();
+        console.log('图表事件处理已强制初始化');
+    }, 1000);
 </script>
 </body>
 </html>

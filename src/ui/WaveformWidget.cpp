@@ -19,22 +19,44 @@ WaveformWidget::WaveformWidget(QWidget* parent)
 void WaveformWidget::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
-    // 立即更新Web视图尺寸
-    // m_pWebEngineView->resize(this->size());
-    if (m_pageLoaded && !m_resizePending)
+
+    if (!m_pageLoaded) return;
+
+    m_isResizing = true;
+
+    // 暂停数据更新以提升resize性能
+    if (m_updateTimer->isActive()) m_updateTimer->stop();
+
+    // 延迟恢复数据更新
+    QTimer::singleShot(200, this, [this]()
     {
-        m_resizePending = true;
-        // 使用短延迟确保布局完成
-        QTimer::singleShot(20, this, [this]()
+        m_isResizing = false;
+        // 强制检查并安排更新，确保图表恢复更新
+        if (!m_pendingData.isEmpty())
         {
-            if (m_pageLoaded)
-            {
-                // 触发JavaScript中的尺寸检查
-                this->executeJS("if (typeof checkSizeChange === 'function') checkSizeChange();");
-            }
-            m_resizePending = false;
-        });
+            m_updateScheduled = true;
+            m_updateTimer->start(16);
+        }
+    });
+
+    // 使用防抖处理resize
+    if (m_renderTimer)
+    {
+        m_renderTimer->start(100); // 100ms防抖
+        return;
     }
+
+    m_renderTimer = new QTimer(this);
+    m_renderTimer->setSingleShot(true);
+    connect(m_renderTimer, &QTimer::timeout, this, [this]()
+    {
+        if (m_pageLoaded)
+        {
+            this->executeJS("if (typeof handleResize === 'function') handleResize();");
+        }
+    });
+
+    m_renderTimer->start(100); // 100ms防抖
 }
 
 void WaveformWidget::setUI()
@@ -47,10 +69,13 @@ void WaveformWidget::setUI()
 
 void WaveformWidget::createComponents()
 {
+    // 初始化更新检查定时器
+    m_updateCheckTimer = new QTimer(this);
+    m_updateCheckTimer->setInterval(500); // 500ms检查一次
     m_updateTimer = new QTimer(this);
     m_updateTimer->setSingleShot(true);
-
     m_pWebEngineView = std::make_unique<QWebEngineView>(this);
+    this->webEngineViewSettings();
     // 启用透明背景
     QPalette pal = m_pWebEngineView->palette();
     pal.setColor(QPalette::Window, Qt::transparent);
@@ -58,12 +83,6 @@ void WaveformWidget::createComponents()
     // 设置背景透明
     m_pWebEngineView->setAttribute(Qt::WA_TranslucentBackground);
     m_pWebEngineView->page()->setBackgroundColor(Qt::transparent);
-    // 性能优化设置
-    auto settings = m_pWebEngineView->settings();
-    settings->setAttribute(QWebEngineSettings::JavascriptEnabled, true);
-    settings->setAttribute(QWebEngineSettings::Accelerated2dCanvasEnabled, true);
-    settings->setAttribute(QWebEngineSettings::WebGLEnabled, true);
-    settings->setAttribute(QWebEngineSettings::ScrollAnimatorEnabled, false);
     // 加载html文件
     QFile htmlFile(":/resources/web/wave.html");
     htmlFile.open(QIODevice::ReadOnly);
@@ -79,6 +98,8 @@ void WaveformWidget::createLayout()
 
 void WaveformWidget::connectSignals()
 {
+    connect(m_updateCheckTimer, &QTimer::timeout, this, &WaveformWidget::checkAndUpdateData);
+    m_updateCheckTimer->start();
     ChannelManager* manager = ChannelManager::getInstance();
     if (!manager) return;
     this->connect(m_pWebEngineView.get(), &QWebEngineView::loadFinished, this, &WaveformWidget::onPageLoadFinished);
@@ -88,37 +109,74 @@ void WaveformWidget::connectSignals()
     this->connect(manager, &ChannelManager::channelDataAdded, this, &WaveformWidget::onChannelDataAdded);
 }
 
+void WaveformWidget::webEngineViewSettings()
+{
+    // 性能优化设置
+    auto settings = m_pWebEngineView->settings();
+    // 启用JavaScript支持，确保网页能够正常执行脚本
+    settings->setAttribute(QWebEngineSettings::JavascriptEnabled, true);
+    // 启用2D画布加速渲染，提升图形绘制性能
+    settings->setAttribute(QWebEngineSettings::Accelerated2dCanvasEnabled, true);
+    // 关闭WebGL支持，不允许网页使用3D图形渲染功能
+    settings->setAttribute(QWebEngineSettings::WebGLEnabled, false);
+    // 禁用滚动动画效果，提升滚动操作的响应速度
+    settings->setAttribute(QWebEngineSettings::ScrollAnimatorEnabled, false);
+    // 禁止本地内容访问远程URL，增强安全性和性能
+    settings->setAttribute(QWebEngineSettings::LocalContentCanAccessRemoteUrls, false);
+    // 禁用空间导航功能，减少不必要的键盘导航处理
+    settings->setAttribute(QWebEngineSettings::SpatialNavigationEnabled, false);
+    // 禁用超链接审计功能，避免发送额外的网络请求
+    settings->setAttribute(QWebEngineSettings::HyperlinkAuditingEnabled, false);
+    // 禁用全屏支持功能，减少资源占用
+    settings->setAttribute(QWebEngineSettings::FullScreenSupportEnabled, false);
+    // 禁用插件支持，提升安全性和性能
+    settings->setAttribute(QWebEngineSettings::PluginsEnabled, false);
+    // 保持图像自动加载启用状态，确保图表等图片内容正常显示
+    settings->setAttribute(QWebEngineSettings::AutoLoadImages, true);
+}
+
 
 void WaveformWidget::executeJS(const QString& jsCode)
 {
     if (!m_pageLoaded) return;
+
+    // 在resize过程中限制JS执行频率
+    static qint64 lastExecTime = 0;
+    qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
+
+    if (m_isResizing && (currentTime - lastExecTime) < 50)
+    {
+        // 在resize过程中跳过高频JS调用
+        return;
+    }
+
+    lastExecTime = currentTime;
+
     m_pWebEngineView->page()->runJavaScript(jsCode, [jsCode](const QVariant& result)
     {
         // qDebug() << "JavaScript执行结果:" << result;
     });
 }
 
-void WaveformWidget::setSeriesData(const QString& seriesName, const QVariantList& data)
+void WaveformWidget::checkAndScheduleUpdate()
 {
     if (!m_pageLoaded) return;
-    QJsonArray jsonArray;
-    for (int i = 0; i < data.size(); ++i)
+
+    // 如果有待处理数据且没有计划更新，则安排一次更新
+    if (!m_pendingData.isEmpty() && !m_updateScheduled)
     {
-        const auto& point = data[i];
-        if (!point.canConvert<QVariantList>()) continue;
-        auto pointList = point.toList();
-        if (pointList.size() >= 2)
-        {
-            QJsonArray pointArray;
-            pointArray.append(pointList[0].toDouble());
-            pointArray.append(pointList[1].toDouble());
-            jsonArray.append(pointArray);
-        }
+        m_updateScheduled = true;
+        m_updateTimer->start(16); // 约60FPS
     }
-    QJsonDocument doc(jsonArray);
-    auto jsonString = doc.toJson(QJsonDocument::Compact);
-    QString jsCode = QString("setSeriesData('%1', %2);").arg(seriesName, jsonString);
-    this->executeJS(jsCode);
+}
+
+void WaveformWidget::checkAndUpdateData()
+{
+    if (!m_isResizing && !m_updateScheduled && !m_pendingData.isEmpty() && m_pageLoaded)
+    {
+        m_updateScheduled = true;
+        m_updateTimer->start(16);
+    }
 }
 
 void WaveformWidget::onPageLoadFinished(bool status)
@@ -134,35 +192,46 @@ void WaveformWidget::onAddSeries(const QString& name, const QString& color)
     this->executeJS(jsCode);
 }
 
-// 实现槽函数
 void WaveformWidget::onChannelDataAdded(const QString& channelId, const QVariant& data)
 {
     if (!m_pageLoaded) return;
 
     ChannelManager* manager = ChannelManager::getInstance();
+    if (!manager) return;
+
     ChannelInfo channel = manager->getChannel(channelId);
+    if (!data.canConvert<QVariantList>()) return;
 
-    if (data.canConvert<QVariantList>())
+    QVariantList pointList = data.toList();
+    if (pointList.size() < 2) return;
+
+    // 将数据添加到待处理队列
+    m_pendingData[channel.name].append(qMakePair(pointList[0].toDouble(), pointList[1].toDouble()));
+
+    // 如果没有计划更新，则安排一次更新
+    if (m_updateScheduled) return;
+
+    m_updateScheduled = true;
+    // 只有不在 resize 过程中才启动定时器
+    if (!m_isResizing)
     {
-        QVariantList pointList = data.toList();
-        if (pointList.size() >= 2)
-        {
-            // 将数据添加到待处理队列
-            m_pendingData[channel.name].append(qMakePair(pointList[0].toDouble(), pointList[1].toDouble()));
-
-            // 如果没有计划更新，则安排一次更新
-            if (!m_updateScheduled)
-            {
-                m_updateScheduled = true;
-                m_updateTimer->start(16); // 约60FPS
-            }
-        }
+        m_updateTimer->start(16); // 约60FPS
     }
+    // 如果在 resize 过程中，数据会被保留，等待 resize 结束后处理
 }
 
 // 新增处理待处理数据的函数
 void WaveformWidget::onProcessPendingData()
 {
+    // 在resize过程中暂时不更新图表
+    if (m_isResizing)
+    {
+        // 保持更新调度状态，稍后重试
+        if (m_updateTimer->isActive()) return;
+        m_updateTimer->start(50);
+    }
+
+    // 正常处理数据更新
     if (!m_pageLoaded || m_pendingData.isEmpty())
     {
         m_updateScheduled = false;
@@ -196,4 +265,12 @@ void WaveformWidget::onProcessPendingData()
 
     m_pendingData.clear();
     m_updateScheduled = false;
+
+    // 处理完数据后，检查是否还有新数据需要处理
+    // 这确保在处理数据期间新到达的数据也能被处理
+    if (!m_pendingData.isEmpty())
+    {
+        m_updateScheduled = true;
+        m_updateTimer->start(16);
+    }
 }
