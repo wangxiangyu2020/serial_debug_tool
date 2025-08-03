@@ -104,6 +104,7 @@ void WaveformCtrlWidget::onAddChannelBtnClicked()
 void WaveformCtrlWidget::onActionBtnClicked()
 {
     bool actionClicked = m_pActionButton->property("actionClicked").toBool();
+    ChannelManager* manager = ChannelManager::getInstance();
 
     if (!actionClicked)
     {
@@ -111,6 +112,10 @@ void WaveformCtrlWidget::onActionBtnClicked()
         m_isGeneratingTestData = true;
         m_testDataTimestamp = 0; // 重置时间戳
         m_pTestDataTimer->start(50); // 每50ms生成一次数据
+
+        // 启动数据分发
+        manager->startDataDispatch();
+
         m_pActionButton->setToolTip("结束数据采集");
         qDebug() << "开始生成测试数据";
     }
@@ -119,6 +124,10 @@ void WaveformCtrlWidget::onActionBtnClicked()
         // 停止生成测试数据
         m_isGeneratingTestData = false;
         m_pTestDataTimer->stop();
+
+        // 停止数据分发
+        manager->stopDataDispatch();
+
         m_pActionButton->setToolTip("开始数据采集");
         qDebug() << "停止生成测试数据";
     }

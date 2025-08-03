@@ -16,6 +16,8 @@
 #include <QString>
 #include <QMutex>
 #include <QVariant>
+#include <QQueue>
+#include <QTimer>
 
 struct ChannelInfo
 {
@@ -50,6 +52,19 @@ public:
     // 通道数据crud操作
     void addChannelData(const QString& channelId, const QVariant& data);
 
+    void startDataDispatch();
+    void stopDataDispatch();
+
+private:
+    explicit ChannelManager(QObject* parent = nullptr);
+    ~ChannelManager() = default;
+
+    ChannelManager(const ChannelManager&) = delete;
+    ChannelManager& operator=(const ChannelManager&) = delete;
+
+private slots:
+    void dispatchQueuedData(); //
+
 signals:
     void channelAdded(const QString& name, const QString& color);
     void channelRemoved(const QString& name);
@@ -59,19 +74,16 @@ signals:
     void channelDataAdded(const QString& channelId, const QVariant& data);
 
 private:
-    explicit ChannelManager(QObject* parent = nullptr);
-    ~ChannelManager() = default;
-
-    ChannelManager(const ChannelManager&) = delete;
-    ChannelManager& operator=(const ChannelManager&) = delete;
-
-private:
     static ChannelManager* m_instance;
     static QMutex m_mutex;
     QMap<QString, ChannelInfo> m_channels; // 改为存储完整的ChannelInfo
     mutable QMutex m_dataMutex;
     // 通道数据相关
     mutable QMutex m_channelDataMutex;
+    QTimer* m_dataDispatchTimer = nullptr; // 数据分发定时器
+    QQueue<QPair<QString, QVariant>> m_dataQueue; // 数据队列
+    mutable QMutex m_queueMutex; // 队列互斥锁
+    bool m_isDispatching = false; // 是否正在分发数据
 };
 
 #endif // CHANNELMANAGER_H

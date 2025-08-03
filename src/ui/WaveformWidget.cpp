@@ -39,6 +39,10 @@ void WaveformWidget::resizeEvent(QResizeEvent* event)
             m_updateScheduled = true;
             m_updateTimer->start(16);
         }
+        else
+        {
+            if (m_updateTimer->isActive()) m_updateTimer->stop();
+        }
     });
 
     // 使用防抖处理resize
@@ -50,12 +54,9 @@ void WaveformWidget::resizeEvent(QResizeEvent* event)
 
     m_renderTimer = new QTimer(this);
     m_renderTimer->setSingleShot(true);
-    connect(m_renderTimer, &QTimer::timeout, this, [this]()
+    this->connect(m_renderTimer, &QTimer::timeout, this, [this]()
     {
-        if (m_pageLoaded)
-        {
-            this->executeJS("if (typeof handleResize === 'function') handleResize();");
-        }
+        if (m_pageLoaded) this->executeJS("if (typeof handleResize === 'function') handleResize();");
     });
 
     m_renderTimer->start(100); // 100ms防抖
@@ -100,7 +101,7 @@ void WaveformWidget::createLayout()
 
 void WaveformWidget::connectSignals()
 {
-    connect(m_updateCheckTimer, &QTimer::timeout, this, &WaveformWidget::checkAndUpdateData);
+    this->connect(m_updateCheckTimer, &QTimer::timeout, this, &WaveformWidget::checkAndUpdateData);
     m_updateCheckTimer->start();
     ChannelManager* manager = ChannelManager::getInstance();
     if (!manager) return;
@@ -180,6 +181,10 @@ void WaveformWidget::checkAndUpdateData()
         m_updateScheduled = true;
         m_updateTimer->start(16);
     }
+    else if (m_pendingData.isEmpty() && m_updateTimer->isActive())
+    {
+        m_updateTimer->stop();
+    }
 }
 
 void WaveformWidget::flushPendingJSCommands()
@@ -232,10 +237,7 @@ void WaveformWidget::onChannelDataAdded(const QString& channelId, const QVariant
 
     m_updateScheduled = true;
     // 只有不在 resize 过程中才启动定时器
-    if (!m_isResizing)
-    {
-        m_updateTimer->start(16); // 约60FPS
-    }
+    if (!m_isResizing) m_updateTimer->start(16); // 约60FPS
     // 如果在 resize 过程中，数据会被保留，等待 resize 结束后处理
 }
 
@@ -245,15 +247,17 @@ void WaveformWidget::onProcessPendingData()
     // 在resize过程中暂时不更新图表
     if (m_isResizing)
     {
-        // 保持更新调度状态，稍后重试
-        if (m_updateTimer->isActive()) return;
-        m_updateTimer->start(50);
+        // 只有在有待处理数据时才重新调度
+        if (!m_pendingData.isEmpty() && !m_updateTimer->isActive()) m_updateTimer->start(50);
+        return;
     }
 
     // 正常处理数据更新
     if (!m_pageLoaded || m_pendingData.isEmpty())
     {
         m_updateScheduled = false;
+        // 显式停止定时器，确保没有无谓的定时器运行
+        if (m_updateTimer->isActive()) m_updateTimer->stop();
         return;
     }
 
@@ -284,12 +288,4 @@ void WaveformWidget::onProcessPendingData()
 
     m_pendingData.clear();
     m_updateScheduled = false;
-
-    // 处理完数据后，检查是否还有新数据需要处理
-    // 这确保在处理数据期间新到达的数据也能被处理
-    if (!m_pendingData.isEmpty())
-    {
-        m_updateScheduled = true;
-        m_updateTimer->start(16);
-    }
 }
