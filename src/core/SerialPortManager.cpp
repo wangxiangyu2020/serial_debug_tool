@@ -176,7 +176,7 @@ void SerialPortManager::startWaveformRecording()
     //             for (const auto& channel : channels)
     //             {
     //                 // 为每个通道生成随机值 (0-1000)
-    //                 int value = QRandomGenerator::global()->bounded(1001);
+    //                 int value = QRandomGenerator::global()->bounded(131072) - 65536;
     //
     //                 // 格式: "X1=100,"
     //                 QString dataStr = channel.id + "=" + QByteArray::number(value) + ",";
@@ -185,7 +185,7 @@ void SerialPortManager::startWaveformRecording()
     //             this->handleChannelData(data);
     //             data.clear();
     //         }
-    //         QThread::msleep(1);
+    //         QThread::msleep(100);
     //     }
     // });
 }
