@@ -72,6 +72,7 @@ signals:
     void channelsCleared();
 
     void channelDataAdded(const QString& channelId, const QVariant& data);
+    void channelDataProcess(bool status);
 
 private:
     static ChannelManager* m_instance;

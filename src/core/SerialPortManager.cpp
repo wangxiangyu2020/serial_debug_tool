@@ -8,6 +8,7 @@
   ******************************************************************************
   */
 #include "core/SerialPortManager.h"
+
 #include "ui/SerialPortConnectConfigWidget.h"
 #include "ui/SerialPortDataSendWidget.h"
 #include "ui/SerialPortSendSettingsWidget.h"
@@ -41,6 +42,16 @@ void SerialPortManager::setSendStringDisplayStatus(bool status)
 void SerialPortManager::setTimestampStatus(bool status)
 {
     m_isDisplayTimestamp = status;
+}
+
+void SerialPortManager::setChannelDataProcess(bool status)
+{
+    m_isChannelDataProcess = status;
+}
+
+bool SerialPortManager::getChannelDataProcess()
+{
+    return m_isChannelDataProcess;
 }
 
 bool SerialPortManager::openSerialPort(const QMap<QString, QVariant>& serialParams)
@@ -134,11 +145,56 @@ void SerialPortManager::handlerError(QSerialPort::SerialPortError error)
     CMessageBox::showToast(errorMsg);
 }
 
+void SerialPortManager::handleChannelData(const QByteArray& data)
+{
+    QMutexLocker locker(&m_channelMutex);
+    for (char c : data)
+    {
+        m_dataQueue.enqueue(c);
+    }
+    this->processQueueInternal();
+}
+
+void SerialPortManager::startWaveformRecording()
+{
+    QMutexLocker locker(&m_channelMutex);
+    m_channelManager = ChannelManager::getInstance();
+    this->clearAllChannelData();
+    ChannelManager* manager = ChannelManager::getInstance();
+    QList<ChannelInfo> channels = manager->getAllChannels();
+    for (const auto& channel : channels)
+    {
+        m_channelIds.insert(channel.id);
+    }
+    // ThreadPoolManager::addTask([this,channels]()
+    // {
+    //     while (true)
+    //     {
+    //         if (this->getChannelDataProcess())
+    //         {
+    //             QByteArray data;
+    //             for (const auto& channel : channels)
+    //             {
+    //                 // 为每个通道生成随机值 (0-1000)
+    //                 int value = QRandomGenerator::global()->bounded(1001);
+    //
+    //                 // 格式: "X1=100,"
+    //                 QString dataStr = channel.id + "=" + QByteArray::number(value) + ",";
+    //                 data.append(dataStr.toUtf8());
+    //             }
+    //             this->handleChannelData(data);
+    //             data.clear();
+    //         }
+    //         QThread::msleep(1);
+    //     }
+    // });
+}
+
 void SerialPortManager::connectSignals()
 {
     SerialPortManager* manager = SerialPortConnectConfigWidget::getSerialPortManager();
-    if (!manager)
-        return;
+    ChannelManager* channelManager = ChannelManager::getInstance();
+    if (!manager) return;
     this->connect(manager->getSerialPort(), &QSerialPort::readyRead, manager, &SerialPortManager::onReadyRead);
     this->connect(manager, &SerialPortManager::sigHexDisplay, [manager](bool isHex)
     {
@@ -187,6 +243,11 @@ void SerialPortManager::connectSignals()
     {
         manager->setTimestampStatus(isDisplay);
     });
+    this->connect(channelManager, &ChannelManager::channelDataProcess, [manager](bool status)
+    {
+        if (status) manager->startWaveformRecording();
+        manager->setChannelDataProcess(status);
+    });
 }
 
 void SerialPortManager::configureSerialPort(const QMap<QString, QVariant>& serialParams)
@@ -226,6 +287,8 @@ void SerialPortManager::serialPortRead()
     ThreadPoolManager::addTask([this, readByteArray]()
     {
         QMutexLocker locker(&m_serialMutex);
+        if (this->getChannelDataProcess())
+            this->handleChannelData(readByteArray);
         // 处理读取到的数据
         this->handleReadData(readByteArray);
     });
@@ -238,6 +301,60 @@ QByteArray& SerialPortManager::generateTimestamp(const QString& data)
     timestamp = QDateTime::currentDateTime().toString("[HH:mm:ss.zzz] ");
     array = (timestamp + data).toUtf8();
     return array;
+}
+
+void SerialPortManager::clearAllChannelData()
+{
+    m_channelIds.clear();
+    m_dataQueue.clear();
+    m_currentPoint.clear();
+    m_lastTimestamp = 0;
+}
+
+void SerialPortManager::processDataPointInternal(const QByteArray& dataPoint)
+{
+    m_lastTimestamp += TIME_DELTA_US;
+    double currentTime = m_lastTimestamp;
+    int eqPos = dataPoint.indexOf('=');
+    if (eqPos == -1) return;
+    QByteArray channel = dataPoint.left(eqPos).trimmed();
+    QByteArray data = dataPoint.mid(eqPos + 1).trimmed();
+    QString channelId = QString::fromLatin1(channel);
+    if (!m_channelIds.contains(channelId)) return;
+    bool ok;
+    double value = data.toDouble(&ok);
+    if (!ok) return;
+    QVariantList point;
+    point.reserve(2);
+    point << currentTime << value;
+    emit m_channelManager->addChannelData(channelId, QVariant(std::move(point)));
+}
+
+void SerialPortManager::processQueueInternal()
+{
+    // 添加一个保护性检查，避免队列过大导致内存问题
+    if (m_dataQueue.size() > MAX_QUEUE_SIZE)
+    {
+        m_dataQueue.clear();
+        m_currentPoint.clear();
+        return;
+    }
+    while (!m_dataQueue.isEmpty())
+    {
+        char ch = m_dataQueue.dequeue();
+        // 遇到分隔符时处理数据点
+        if (ch == ',')
+        {
+            if (!m_currentPoint.isEmpty())
+            {
+                this->processDataPointInternal(m_currentPoint);
+                m_currentPoint.clear();
+            }
+            continue;
+        }
+        // 普通字符添加到当前数据点
+        m_currentPoint.append(ch);
+    }
 }
 
 void SerialPortManager::onReadyRead()

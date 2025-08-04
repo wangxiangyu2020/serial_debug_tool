@@ -10,6 +10,9 @@
 
 #include "core/ChannelManager.h"
 
+#include "core/SerialPortManager.h"
+#include "ui/SerialPortConnectConfigWidget.h"
+
 ChannelManager* ChannelManager::m_instance = nullptr;
 QMutex ChannelManager::m_mutex;
 
@@ -120,8 +123,16 @@ void ChannelManager::addChannelData(const QString& channelId, const QVariant& da
     // 将数据添加到队列
     m_dataQueue.enqueue(qMakePair(channelId, data));
 
-    // 如果定时器未启动且允许分发，则启动定时器
-    if (m_isDispatching && !m_dataDispatchTimer->isActive()) m_dataDispatchTimer->start();
+    // 如果定时器未启动且允许分发，则启动定时器（通过信号槽机制）
+    if (m_isDispatching && !m_dataDispatchTimer->isActive())
+    {
+        // 使用信号槽确保在正确线程启动定时器
+        QMetaObject::invokeMethod(this, [this]()
+        {
+            if (m_isDispatching && !m_dataDispatchTimer->isActive())
+                m_dataDispatchTimer->start();
+        }, Qt::QueuedConnection);
+    }
 }
 
 void ChannelManager::startDataDispatch()

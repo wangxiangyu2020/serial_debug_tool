@@ -300,7 +300,6 @@ void WaveformWidget::onProcessPendingData()
     // 在无锁状态下执行耗时操作
     QJsonDocument doc(seriesDataObject);
     QString jsonStr = QString::fromUtf8(doc.toJson(QJsonDocument::Compact));
-
     // 单次JavaScript调用传递所有数据
     QString jsCode = QString("batchAddDataPoints(%1);").arg(jsonStr);
     this->executeJS(jsCode);
