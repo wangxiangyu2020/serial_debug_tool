@@ -185,7 +185,7 @@ void SerialPortManager::startWaveformRecording()
     //             this->handleChannelData(data);
     //             data.clear();
     //         }
-    //         QThread::msleep(100);
+    //         QThread::msleep(50);
     //     }
     // });
 }
@@ -327,7 +327,7 @@ void SerialPortManager::processDataPointInternal(const QByteArray& dataPoint)
     QVariantList point;
     point.reserve(2);
     point << currentTime << value;
-    emit m_channelManager->addChannelData(channelId, QVariant(std::move(point)));
+    m_channelManager->addChannelData(channelId, QVariant(std::move(point)));
 }
 
 void SerialPortManager::processQueueInternal()

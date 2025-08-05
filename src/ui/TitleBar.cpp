@@ -25,7 +25,7 @@ void TitleBar::setUI()
 
     m_pLogoBtn = new QPushButton(this);
     m_pLogoBtn->setObjectName("logoBtn");
-    m_pLogoBtn->setText("串口调试助手");
+    m_pLogoBtn->setText("iKUN调试助手");
     m_pLogoBtn->setFixedSize(160, 32);
 
     m_pMinBtn = new QPushButton(this);

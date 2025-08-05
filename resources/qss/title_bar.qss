@@ -17,7 +17,7 @@ TitleBar {
 QPushButton#logoBtn {
     padding-left: 10px;  /* 在图标和文本之间添加5px间距 */
     /* 仅调整图标和文本 */
-    qproperty-icon: url(:/resources/icons/logo.svg);
+    qproperty-icon: url(:/resources/icons/ikun.svg);
     qproperty-iconSize: 28px;  /* 图标放大至28px */
     font-size: 13px;           /* 文本缩小至13px */
     font-weight: 500;          /* 字重调整为中等(500) */
