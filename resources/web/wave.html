@@ -38,8 +38,12 @@
     // 初始坐标轴范围
     var initialXAxisMin = 0;
     var initialXAxisMax = 10000; // 初始X轴范围：0-10秒
-    var initialYAxisMin = -1000;
-    var initialYAxisMax = 1000;  // 初始Y轴范围：-1000到1000
+    var initialYAxisMin = -100000;
+    var initialYAxisMax = 100000;  // 初始Y轴范围：-100000到100000
+
+    // 当前Y轴范围（可能会因数据扩容而改变）
+    var currentYAxisMin = initialYAxisMin;
+    var currentYAxisMax = initialYAxisMax;
 
     // 添加尺寸监控变量
     let lastWidth = 0;
@@ -115,8 +119,8 @@
             name: '',
             nameLocation: 'middle',
             nameGap: 50,
-            min: initialYAxisMin,
-            max: initialYAxisMax,
+            min: currentYAxisMin,
+            max: currentYAxisMax,
             axisLabel: {
                 formatter: function (value) {
                     // 整数化Y轴标签
@@ -124,7 +128,7 @@
                 }
             },
             // 添加刻度间隔设置
-            interval: 200  // 初始刻度间隔
+            interval: 20000  // 初始刻度间隔调整为20000
         },
         dataZoom: [
             {
@@ -193,6 +197,20 @@
         resetYAxisToInitial();
     });
 
+    // 重置Y轴到初始范围
+    function resetYAxisToInitial() {
+        currentYAxisMin = initialYAxisMin;
+        currentYAxisMax = initialYAxisMax;
+        yAxisAdjusted = false;
+
+        myChart.setOption({
+            yAxis: {
+                min: initialYAxisMin,
+                max: initialYAxisMax,
+                interval: 20000
+            }
+        });
+    }
 
     // 添加切换符号显示的函数
     function toggleSymbolVisibility() {
@@ -305,29 +323,6 @@
                 newMaxY = newMinY + 1;
             }
 
-            // // 计算合适的刻度间隔
-            // const range = newMaxY - newMinY;
-            // let interval = 1;
-            //
-            // // 根据范围动态计算刻度间隔
-            // if (range > 1000) {
-            //     interval = 200;
-            // } else if (range > 500) {
-            //     interval = 100;
-            // } else if (range > 200) {
-            //     interval = 50;
-            // } else if (range > 100) {
-            //     interval = 20;
-            // } else if (range > 50) {
-            //     interval = 10;
-            // } else if (range > 20) {
-            //     interval = 5;
-            // } else if (range > 10) {
-            //     interval = 2;
-            // } else {
-            //     interval = 1;
-            // }
-
             const maxAbsValue = Math.max(Math.abs(newMinY), Math.abs(newMaxY));
             const yAxisInterval = calculateYAxisInterval(maxAbsValue);
 
@@ -342,6 +337,54 @@
         } catch (e) {
             console.error('更新Y轴时出错:', e);
         }
+    }
+
+    // 检查并更新Y轴范围以适应新数据
+    function checkAndUpdateYAxisRange(points) {
+        if (!points || points.length === 0) return false;
+
+        let needUpdate = false;
+        let maxAbsValue = Math.max(Math.abs(currentYAxisMin), Math.abs(currentYAxisMax));
+
+        // 检查所有新数据点的绝对值
+        for (const point of points) {
+            const absValue = Math.abs(point[1]);
+            if (absValue > maxAbsValue) {
+                maxAbsValue = absValue;
+                needUpdate = true;
+            }
+        }
+
+        if (needUpdate) {
+            // 计算新的刻度间隔
+            const yAxisInterval = calculateYAxisInterval(maxAbsValue);
+
+            // 设置对称的Y轴范围：正负各5个刻度
+            const newMaxY = yAxisInterval * 5;
+            const newMinY = -yAxisInterval * 5;
+
+            // 更新当前Y轴范围
+            currentYAxisMin = newMinY;
+            currentYAxisMax = newMaxY;
+
+            // 更新图表Y轴
+            myChart.setOption({
+                yAxis: {
+                    min: newMinY,
+                    max: newMaxY,
+                    interval: yAxisInterval,
+                    axisLabel: {
+                        formatter: function (value) {
+                            return Math.round(value) === value ? value : value.toFixed(1);
+                        }
+                    }
+                }
+            });
+
+            console.log(`Y轴范围已扩展: ${newMinY} ~ ${newMaxY}, 间隔: ${yAxisInterval}`);
+        }
+
+        return needUpdate;
     }
 
     function calculateXAxisInterval(maxValue) {
@@ -370,16 +413,13 @@
         return interval;
     }
 
-    // 固定显示6个刻度，包含0值，其他刻度根据数据动态调整
+    // 固定显示正负各5个刻度，0值单独显示
     function calculateYAxisInterval(maxAbsValue) {
-        // 确保0刻度始终显示
-        // 其他5个刻度值动态调整
-
-        // 找到刚好能包含最大值的刻度间隔
+        // 确保正负半轴各有5个刻度值，0值单独显示
         let interval = 1;
-        const targetTickCount = 5; // 除0外的刻度数
+        const targetTickCount = 5; // 正负半轴各5个刻度
 
-        // 动态调整刻度间隔，确保最大值能被包含
+        // 动态调整刻度间隔，确保最大绝对值能被包含在5个刻度内
         while (interval * targetTickCount < maxAbsValue) {
             // 按照常见数值序列进行调整: 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000...
             if (interval % 10 === 0) {
@@ -392,40 +432,14 @@
                 }
             } else if (interval % 5 === 0) {
                 interval = interval * 2;       // 5 -> 10
+            } else if (interval === 2) {
+                interval = 5;                  // 2 -> 5
             } else {
-                interval = interval * 2;       // 1 -> 2, 2 -> 5
+                interval = interval * 2;       // 1 -> 2
             }
         }
 
         return interval;
-    }
-
-    // 重置Y轴到初始范围
-    function resetYAxisToInitial() {
-        myChart.setOption({
-            yAxis: {
-                min: initialYAxisMin,
-                max: initialYAxisMax,
-                interval: 200,  // 重置为初始刻度间隔
-                axisLabel: {
-                    formatter: function (value) {
-                        // 整数化X轴标签
-                        return Math.round(value) === value ? value : Math.round(value);
-                    }
-                }
-            },
-            xAxis: {
-                min: initialXAxisMin,
-                max: initialXAxisMax,
-                interval: 2000,
-                axisLabel: {
-                    formatter: function (value) {
-                        // 整数化X轴标签
-                        return Math.round(value) === value ? value : Math.round(value);
-                    }
-                }
-            }
-        });
     }
 
     // 添加示例数据标志
@@ -450,9 +464,9 @@
                 name: '',
                 nameLocation: 'middle',
                 nameGap: 50,
-                min: initialYAxisMin,
-                max: initialYAxisMax,
-                interval: 200,
+                min: currentYAxisMin,
+                max: currentYAxisMax,
+                interval: 20000,
                 axisLabel: {
                     formatter: function (value) {
                         // 整数化Y轴标签
@@ -595,6 +609,9 @@
             console.log('当前系列列表:', currentOption.series.map(s => s.name));
         }
 
+        // 检查并更新Y轴范围
+        checkAndUpdateYAxisRange(data);
+
         // 强制刷新图表
         myChart.setOption(currentOption, true);
     }
@@ -608,7 +625,11 @@
         // 确保时间戳非负
         timestamp = Math.max(0, timestamp);
 
-        chartData[seriesName].push([timestamp, value]);
+        const newPoint = [timestamp, value];
+        chartData[seriesName].push(newPoint);
+
+        // 检查并更新Y轴范围
+        checkAndUpdateYAxisRange([newPoint]);
 
         // 使用增量渲染API
         const seriesIndex = seriesIndexMap[seriesName];
@@ -616,7 +637,7 @@
             try {
                 myChart.appendData({
                     seriesIndex: seriesIndex,
-                    data: [[timestamp, value]]
+                    data: [newPoint]
                 });
             } catch (e) {
                 console.error('增量渲染失败，回退到全量更新:', e);
@@ -647,6 +668,9 @@
         if (chartData[seriesName].length > MAX_POINTS) {
             chartData[seriesName] = chartData[seriesName].slice(-MAX_POINTS);
         }
+
+        // 检查并更新Y轴范围
+        checkAndUpdateYAxisRange(points);
 
         // 使用增量渲染API
         const seriesIndex = seriesIndexMap[seriesName];
@@ -691,6 +715,9 @@
                 if (chartData[seriesName].length > MAX_POINTS) {
                     chartData[seriesName] = chartData[seriesName].slice(-MAX_POINTS);
                 }
+
+                // 检查并更新Y轴范围
+                checkAndUpdateYAxisRange(points);
 
                 // 使用增量渲染API
                 const seriesIndex = seriesIndexMap[seriesName];
@@ -746,11 +773,8 @@
         }
     }
 
-    // 修改自动调整视图范围函数，使其在有新数据时总是更新坐标轴
+    // 修改自动调整视图范围函数，禁用自动Y轴调整
     function autoAdjustView(seriesName) {
-        // 移除 userInteracted 的检查，或者添加一个强制更新的条件
-        // 用户交互后只锁定视图范围，但不妨碍根据新数据更新坐标轴范围
-
         const data = chartData[seriesName];
         if (!data || data.length === 0) return;
 
@@ -758,15 +782,11 @@
         const startIdx = Math.max(0, data.length - 500);
         let minX = Infinity;
         let maxX = -Infinity;
-        let minY = Infinity;
-        let maxY = -Infinity;
 
         for (let i = startIdx; i < data.length; i++) {
             const point = data[i];
             if (point[0] < minX) minX = point[0];
             if (point[0] > maxX) maxX = point[0];
-            if (point[1] < minY) minY = point[1];
-            if (point[1] > maxY) maxY = point[1];
         }
 
         // 确保X轴从0开始
@@ -774,7 +794,6 @@
 
         // 检查是否需要更新X轴
         let needUpdateX = false;
-        let needUpdateY = false;
 
         // 检查是否超出当前X轴范围（无论用户是否交互过）
         if (maxX > initialXAxisMax || minX < initialXAxisMin) {
@@ -790,105 +809,23 @@
             }
         }
 
-        // 检查是否需要更新Y轴 (只有当数据超出当前Y轴范围时才更新)
-        if (!yAxisAdjusted && (maxY > initialYAxisMax || minY < initialYAxisMin)) {
-            needUpdateY = true;
-            yAxisAdjusted = true; // 标记Y轴已被调整过
-
-            // 扩展Y轴范围
-            const yRange = maxY - minY;
-            initialYAxisMin = minY - yRange * 0.1;
-            initialYAxisMax = maxY + yRange * 0.1;
-        }
-        // 如果Y轴已调整过，只有当数据超出当前范围时才更新
-        else if (yAxisAdjusted && (maxY > initialYAxisMax || minY < initialYAxisMin)) {
-            needUpdateY = true;
-
-            // 扩展Y轴范围
-            const yRange = maxY - minY;
-            initialYAxisMin = minY - yRange * 0.1;
-            initialYAxisMax = maxY + yRange * 0.1;
-        }
-
-        // 确保只显示第一和第四象限
-        if (minY >= 0 && maxY >= 0) {
-            // 所有值都为正，只显示第一象限
-            initialYAxisMin = Math.max(0, initialYAxisMin);
-        } else if (minY < 0 && maxY < 0) {
-            // 所有值都为负，只显示第四象限
-            initialYAxisMax = Math.min(0, initialYAxisMax);
-        }
-
-        // 调整Y轴范围，确保刻度值为整数
-        initialYAxisMin = Math.floor(initialYAxisMin);
-        initialYAxisMax = Math.ceil(initialYAxisMax);
-
-        // 确保Y轴有合理的范围
-        if (initialYAxisMax - initialYAxisMin < 1) {
-            initialYAxisMax = initialYAxisMin + 1;
-        }
-
-        // 计算合适的刻度间隔
-        const range = initialYAxisMax - initialYAxisMin;
-        let interval = 1;
-
-        // 根据范围动态计算刻度间隔
-        if (range > 1000) {
-            interval = 200;
-        } else if (range > 500) {
-            interval = 100;
-        } else if (range > 200) {
-            interval = 50;
-        } else if (range > 100) {
-            interval = 20;
-        } else if (range > 50) {
-            interval = 10;
-        } else if (range > 20) {
-            interval = 5;
-        } else if (range > 10) {
-            interval = 2;
-        } else {
-            interval = 1;
-        }
-
-        // 如果有需要更新坐标轴
-        if (needUpdateX || needUpdateY) {
+        // 移除Y轴自动调整逻辑，只保留X轴调整
+        if (needUpdateX) {
             const updateOption = {};
+            // 计算X轴刻度间隔
+            const xAxisInterval = calculateXAxisInterval(initialXAxisMax);
 
-            if (needUpdateX) {
-                // 计算X轴刻度间隔
-                const xAxisInterval = calculateXAxisInterval(initialXAxisMax);
-
-                updateOption.xAxis = {
-                    min: initialXAxisMin,
-                    max: initialXAxisMax,
-                    interval: xAxisInterval, // 添加刻度间隔设置
-                    axisLabel: {
-                        formatter: function (value) {
-                            // 整数化X轴标签
-                            return Math.round(value) === value ? value : Math.round(value);
-                        }
+            updateOption.xAxis = {
+                min: initialXAxisMin,
+                max: initialXAxisMax,
+                interval: xAxisInterval,
+                axisLabel: {
+                    formatter: function (value) {
+                        // 整数化X轴标签
+                        return Math.round(value) === value ? value : Math.round(value);
                     }
-                };
-            }
-
-            if (needUpdateY) {
-                // 使用新的Y轴刻度计算方法
-                const maxAbsValue = Math.max(Math.abs(initialYAxisMin), Math.abs(initialYAxisMax));
-                const yAxisInterval = calculateYAxisInterval(maxAbsValue);
-
-                updateOption.yAxis = {
-                    min: initialYAxisMin,
-                    max: initialYAxisMax,
-                    interval: yAxisInterval,  // 使用固定刻度数的间隔
-                    axisLabel: {
-                        formatter: function (value) {
-                            // 整数化X轴标签
-                            return Math.round(value) === value ? value : Math.round(value);
-                        }
-                    }
-                };
-            }
+                }
+            };
 
             // 更新坐标轴范围
             myChart.setOption(updateOption);
@@ -928,8 +865,10 @@
         // 重置初始坐标轴范围
         initialXAxisMin = 0;
         initialXAxisMax = 10000;
-        initialYAxisMin = -1000;
-        initialYAxisMax = 1000;
+        initialYAxisMin = -100000;
+        initialYAxisMax = 100000;
+        currentYAxisMin = initialYAxisMin;
+        currentYAxisMax = initialYAxisMax;
 
         var currentOption = myChart.getOption();
         currentOption.series.forEach(function (series) {
@@ -941,37 +880,14 @@
         // 重置坐标轴范围
         currentOption.xAxis.min = initialXAxisMin;
         currentOption.xAxis.max = initialXAxisMax;
-        currentOption.yAxis.min = initialYAxisMin;
-        currentOption.yAxis.max = initialYAxisMax;
-        currentOption.yAxis.interval = 200; // 重置刻度间隔
+        currentOption.yAxis.min = currentYAxisMin;
+        currentOption.yAxis.max = currentYAxisMax;
+        currentOption.yAxis.interval = 20000; // 重置刻度间隔
 
         myChart.setOption(currentOption, false, false);
 
         // 重新显示示例
         setTimeout(showExampleData, 100);
-    }
-
-    // 清除指定系列数据
-    function clearSeriesData(seriesName) {
-        if (chartData[seriesName]) {
-            chartData[seriesName] = [];
-
-            // 使用增量渲染API清除数据
-            const seriesIndex = seriesIndexMap[seriesName];
-            if (seriesIndex !== undefined) {
-                try {
-                    myChart.dispatchAction({
-                        type: 'seriesDataReset',
-                        seriesIndex: seriesIndex
-                    });
-                } catch (e) {
-                    console.error('清除系列数据失败:', e);
-                    updateChart();
-                }
-            } else {
-                updateChart();
-            }
-        }
     }
 
     // 移除系列
