@@ -76,9 +76,13 @@ void SerialPortDataReceiveWidget::createComponents()
     m_pReceiveTextEdit->setUndoRedoEnabled(false); // 禁用撤销/重做
     m_pReceiveTextEdit->setLineWrapMode(QPlainTextEdit::WidgetWidth); // 设置自动换行模式为按窗口宽度换行
     pReceiveTextEdit = m_pReceiveTextEdit;
-    // 使用等宽字体
-    QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-    fixedFont.setPointSize(10);
+    // 替换系统等宽字体调用
+    QFont fixedFont("Consolas", 10);
+    if (!QFontDatabase().families().contains("Consolas"))
+    {
+        fixedFont = QFont("Courier New", 10);
+    }
+    fixedFont.setStyleHint(QFont::Monospace);
     m_pReceiveTextEdit->setFont(fixedFont);
     // 安装事件过滤器
     m_pReceiveTextEdit->installEventFilter(this);

@@ -69,8 +69,12 @@ void SerialPortRealTimeSaveWidget::createComponents()
     // 关键修改：使用任意位置换行而不是在单词边界换行
     m_pSavePathDisplayTextEdit->setLineWrapMode(QPlainTextEdit::WidgetWidth);
     m_pSavePathDisplayTextEdit->setWordWrapMode(QTextOption::WrapAnywhere);
-    QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-    fixedFont.setPointSize(10);
+    QFont fixedFont("Consolas", 10);
+    if (!QFontDatabase().families().contains("Consolas"))
+    {
+        fixedFont = QFont("Courier New", 10);
+    }
+    fixedFont.setStyleHint(QFont::Monospace);
     m_pSavePathDisplayTextEdit->setFont(fixedFont);
     m_pSavePathDisplayTextEdit->installEventFilter(this);
     // 设置固定高度以只显示一行（可根据需要调整）
