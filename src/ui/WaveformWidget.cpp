@@ -238,7 +238,13 @@ void WaveformWidget::onChannelDataAdded(const QString& channelId, const QVariant
     {
         QMutexLocker locker(&m_dataMutex);
         // 将数据添加到待处理队列
-        m_pendingData[channel.name].append(qMakePair(pointList[0].toDouble(), pointList[1].toDouble()));
+        DataPoint point;
+        point.channelName = channel.name;
+        point.timestamp = pointList[0].toDouble();
+        point.value = pointList[1].toDouble();
+        m_pendingData.enqueue(point);
+
+        if (m_pendingData.size() >= MAX_QUEUE_SIZE) m_pendingData.dequeue();
 
         // 如果没有计划更新，则安排一次更新
         if (m_updateScheduled) return;
@@ -262,45 +268,59 @@ void WaveformWidget::onProcessPendingData()
         return;
     }
 
-    // 正常处理数据更新 - 获取数据副本
+    // 批量处理队列中的数据
     QJsonObject seriesDataObject;
     {
         QMutexLocker locker(&m_dataMutex);
         if (!m_pageLoaded || m_pendingData.isEmpty())
         {
             m_updateScheduled = false;
-            // 显式停止定时器，确保没有无谓的定时器运行
             if (m_updateTimer->isActive()) m_updateTimer->stop();
             return;
         }
 
-        // 构建要发送的数据
-        for (auto it = m_pendingData.begin(); it != m_pendingData.end(); ++it)
-        {
-            const QString& seriesName = it.key();
-            const QList<QPair<double, double>>& dataPoints = it.value();
+        // 按通道名分组处理数据
+        QHash<QString, QJsonArray> channelData;
 
-            QJsonArray pointsArray;
-            for (const auto& point : dataPoints)
-            {
-                QJsonArray p;
-                p.append(point.first);
-                p.append(point.second);
-                pointsArray.append(p);
-            }
-            seriesDataObject[seriesName] = pointsArray;
+        // 批量处理，每次最多处理1000个数据点
+        const int BATCH_SIZE = 1000;
+        int processed = 0;
+
+        while (!m_pendingData.isEmpty() && processed < BATCH_SIZE)
+        {
+            DataPoint point = m_pendingData.dequeue();
+
+            QJsonArray pointArray;
+            pointArray.append(point.timestamp);
+            pointArray.append(point.value);
+
+            channelData[point.channelName].append(pointArray);
+            processed++;
         }
 
-        // 清空原始数据并更新状态
-        m_pendingData.clear();
-        m_updateScheduled = false;
-        // 锁在这里自动释放（QMutexLocker作用域结束
+        // 转换为最终的JSON对象
+        for (auto it = channelData.begin(); it != channelData.end(); ++it)
+        {
+            seriesDataObject[it.key()] = it.value();
+        }
+
+        // 如果队列还有数据，继续调度处理
+        if (!m_pendingData.isEmpty())
+        {
+            m_updateTimer->start(16);
+        }
+        else
+        {
+            m_updateScheduled = false;
+        }
     }
 
-    // 在无锁状态下执行耗时操作
-    QJsonDocument doc(seriesDataObject);
-    QString jsonStr = QString::fromUtf8(doc.toJson(QJsonDocument::Compact));
-    // 单次JavaScript调用传递所有数据
-    QString jsCode = QString("batchAddDataPoints(%1);").arg(jsonStr);
-    this->executeJS(jsCode);
+    // 发送数据到JavaScript
+    if (!seriesDataObject.isEmpty())
+    {
+        QJsonDocument doc(seriesDataObject);
+        QString jsonStr = QString::fromUtf8(doc.toJson(QJsonDocument::Compact));
+        QString jsCode = QString("batchAddDataPoints(%1);").arg(jsonStr);
+        this->executeJS(jsCode);
+    }
 }

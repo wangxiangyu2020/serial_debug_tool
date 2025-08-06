@@ -55,19 +55,28 @@ private slots:
     void onProcessPendingData();
 
 private:
+    static constexpr int MAX_QUEUE_SIZE = 10000;
+
+    struct DataPoint
+    {
+        QString channelName;
+        double timestamp;
+        double value;
+    };
+
     QVBoxLayout* m_pMainLayout = nullptr;
     std::unique_ptr<QWebEngineView> m_pWebEngineView;
     bool m_pageLoaded = false;
     bool m_resizePending = false;
     // 图表加载优化相关
     QTimer* m_updateTimer;
-    QHash<QString, QList<QPair<double, double>>> m_pendingData;
+    QQueue<DataPoint> m_pendingData;
     mutable QMutex m_dataMutex; // 保护 m_pendingData 的互斥锁
     bool m_updateScheduled = false;
     bool m_isResizing = false;
     QTimer* m_renderTimer = nullptr;
     QTimer* m_updateCheckTimer = nullptr;
-    QStringList m_pendingJSCommands;  // 缓存被跳过的JS命令
+    QStringList m_pendingJSCommands; // 缓存被跳过的JS命令
 };
 
 #endif //WAVEFORMWIDGET_H

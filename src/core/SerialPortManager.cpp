@@ -166,28 +166,28 @@ void SerialPortManager::startWaveformRecording()
     {
         m_channelIds.insert(channel.id);
     }
-    // ThreadPoolManager::addTask([this,channels]()
-    // {
-    //     while (true)
-    //     {
-    //         if (this->getChannelDataProcess())
-    //         {
-    //             QByteArray data;
-    //             for (const auto& channel : channels)
-    //             {
-    //                 // 为每个通道生成随机值 (0-1000)
-    //                 int value = QRandomGenerator::global()->bounded(100000) - 65536;
-    //
-    //                 // 格式: "X1=100,"
-    //                 QString dataStr = channel.id + "=" + QByteArray::number(value) + ",";
-    //                 data.append(dataStr.toUtf8());
-    //             }
-    //             this->handleChannelData(data);
-    //             data.clear();
-    //         }
-    //         QThread::msleep(50);
-    //     }
-    // });
+    ThreadPoolManager::addTask([this,channels]()
+    {
+        while (true)
+        {
+            if (this->getChannelDataProcess())
+            {
+                QByteArray data;
+                for (const auto& channel : channels)
+                {
+                    // 为每个通道生成随机值 (0-1000)
+                    int value = QRandomGenerator::global()->bounded(100000) - 65536;
+
+                    // 格式: "X1=100,"
+                    QString dataStr = channel.id + "=" + QByteArray::number(value) + ",";
+                    data.append(dataStr.toUtf8());
+                }
+                this->handleChannelData(data);
+                data.clear();
+            }
+            QThread::msleep(50);
+        }
+    });
 }
 
 void SerialPortManager::connectSignals()
