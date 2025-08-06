@@ -147,12 +147,15 @@ void SerialPortManager::handlerError(QSerialPort::SerialPortError error)
 
 void SerialPortManager::handleChannelData(const QByteArray& data)
 {
-    QMutexLocker locker(&m_channelMutex);
-    for (char c : data)
+    ThreadPoolManager::addTask([this, data]()
     {
-        m_dataQueue.enqueue(c);
-    }
-    this->processQueueInternal();
+        QMutexLocker locker(&m_channelMutex);
+        for (char c : data)
+        {
+            m_dataQueue.enqueue(c);
+        }
+        this->processQueueInternal();
+    });
 }
 
 void SerialPortManager::startWaveformRecording()
