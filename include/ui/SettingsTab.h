@@ -13,6 +13,10 @@
 #define SETTINGSTAB_H
 
 #include <QWidget>
+#include "utils/StyleLoader.h"
+#include <QTabWidget>
+#include <QTextEdit>
+#include <QVBoxLayout>
 
 class SettingsTab : public QWidget
 {
@@ -24,6 +28,11 @@ public:
 
 private:
     void setUI();
+    void createComponents();
+
+private:
+    QTabWidget* m_pTabWidget = nullptr;
+    QTextEdit* m_pReadmeViewer = nullptr;
 };
 
 #endif //SETTINGSTAB_H

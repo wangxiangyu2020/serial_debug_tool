@@ -1,0 +1,121 @@
+SettingsTab {
+    background-color: #f8f9fa;
+    border-left: 1px solid #000000;
+    border-right: 1px solid #000000;
+    border-bottom: 1px solid #000000;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+/* QTabWidget样式 - 只去掉pane的边框 */
+SettingsTab QTabWidget::pane {
+    border: none;
+    background-color: transparent;
+}
+
+/* QTabBar样式 - 去掉左右边框 */
+SettingsTab QTabBar {
+    border: none;
+    background-color: transparent;
+}
+
+/* Tab标签样式 - 保持选中效果 */
+SettingsTab QTabBar::tab {
+    background: transparent;
+    color: #666;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    margin: 2px 0;
+}
+
+SettingsTab QTabBar::tab:hover {
+    color: #333;
+    background: rgba(0,0,0,0.05);
+}
+
+SettingsTab QTabBar::tab:selected {
+    color: #1a73e8;
+    background: rgba(26, 115, 232, 0.1);
+    font-weight: 500;
+}
+
+/* README文档查看器样式 */
+QTextEdit {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    padding: 5px;
+    font-size: 15px;
+    font-weight: bold;
+    color: #495057;
+    selection-background-color: #d1e7ff;
+    selection-color: #000000;
+}
+
+/* 滚动条样式 */
+QScrollBar:vertical {
+    background: #f8f9fa;
+    width: 12px;
+    border-radius: 6px;
+    margin: 0;
+}
+
+QScrollBar::handle:vertical {
+    background: #ced4da;
+    border-radius: 6px;
+    min-height: 20px;
+    margin: 2px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #adb5bd;
+}
+
+QScrollBar::handle:vertical:pressed {
+    background: #6c757d;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0px;
+    background: none;
+}
+
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+QScrollBar:horizontal {
+    background: #f8f9fa;
+    height: 12px;
+    border-radius: 6px;
+    margin: 0;
+}
+
+QScrollBar::handle:horizontal {
+    background: #ced4da;
+    border-radius: 6px;
+    min-width: 20px;
+    margin: 2px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background: #adb5bd;
+}
+
+QScrollBar::handle:horizontal:pressed {
+    background: #6c757d;
+}
+
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal {
+    width: 0px;
+    background: none;
+}
+
+QScrollBar::add-page:horizontal,
+QScrollBar::sub-page:horizontal {
+    background: none;
+}

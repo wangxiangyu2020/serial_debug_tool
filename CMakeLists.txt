@@ -73,6 +73,7 @@ qt_add_resources(${PROJECT_NAME} "resources"
         resources/icons/stop_series.svg
         resources/qss/main_window.qss
         resources/qss/tab_bar.qss
+        resources/qss/settings_tab.qss
         resources/qss/title_bar.qss
         resources/qss/serial_prot_config_tab.qss
         resources/qss/serial_port_connect_config_widget.qss
@@ -88,6 +89,7 @@ qt_add_resources(${PROJECT_NAME} "resources"
         resources/qss/dialog_base.qss
         resources/web/echarts.min.js
         resources/web/wave.html
+        README.md
 )
 
 target_link_libraries(${PROJECT_NAME}
