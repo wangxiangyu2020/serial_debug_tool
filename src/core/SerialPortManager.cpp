@@ -264,11 +264,9 @@ void SerialPortManager::serialPortWrite(const QByteArray& data)
 
 void SerialPortManager::serialPortRead()
 {
-    if (!m_pSerialPort || !m_pSerialPort->isOpen())
-        return;
+    if (!m_pSerialPort || !m_pSerialPort->isOpen()) return;
     auto readByteArray = m_pSerialPort->readAll();
-    if (readByteArray.isEmpty())
-        return;
+    if (readByteArray.isEmpty()) return;
     ThreadPoolManager::addTask([this, readByteArray]()
     {
         QMutexLocker locker(&m_serialMutex);

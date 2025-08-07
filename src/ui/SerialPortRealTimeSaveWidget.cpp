@@ -107,7 +107,6 @@ void SerialPortRealTimeSaveWidget::createComponents()
     // 创建定时器
     m_pTimer = new QTimer(this);
     connect(m_pTimer, &QTimer::timeout, this, &SerialPortRealTimeSaveWidget::moveIcon);
-    m_pTimer->start(50);
     // 调整组件的高度比例: 文本框占较小比例，进度条占较大比例
     m_pPanelLayout->addWidget(m_pSavePathDisplayTextEdit, 0); // 使用固定大小
     m_pPanelLayout->addWidget(progressContainer, 1); // 占据剩余空间
@@ -125,6 +124,12 @@ void SerialPortRealTimeSaveWidget::connectSignals()
 {
     this->connect(this, &SerialPortRealTimeSaveWidget::sigDisplaySavePath, [this](const QString& path)
     {
+        if (path == nullptr)
+        {
+            m_pTimer->stop();
+            return;
+        }
+        m_pTimer->start(50);
         m_pSavePathDisplayTextEdit->setPlainText(path);
     });
 }

@@ -221,6 +221,6 @@ void SerialPortConnectConfigWidget::detectionAvailablePorts()
                 m_pPortComboBox->addItem(portName, QVariant::fromValue(port));
             }
         }
-        QThread::msleep(3000);
+        QThread::msleep(5000);
     }
 }

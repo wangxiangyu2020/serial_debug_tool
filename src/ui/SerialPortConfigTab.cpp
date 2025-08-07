@@ -105,6 +105,7 @@ void SerialPortConfigTab::readySaveFile(bool status)
         QScopedPointer<QFile> fileGuard(m_pSaveFile);
         m_pSaveFile = nullptr;
         m_pSerialPortRealTimeSaveWidget->hide();
+        emit m_pSerialPortRealTimeSaveWidget->sigDisplaySavePath(nullptr);
         return;
     }
     QString fileName = QFileDialog::getSaveFileName(this,
