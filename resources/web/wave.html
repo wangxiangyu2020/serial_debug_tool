@@ -1037,11 +1037,32 @@
         return JSON.stringify(chartData);
     }
 
-    // 从JSON导入数据
     function importData(jsonData) {
         try {
-            chartData = JSON.parse(jsonData);
+            // 如果传入的是字符串，先解析
+            const importedData = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
+
+            // 清除现有数据
+            clearAllData();
+
+            // 导入每个通道的数据
+            for (const seriesName in importedData) {
+                if (importedData.hasOwnProperty(seriesName)) {
+                    const points = importedData[seriesName];
+
+                    // 确保通道存在
+                    if (!chartData[seriesName]) {
+                        const colors = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de'];
+                        const colorIndex = Object.keys(chartData).length % colors.length;
+                        addSeries(seriesName, colors[colorIndex]);
+                    }
+
+                    setSeriesData(seriesName, points);
+                }
+            }
+
             updateChart();
+            console.log('数据导入完成');
             return true;
         } catch (error) {
             console.error('导入数据失败:', error);

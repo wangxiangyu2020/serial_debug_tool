@@ -121,6 +121,25 @@ void WaveformWidget::connectSignals()
     {
         this->clearAllData();
     });
+    this->connect(manager, &ChannelManager::importChannelsData, [this]()
+    {
+        QString fileName = QFileDialog::getOpenFileName(this, tr("导入数据"), QString(), tr("JSON文件(*.json)"));
+        if (fileName.isEmpty()) return;
+        QFile file(fileName);
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return;
+        QTextStream in(&file);
+        in.setEncoding(QStringConverter::Utf8);
+        QString jsonData = in.readAll();
+        file.close();
+        if (jsonData.isEmpty()) return;
+        // 验证JSON格式
+        QJsonParseError parseError;
+        QJsonDocument::fromJson(jsonData.toUtf8(), &parseError);
+        if (parseError.error != QJsonParseError::NoError) return;
+        // 先设置全局变量，再调用导入函数
+        QString jsCode = QString("window.importJsonData = %1; importData(window.importJsonData);").arg(jsonData);
+        this->executeJS(jsCode);
+    });
     this->connect(manager, &ChannelManager::channelsExportData, [this]()
     {
         QString fileName = QFileDialog::getSaveFileName(this, tr("导出数据"), QDir::homePath(), tr("JSON文件(*.json)"));
