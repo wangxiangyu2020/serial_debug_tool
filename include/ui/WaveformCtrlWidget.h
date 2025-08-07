@@ -16,6 +16,7 @@
 #include <QHBoxLayout>
 #include <QPushButton>
 #include "ui/AddChannelDialog.h"
+#include "ui/RemoveChannelDialog.h"
 #include "core/ChannelManager.h"
 #include <QRandomGenerator>
 
@@ -34,9 +35,12 @@ private:
     void createComponents();
     void createLayout();
     void connectSignals();
+    void setBtnStatus(bool actionClicked);
 
 private slots:
     void onAddChannelBtnClicked();
+    void onRemoveChannelBtnClicked();
+    void onClearBtnClicked();
     void onActionBtnClicked();
 
 private:
@@ -48,6 +52,7 @@ private:
     QPushButton* m_pExportButton = nullptr;
     QPushButton* m_pActionButton = nullptr;
     AddChannelDialog* m_pAddChannelDialog = nullptr;
+    RemoveChannelDialog* m_pRemoveChannelDialog = nullptr;
 };
 
 #endif //WAVEFORMCTRLWIDGET_H

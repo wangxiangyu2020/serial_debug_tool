@@ -63,7 +63,18 @@ void WaveformCtrlWidget::createLayout()
 void WaveformCtrlWidget::connectSignals()
 {
     this->connect(m_pAddChannelButton, &QPushButton::clicked, this, &WaveformCtrlWidget::onAddChannelBtnClicked);
+    this->connect(m_pRemoveChannelButton, &QPushButton::clicked, this, &WaveformCtrlWidget::onRemoveChannelBtnClicked);
+    this->connect(m_pClearButton, &QPushButton::clicked, this, &WaveformCtrlWidget::onClearBtnClicked);
     this->connect(m_pActionButton, &QPushButton::clicked, this, &WaveformCtrlWidget::onActionBtnClicked);
+}
+
+void WaveformCtrlWidget::setBtnStatus(bool actionClicked)
+{
+    m_pAddChannelButton->setEnabled(actionClicked);
+    m_pRemoveChannelButton->setEnabled(actionClicked);
+    m_pClearButton->setEnabled(actionClicked);
+    m_pExportButton->setEnabled(actionClicked);
+    m_pImportButton->setEnabled(actionClicked);
 }
 
 void WaveformCtrlWidget::onAddChannelBtnClicked()
@@ -94,6 +105,22 @@ void WaveformCtrlWidget::onAddChannelBtnClicked()
     m_pAddChannelDialog->deleteLater();
 }
 
+void WaveformCtrlWidget::onRemoveChannelBtnClicked()
+{
+    m_pRemoveChannelDialog = new RemoveChannelDialog(this);
+    // 从单例管理器获取已有通道
+    ChannelManager* manager = ChannelManager::getInstance();
+    m_pRemoveChannelDialog->setExistingChannels(manager->getAllChannels());
+    m_pRemoveChannelDialog->exec();
+    m_pRemoveChannelDialog->deleteLater();
+}
+
+void WaveformCtrlWidget::onClearBtnClicked()
+{
+    ChannelManager* manager = ChannelManager::getInstance();
+    manager->clearAllChannelData();
+}
+
 void WaveformCtrlWidget::onActionBtnClicked()
 {
     bool actionClicked = m_pActionButton->property("actionClicked").toBool();
@@ -101,6 +128,7 @@ void WaveformCtrlWidget::onActionBtnClicked()
 
     if (!actionClicked)
     {
+        this->setBtnStatus(actionClicked);
         // 启动数据分发
         emit manager->channelDataProcess(!actionClicked);
         manager->startDataDispatch();
@@ -108,6 +136,7 @@ void WaveformCtrlWidget::onActionBtnClicked()
     }
     else
     {
+        this->setBtnStatus(actionClicked);
         emit manager->channelDataProcess(actionClicked);
         // 停止数据分发
         manager->stopDataDispatch();

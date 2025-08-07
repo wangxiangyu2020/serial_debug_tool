@@ -229,6 +229,10 @@ void SerialPortManager::connectSignals()
         if (status) manager->startWaveformRecording();
         manager->setChannelDataProcess(status);
     });
+    this->connect(channelManager, &ChannelManager::channelsDataAllCleared, [manager]()
+    {
+        manager->clearAllChannelData();
+    });
 }
 
 void SerialPortManager::configureSerialPort(const QMap<QString, QVariant>& serialParams)

@@ -135,6 +135,12 @@ void ChannelManager::addChannelData(const QString& channelId, const QVariant& da
     }
 }
 
+void ChannelManager::clearAllChannelData()
+{
+    m_dataQueue.clear();
+    emit channelsDataAllCleared();
+}
+
 void ChannelManager::startDataDispatch()
 {
     QMutexLocker locker(&m_queueMutex);

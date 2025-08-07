@@ -113,6 +113,14 @@ void WaveformWidget::connectSignals()
     this->connect(m_updateTimer, &QTimer::timeout, this, &WaveformWidget::onProcessPendingData);
     // 连接数据更新信号
     this->connect(manager, &ChannelManager::channelDataAdded, this, &WaveformWidget::onChannelDataAdded);
+    this->connect(manager, &ChannelManager::channelRemoved, [this](const QString& channelName)
+    {
+        this->executeJS(QString("removeSeries(\"%1\")").arg(channelName));
+    });
+    this->connect(manager, &ChannelManager::channelsDataAllCleared, [this]()
+    {
+        this->clearAllData();
+    });
 }
 
 void WaveformWidget::webEngineViewSettings()
@@ -206,6 +214,12 @@ void WaveformWidget::flushPendingJSCommands()
     }
 
     m_pendingJSCommands.clear();
+}
+
+void WaveformWidget::clearAllData()
+{
+    m_pendingData.clear();
+    this->executeJS("clearAllData()");
 }
 
 void WaveformWidget::onPageLoadFinished(bool status)

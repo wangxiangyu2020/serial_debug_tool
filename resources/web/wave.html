@@ -874,44 +874,62 @@
 
     // 清除所有数据
     function clearAllData() {
-        chartData = {};
-        hasRealData = false;
-        seriesIndexMap = {};
-        userInteracted = false;
-        yAxisAdjusted = false; // 重置Y轴调整标志
+        // 清除所有通道的数据
+        for (var seriesName in chartData) {
+            chartData[seriesName] = [];
+        }
 
-        // 重置初始坐标轴范围
-        initialXAxisMin = 0;
-        initialXAxisMax = 10000;
-        initialYAxisMin = -100000;
-        initialYAxisMax = 100000;
-        currentYAxisMin = initialYAxisMin;
-        currentYAxisMax = initialYAxisMax;
-
+        // 获取当前图表配置
         var currentOption = myChart.getOption();
+
+        // 清空所有系列的数据
         currentOption.series.forEach(function (series) {
             series.data = [];
         });
-        currentOption.series = [];
-        currentOption.legend[0].data = [];
 
-        // 重置坐标轴范围
-        currentOption.xAxis.min = initialXAxisMin;
-        currentOption.xAxis.max = initialXAxisMax;
-        currentOption.yAxis.min = currentYAxisMin;
-        currentOption.yAxis.max = currentYAxisMax;
-        currentOption.yAxis.interval = 20000; // 重置刻度间隔
-
+        // 更新图表显示
         myChart.setOption(currentOption, false, false);
 
-        // 重新显示示例
+        // 重置坐标轴范围到初始值
+        initialXAxisMin = 0;
+        initialXAxisMax = 10000;
+        currentYAxisMin = initialYAxisMin;
+        currentYAxisMax = initialYAxisMax;
+
+        // 重置Y轴相关状态
+        hasRealData = false;
+        userInteracted = false;
+        yAxisAdjusted = false;
+
+        // 重置坐标轴显示范围
+        myChart.setOption({
+            xAxis: {
+                min: initialXAxisMin,
+                max: initialXAxisMax
+            },
+            yAxis: {
+                min: currentYAxisMin,
+                max: currentYAxisMax,
+                interval: 20000
+            }
+        });
+
+        // 重新显示示例数据
         setTimeout(showExampleData, 100);
     }
 
     // 移除系列
     function removeSeries(seriesName) {
-        delete chartData[seriesName];
-        delete seriesIndexMap[seriesName];
+        // 清除通道数据
+        if (chartData[seriesName]) {
+            chartData[seriesName] = [];
+            delete chartData[seriesName];
+        }
+
+        // 删除索引映射
+        if (seriesIndexMap[seriesName]) {
+            delete seriesIndexMap[seriesName];
+        }
 
         var currentOption = myChart.getOption();
 
@@ -926,7 +944,39 @@
             return series.name !== seriesName;
         });
 
-        myChart.setOption(currentOption);
+        // 更新图表，确保完全清除曲线
+        myChart.setOption({
+            series: currentOption.series,
+            legend: currentOption.legend
+        }, {replaceMerge: ['series', 'legend']});
+
+        // 如果没有剩余系列，重置状态
+        if (currentOption.series.length === 0) {
+            hasRealData = false;
+            userInteracted = false;
+            yAxisAdjusted = false;
+
+            // 重置坐标轴范围到初始值
+            initialXAxisMin = 0;
+            initialXAxisMax = 10000;
+            currentYAxisMin = initialYAxisMin;
+            currentYAxisMax = initialYAxisMax;
+
+            myChart.setOption({
+                xAxis: {
+                    min: initialXAxisMin,
+                    max: initialXAxisMax
+                },
+                yAxis: {
+                    min: currentYAxisMin,
+                    max: currentYAxisMax,
+                    interval: 20000
+                }
+            });
+
+            // 重新显示示例数据
+            setTimeout(showExampleData, 100);
+        }
     }
 
     // 获取数据统计信息

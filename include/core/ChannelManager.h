@@ -51,6 +51,7 @@ public:
     int getChannelCount() const;
     // 通道数据crud操作
     void addChannelData(const QString& channelId, const QVariant& data);
+    void clearAllChannelData();
 
     void startDataDispatch();
     void stopDataDispatch();
@@ -73,6 +74,7 @@ signals:
 
     void channelDataAdded(const QString& channelId, const QVariant& data);
     void channelDataProcess(bool status);
+    void channelsDataAllCleared();
 
 private:
     static ChannelManager* m_instance;

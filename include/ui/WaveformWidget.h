@@ -47,6 +47,7 @@ private:
     void checkAndScheduleUpdate();
     void checkAndUpdateData();
     void flushPendingJSCommands();
+    void clearAllData();
 
 private slots:
     void onPageLoadFinished(bool success);
