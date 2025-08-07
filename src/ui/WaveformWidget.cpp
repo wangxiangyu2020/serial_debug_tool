@@ -121,6 +121,22 @@ void WaveformWidget::connectSignals()
     {
         this->clearAllData();
     });
+    this->connect(manager, &ChannelManager::channelsExportData, [this]()
+    {
+        QString fileName = QFileDialog::getSaveFileName(this, tr("导出数据"), QDir::homePath(), tr("JSON文件(*.json)"));
+        if (fileName.isEmpty()) return;
+        if (!fileName.endsWith(".json", Qt::CaseInsensitive)) fileName += ".json";
+        m_pWebEngineView->page()->runJavaScript(QString("exportData()"), [this, fileName](const QVariant& result)
+        {
+            QString jsonData = result.toString();
+            QFile file(fileName);
+            if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return;
+            QTextStream out(&file);
+            out.setEncoding(QStringConverter::Utf8);
+            out << jsonData;
+            file.close();
+        });
+    });
 }
 
 void WaveformWidget::webEngineViewSettings()

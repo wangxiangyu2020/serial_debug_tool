@@ -65,6 +65,7 @@ void WaveformCtrlWidget::connectSignals()
     this->connect(m_pAddChannelButton, &QPushButton::clicked, this, &WaveformCtrlWidget::onAddChannelBtnClicked);
     this->connect(m_pRemoveChannelButton, &QPushButton::clicked, this, &WaveformCtrlWidget::onRemoveChannelBtnClicked);
     this->connect(m_pClearButton, &QPushButton::clicked, this, &WaveformCtrlWidget::onClearBtnClicked);
+    this->connect(m_pExportButton, &QPushButton::clicked, this, &WaveformCtrlWidget::onExportBtnClicked);
     this->connect(m_pActionButton, &QPushButton::clicked, this, &WaveformCtrlWidget::onActionBtnClicked);
 }
 
@@ -119,6 +120,12 @@ void WaveformCtrlWidget::onClearBtnClicked()
 {
     ChannelManager* manager = ChannelManager::getInstance();
     manager->clearAllChannelData();
+}
+
+void WaveformCtrlWidget::onExportBtnClicked()
+{
+    ChannelManager* manager = ChannelManager::getInstance();
+    emit manager->channelsExportData();
 }
 
 void WaveformCtrlWidget::onActionBtnClicked()

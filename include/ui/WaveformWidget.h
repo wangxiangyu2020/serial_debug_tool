@@ -25,6 +25,7 @@
 #include <cmath>
 #include "core/ChannelManager.h"
 #include <memory>
+#include <QFileDialog>
 
 class WaveformWidget : public QWidget
 {

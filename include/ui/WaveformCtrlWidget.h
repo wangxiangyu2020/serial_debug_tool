@@ -41,6 +41,7 @@ private slots:
     void onAddChannelBtnClicked();
     void onRemoveChannelBtnClicked();
     void onClearBtnClicked();
+    void onExportBtnClicked();
     void onActionBtnClicked();
 
 private:
