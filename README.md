@@ -1,6 +1,6 @@
 # IKUN 串口调试工具
 
-一个基于 Qt6 和 C++20 构建的现代化、功能丰富的串口调试工具。该应用程序为串口通信提供了直观的界面，支持多种数据格式、实时监控、数据可视化和可定制的样式系统。
+一个基于 Qt6 和 C++20 构建的现代化、功能丰富的串口调试工具。该应用程序为串口通信提供了直观的界面，支持多种数据格式、实时监控、专业级数据可视化和完全可定制的样式系统。集成了基于 ECharts 的波形显示功能，支持多通道数据管理和实时图表更新。
 
 ## 🚀 核心特性
 
@@ -42,12 +42,12 @@
 
 ```
 serial_debug_tool/
-├── src/                    # 源代码
+├── src/                    # 源代码 (22个文件)
 │   ├── main.cpp           # 应用程序入口点
-│   ├── core/              # 核心业务逻辑
+│   ├── core/              # 核心业务逻辑 (2个文件)
 │   │   ├── SerialPortManager.cpp          # 串口管理核心类
 │   │   └── ChannelManager.cpp             # 通道管理器 (单例模式)
-│   ├── ui/                # 用户界面组件
+│   ├── ui/                # 用户界面组件 (19个文件)
 │   │   ├── MainWindow.cpp                 # 主窗口
 │   │   ├── TitleBar.cpp                   # 自定义标题栏
 │   │   ├── CTabWidget.cpp                 # 标签页容器
@@ -65,33 +65,46 @@ serial_debug_tool/
 │   │   ├── WaveformWidget.cpp             # ECharts 波形显示组件
 │   │   ├── WaveformCtrlWidget.cpp         # 波形控制面板
 │   │   ├── AddChannelDialog.cpp           # 添加通道对话框
+│   │   ├── RemoveChannelDialog.cpp        # 移除通道对话框
 │   │   └── SettingsTab.cpp                # 设置标签页
-│   └── utils/             # 工具类
+│   └── utils/             # 工具类 (3个文件)
 │       ├── StyleLoader.cpp               # QSS样式加载器
 │       ├── ThreadPoolManager.cpp         # 线程池管理器
 │       └── SerialPortSettings.cpp        # 串口参数配置工具
-├── include/               # 头文件 (与src结构对应)
-│   ├── core/              # 核心模块头文件
+├── include/               # 头文件 (与src结构对应，22个文件)
+│   ├── core/              # 核心模块头文件 (2个文件)
 │   │   ├── SerialPortManager.h
 │   │   └── ChannelManager.h
-│   ├── ui/                # UI组件头文件 (18个组件)
-│   └── utils/             # 工具类头文件
+│   ├── ui/                # UI组件头文件 (19个文件)
+│   │   ├── MainWindow.h, TitleBar.h, CTabWidget.h
+│   │   ├── FramelessBase.h, CDialogBase.h, CMessageBox.h
+│   │   ├── SerialPortConfigTab.h, SerialPortConnectConfigWidget.h
+│   │   ├── SerialPortReceiveSettingsWidget.h, SerialPortSendSettingsWidget.h
+│   │   ├── SerialPortDataReceiveWidget.h, SerialPortDataSendWidget.h
+│   │   ├── SerialPortRealTimeSaveWidget.h
+│   │   ├── WaveformTab.h, WaveformWidget.h, WaveformCtrlWidget.h
+│   │   ├── AddChannelDialog.h, RemoveChannelDialog.h
+│   │   └── SettingsTab.h
+│   └── utils/             # 工具类头文件 (3个文件)
 ├── resources/             # 应用程序资源
-│   ├── icons/            # SVG 和 ICO 图标文件 (15个图标)
-│   │   ├── logo.svg, serial.svg, waves.svg, settings.svg
-│   │   ├── send.svg, checkmark_blue.svg, down_arrow.svg
-│   │   ├── add_series.svg, remove_series.svg, clear_series.svg
-│   │   ├── import_series.svg, export_series.svg
-│   │   ├── start_series.svg, stop_series.svg
-│   │   └── ikun.ico, ikun.svg, un_dev.svg
-│   ├── qss/              # Qt 样式表文件 (13个样式文件)
-│   │   ├── main_window.qss, title_bar.qss, tab_bar.qss
-│   │   ├── dialog_base.qss, add_channel_dialog.qss
-│   │   ├── wave_form_tab.qss, wave_form_ctrl_widget.qss
-│   │   ├── serial_port_*.qss (6个串口组件样式)
-│   │   └── serial_port_real_time_save_widget.qss
-│   ├── web/              # Web资源 (ECharts集成)
-│   │   ├── echarts.min.js                 # ECharts库文件
+│   ├── icons/            # SVG 和 ICO 图标文件 (17个图标)
+│   │   ├── 界面图标: logo.svg, serial.svg, waves.svg, settings.svg
+│   │   ├── 操作图标: send.svg, checkmark_blue.svg, down_arrow.svg
+│   │   ├── 波形图标: add_series.svg, remove_series.svg, clear_series.svg
+│   │   ├── 数据图标: import_series.svg, export_series.svg
+│   │   ├── 控制图标: start_series.svg, stop_series.svg
+│   │   └── 应用图标: ikun.ico, ikun.svg, un_dev.svg
+│   ├── qss/              # Qt 样式表文件 (15个样式文件)
+│   │   ├── 主界面: main_window.qss, title_bar.qss, tab_bar.qss
+│   │   ├── 对话框: dialog_base.qss, add_channel_dialog.qss, remove_channel_dialog.qss
+│   │   ├── 波形界面: wave_form_tab.qss, wave_form_ctrl_widget.qss
+│   │   ├── 串口组件: serial_prot_config_tab.qss
+│   │   ├── 串口配置: serial_port_connect_config_widget.qss
+│   │   ├── 串口设置: serial_port_receive_settings_widget.qss, serial_port_send_settings_widget.qss
+│   │   ├── 串口数据: serial_port_data_receive_widget.qss, serial_port_data_send_widget.qss
+│   │   └── 实时保存: serial_port_real_time_save_widget.qss
+│   ├── web/              # Web资源 (ECharts集成，2个文件)
+│   │   ├── echarts.min.js                 # ECharts库文件 (压缩版)
 │   │   └── wave.html                      # 波形显示HTML页面
 │   └── version.rc        # Windows 版本资源
 ├── cmake-build-debug/     # 调试版本构建输出
@@ -135,51 +148,53 @@ graph TB
         G --> O[WaveformWidget]
         G --> P[WaveformCtrlWidget]
         P --> Q[AddChannelDialog]
-        Q --> R[CDialogBase]
+        P --> R[RemoveChannelDialog]
+        Q --> S[CDialogBase]
+        R --> S
 
-        S[CMessageBox]
+        T[CMessageBox]
     end
 
     subgraph "核心层"
-        T[SerialPortManager]
-        T --> U[QSerialPort]
-        V[ChannelManager]
+        U[SerialPortManager]
+        U --> V[QSerialPort]
+        W[ChannelManager]
     end
 
     subgraph "工具层"
-        W[StyleLoader]
-        X[ThreadPoolManager]
-        Y[SerialPortSettings]
+        X[StyleLoader]
+        Y[ThreadPoolManager]
+        Z[SerialPortSettings]
     end
 
     subgraph "资源"
-        Z[图标系统 - 15个SVG/ICO]
-        AA[样式系统 - 13个QSS]
-        BB[Web资源 - ECharts]
-        CC[版本资源]
+        AA[图标系统 - 17个SVG/ICO]
+        BB[样式系统 - 15个QSS]
+        CC[Web资源 - ECharts]
+        DD[版本资源]
     end
 
-    I --> T
-    L --> T
-    M --> T
-    O --> V
-    P --> V
+    I --> U
+    L --> U
+    M --> U
+    O --> W
+    P --> W
 
-    B --> W
-    E --> W
-    F --> W
-    G --> W
+    B --> X
+    E --> X
+    F --> X
+    G --> X
 
-    I --> X
-    O --> BB
+    I --> Y
+    O --> CC
 
     style A fill:#e1f5fe
-    style T fill:#f3e5f5
-    style V fill:#f3e5f5
-    style W fill:#e8f5e8
+    style U fill:#f3e5f5
+    style W fill:#f3e5f5
     style X fill:#e8f5e8
     style Y fill:#e8f5e8
-    style BB fill:#fff3e0
+    style Z fill:#e8f5e8
+    style CC fill:#fff3e0
 ```
 
 **架构说明**:
@@ -360,6 +375,12 @@ sequenceDiagram
   - 输入验证和已有通道显示
   - 英文ID验证 (正则表达式)
 
+- **`RemoveChannelDialog`**: 移除通道对话框
+  - 继承自 CDialogBase，带动画效果
+  - 显示已有通道列表，支持选择移除
+  - 通道信息可视化显示 (颜色指示器 + 名称 + ID)
+  - 专用的移除按钮样式 (红色主题)
+
 **对话框系统**:
 - **`CDialogBase`**: 对话框基类
   - 无边框圆角设计
@@ -405,21 +426,28 @@ sequenceDiagram
   - 默认值设置支持
 
 #### **资源系统 (Resources)**
-- **图标系统**: 15个SVG矢量图标 + 1个ICO图标
+- **图标系统**: 16个SVG矢量图标 + 1个ICO图标 (共17个)
   - 串口功能图标：serial.svg, send.svg, checkmark_blue.svg
   - 波形功能图标：waves.svg, add_series.svg, remove_series.svg, clear_series.svg
   - 数据操作图标：import_series.svg, export_series.svg, start_series.svg, stop_series.svg
   - 界面图标：logo.svg, settings.svg, down_arrow.svg, un_dev.svg
   - 应用图标：ikun.ico, ikun.svg
 
-- **样式系统**: 13个专用QSS样式表文件
+- **样式系统**: 15个专用QSS样式表文件
   - 主界面样式：main_window.qss, title_bar.qss, tab_bar.qss
-  - 对话框样式：dialog_base.qss, add_channel_dialog.qss
+  - 对话框样式：dialog_base.qss, add_channel_dialog.qss, remove_channel_dialog.qss
   - 波形样式：wave_form_tab.qss, wave_form_ctrl_widget.qss
-  - 串口组件样式：6个 serial_port_*.qss 文件
+  - 串口组件样式：8个 serial_port_*.qss 文件
+    - serial_prot_config_tab.qss (配置标签页)
+    - serial_port_connect_config_widget.qss (连接配置)
+    - serial_port_receive_settings_widget.qss (接收设置)
+    - serial_port_send_settings_widget.qss (发送设置)
+    - serial_port_data_receive_widget.qss (数据接收)
+    - serial_port_data_send_widget.qss (数据发送)
+    - serial_port_real_time_save_widget.qss (实时保存)
 
-- **Web资源**: ECharts 集成
-  - echarts.min.js：ECharts 核心库
+- **Web资源**: ECharts 集成 (2个文件)
+  - echarts.min.js：ECharts 核心库 (压缩版)
   - wave.html：波形显示HTML页面，包含完整的图表配置和JavaScript交互
 
 - **版本资源**: Windows可执行文件元数据
@@ -565,15 +593,19 @@ sequenceDiagram
 - **图表渲染**: ECharts硬件加速，支持大数据量实时更新
 
 ### 项目规模统计
-- **源代码文件**: 21个 (.cpp文件)
-- **头文件**: 21个 (.h文件)
-- **UI组件**: 18个独立组件
+- **源代码文件**: 22个 (.cpp文件)
+  - main.cpp (1个) + core (2个) + ui (19个) + utils (3个)
+- **头文件**: 22个 (.h文件)
+  - 与源文件一一对应的完整头文件结构
+- **UI组件**: 19个独立组件
+  - 包含完整的对话框系统和波形可视化组件
 - **核心模块**: 2个 (SerialPortManager, ChannelManager)
 - **工具类**: 3个 (StyleLoader, ThreadPoolManager, SerialPortSettings)
-- **图标资源**: 15个SVG + 1个ICO
-- **样式文件**: 13个QSS文件
+- **图标资源**: 16个SVG + 1个ICO (共17个)
+- **样式文件**: 15个QSS文件 (完整的样式系统)
 - **Web资源**: 2个文件 (ECharts库 + HTML页面)
-- **代码行数**: 约8000行 (估算)
+- **总文件数**: 约80个文件 (包含构建输出)
+- **代码行数**: 约10000行 (估算，包含注释和空行)
 
 ## 📝 许可证
 
@@ -587,22 +619,26 @@ sequenceDiagram
 
 ## 🐛 已知限制
 
-- **测试覆盖**: 单元测试框架待实现
+- **测试覆盖**: 单元测试框架待实现 (tests目录为空)
 - **设置功能**: SettingsTab 为基础框架，功能待完善
 - **协议分析**: 暂不支持专用串口协议解析
 - **数据导出**: 波形控制面板的导入导出功能待实现
 - **多串口**: 当前仅支持单串口连接
-- **Web引擎依赖**: 需要Qt WebEngine模块支持
+- **Web引擎依赖**: 需要Qt WebEngine模块支持，增加了部署复杂性
+- **内存占用**: Web引擎集成导致内存占用相对较高 (~80MB)
 
 ## ✨ 已实现的高级特性
 
 - ✅ **完整的波形可视化系统**: 基于ECharts的专业级数据可视化
-- ✅ **多通道数据管理**: 支持动态添加/删除数据通道
-- ✅ **实时数据流**: 串口数据到波形图表的实时更新
+- ✅ **多通道数据管理**: 支持动态添加/删除数据通道，完整的通道管理对话框
+- ✅ **实时数据流**: 串口数据到波形图表的实时更新，60FPS刷新率
 - ✅ **现代化UI设计**: 无边框窗口、自定义对话框、动画效果
-- ✅ **完整的样式系统**: 13个专用QSS文件，支持主题定制
+- ✅ **完整的样式系统**: 15个专用QSS文件，支持主题定制
 - ✅ **线程安全架构**: 多线程数据处理，UI响应流畅
 - ✅ **资源管理系统**: 完整的图标、样式、Web资源管理
+- ✅ **双向通道操作**: AddChannelDialog 和 RemoveChannelDialog 完整实现
+- ✅ **数据队列优化**: 支持大容量数据缓冲和性能优化
+- ✅ **Web引擎集成**: QWebEngineView 完美集成 ECharts 图表库
 
 ## 🔮 发展路线
 
