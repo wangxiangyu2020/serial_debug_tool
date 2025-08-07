@@ -176,8 +176,23 @@
         }
         lastZoomTime = now;
 
-        userInteracted = true;
-        isUserZooming = true; // 标记用户正在进行缩放操作
+        const zoomRange = params.batch ?
+            (params.batch[0].end - params.batch[0].start) :
+            (params.end - params.start);
+
+        console.log(`缩放范围: ${zoomRange}%`);
+
+        // 只有当缩放范围小于98%时才认为是用户交互
+        if (zoomRange < 98) {
+            userInteracted = true;
+            isUserZooming = true;
+            console.log('用户交互模式');
+        } else {
+            // 接近全局视图时，重置交互状态
+            userInteracted = false;
+            isUserZooming = false;
+            console.log('全局视图模式');
+        }
 
         if (params.batch) {
             currentView.xStart = params.batch[0].start;
@@ -190,7 +205,6 @@
         // 使用requestAnimationFrame进行异步更新
         requestAnimationFrame(() => {
             updateYAxisBasedOnVisibleData();
-            // 用户操作完成后重置标志
             setTimeout(() => {
                 isUserZooming = false;
             }, 100);
@@ -252,9 +266,38 @@
         }
     }
 
-    // 根据当前可见数据更新Y轴范围 - 优化版本
+    // 根据当前可见数据更新Y轴范围 - 修复滑动条问题
     function updateYAxisBasedOnVisibleData() {
         try {
+            // 获取当前dataZoom的状态
+            const option = myChart.getOption();
+            const dataZoom = option.dataZoom[0];
+            const zoomStart = dataZoom.start || 0;
+            const zoomEnd = dataZoom.end || 100;
+
+            // 计算缩放比例
+            const zoomRange = zoomEnd - zoomStart;
+
+            // 如果滑动条显示接近全部范围（>98%），恢复默认Y轴刻度
+            if (zoomRange > 98) {
+                console.log('恢复默认Y轴刻度');
+                // 恢复到默认的Y轴范围和刻度
+                myChart.setOption({
+                    yAxis: {
+                        min: initialYAxisMin,
+                        max: initialYAxisMax,
+                        interval: 20000
+                    }
+                });
+                return;
+            }
+
+            console.log('使用可见范围数据计算Y轴范围');
+
+            let minY = Infinity;
+            let maxY = -Infinity;
+            let hasVisibleData = false;
+
             // 获取当前视图的X轴范围
             const xAxisModel = myChart.getModel().getComponent('xAxis', 0);
             if (!xAxisModel) return;
@@ -265,70 +308,43 @@
             const visibleMinX = axis.scale.getExtent()[0];
             const visibleMaxX = axis.scale.getExtent()[1];
 
-            // 计算当前可见区域内的Y值范围
-            let minY = Infinity;
-            let maxY = -Infinity;
-            let hasVisibleData = false;
-
-            // 使用高效算法：只检查最近的点
+            // 使用高效算法：只检查可见范围内的点
             for (const seriesName in chartData) {
                 const data = chartData[seriesName];
                 if (!data || data.length === 0) continue;
 
-                // 使用二分查找确定可见范围内的起始索引
-                let startIdx = 0;
-                let endIdx = data.length - 1;
+                for (let i = 0; i < data.length; i++) {
+                    const point = data[i];
+                    const xValue = point[0];
+                    const yValue = point[1];
 
-                // 二分查找下限
-                let low = 0;
-                let high = data.length - 1;
-                while (low <= high) {
-                    const mid = Math.floor((low + high) / 2);
-                    if (data[mid][0] < visibleMinX) {
-                        low = mid + 1;
-                    } else {
-                        startIdx = mid;
-                        high = mid - 1;
+                    // 检查点是否在可见范围内
+                    if (xValue >= visibleMinX && xValue <= visibleMaxX) {
+                        if (yValue < minY) minY = yValue;
+                        if (yValue > maxY) maxY = yValue;
+                        hasVisibleData = true;
                     }
-                }
-
-                // 二分查找上限
-                low = startIdx;
-                high = data.length - 1;
-                while (low <= high) {
-                    const mid = Math.floor((low + high) / 2);
-                    if (data[mid][0] > visibleMaxX) {
-                        high = mid - 1;
-                    } else {
-                        endIdx = mid;
-                        low = mid + 1;
-                    }
-                }
-
-                // 检查可见范围内的点
-                for (let i = startIdx; i <= endIdx; i++) {
-                    const yValue = data[i][1];
-                    if (yValue < minY) minY = yValue;
-                    if (yValue > maxY) maxY = yValue;
-                    hasVisibleData = true;
                 }
             }
 
             // 如果没有可见数据，则返回
-            if (!hasVisibleData) return;
+            if (!hasVisibleData) {
+                console.log('没有找到可见数据');
+                return;
+            }
+
+            console.log(`Y轴数据范围: ${minY} ~ ${maxY}`);
 
             // 扩展Y轴范围10%，以便显示完整波形
             const yRange = maxY - minY;
-            const padding = yRange * 0.1;
+            const padding = Math.max(yRange * 0.1, 1); // 至少1个单位的padding
             let newMinY = minY - padding;
             let newMaxY = maxY + padding;
 
             // 确保只显示第一和第四象限
             if (minY >= 0 && maxY >= 0) {
-                // 所有值都为正，只显示第一象限
                 newMinY = Math.max(0, newMinY);
             } else if (minY < 0 && maxY < 0) {
-                // 所有值都为负，只显示第四象限
                 newMaxY = Math.min(0, newMaxY);
             }
 
@@ -344,12 +360,14 @@
             const maxAbsValue = Math.max(Math.abs(newMinY), Math.abs(newMaxY));
             const yAxisInterval = calculateYAxisInterval(maxAbsValue);
 
+            console.log(`更新Y轴范围: ${newMinY} ~ ${newMaxY}, 间隔: ${yAxisInterval}`);
+
             // 更新Y轴范围
             myChart.setOption({
                 yAxis: {
                     min: newMinY,
                     max: newMaxY,
-                    interval: yAxisInterval  // 设置动态计算的刻度间隔
+                    interval: yAxisInterval
                 }
             });
         } catch (e) {
@@ -791,7 +809,7 @@
         }
     }
 
-    // 修改自动调整视图范围函数，禁用自动Y轴调整
+    // 修改自动调整视图范围函数
     function autoAdjustView(seriesName) {
         const data = chartData[seriesName];
         if (!data || data.length === 0) return;
@@ -813,8 +831,16 @@
         // 检查是否需要更新X轴
         let needUpdateX = false;
 
-        // 检查是否超出当前X轴范围（无论用户是否交互过）
-        if (maxX > initialXAxisMax || minX < initialXAxisMin) {
+        // 检查当前缩放状态
+        const option = myChart.getOption();
+        const dataZoom = option.dataZoom[0];
+        const zoomRange = (dataZoom.end || 100) - (dataZoom.start || 0);
+
+        // 如果当前是全局视图（缩放范围>95%），或者用户没有交互过，则允许自动调整
+        const allowAutoAdjust = zoomRange > 95 || !userInteracted;
+
+        // 检查是否超出当前X轴范围
+        if (allowAutoAdjust && (maxX > initialXAxisMax || minX < initialXAxisMin)) {
             needUpdateX = true;
             // 扩展X轴范围
             const xRange = maxX - minX;
@@ -827,7 +853,6 @@
             }
         }
 
-        // 移除Y轴自动调整逻辑，只保留X轴调整
         if (needUpdateX) {
             const updateOption = {};
             // 计算X轴刻度间隔
@@ -839,7 +864,6 @@
                 interval: xAxisInterval,
                 axisLabel: {
                     formatter: function (value) {
-                        // 整数化X轴标签
                         return Math.round(value) === value ? value : Math.round(value);
                     }
                 }
