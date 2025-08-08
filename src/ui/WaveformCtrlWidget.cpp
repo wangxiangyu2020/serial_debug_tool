@@ -13,7 +13,7 @@ WaveformCtrlWidget::WaveformCtrlWidget(QWidget* parent)
     : QWidget(parent)
 {
     this->setUI();
-    StyleLoader::loadStyleFromFile(this, ":resources/qss/wave_form_ctrl_widget.qss");
+    StyleLoader::loadStyleFromFile(this, ":/resources/qss/wave_form_ctrl_widget.qss");
 }
 
 void WaveformCtrlWidget::setUI()
