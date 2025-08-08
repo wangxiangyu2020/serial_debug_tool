@@ -15,6 +15,8 @@
 #include <QWidget>
 #include "utils/StyleLoader.h"
 #include <QTabWidget>
+#include <QWebEngineView>
+#include <QRegularExpression>
 #include <QTextEdit>
 #include <QVBoxLayout>
 
@@ -32,7 +34,9 @@ private:
 
 private:
     QTabWidget* m_pTabWidget = nullptr;
-    QTextEdit* m_pReadmeViewer = nullptr;
+    QWebEngineView* m_pReadmeViewer = nullptr;
+
+    QString convertMarkdownToHtml(const QString& markdown);
 };
 
 #endif //SETTINGSTAB_H
