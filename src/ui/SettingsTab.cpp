@@ -50,31 +50,94 @@ void SettingsTab::createComponents()
 
 QString SettingsTab::convertMarkdownToHtml(const QString& markdown)
 {
-    // 简单的 Markdown 到 HTML 转换
     QString html = markdown;
 
-    // 转换标题
+    // 1. 首先处理代码块（避免其他规则影响代码内容）
+    html.replace(QRegularExpression("```(\\w+)\\n([\\s\\S]*?)```"),
+                 "<pre><code class=\"language-\\1\">\\2</code></pre>");
+    html.replace(QRegularExpression("```([\\s\\S]*?)```"), "<pre><code>\\1</code></pre>");
+
+    // 2. 处理行内代码
+    html.replace(QRegularExpression("`([^`\n]+)`"), "<code>\\1</code>");
+
+    // 3. 处理标题（从高级到低级）
+    html.replace(QRegularExpression("^#### (.+)$", QRegularExpression::MultilineOption), "<h4>\\1</h4>");
     html.replace(QRegularExpression("^### (.+)$", QRegularExpression::MultilineOption), "<h3>\\1</h3>");
     html.replace(QRegularExpression("^## (.+)$", QRegularExpression::MultilineOption), "<h2>\\1</h2>");
     html.replace(QRegularExpression("^# (.+)$", QRegularExpression::MultilineOption), "<h1>\\1</h1>");
 
-    // 转换代码块
-    html.replace(QRegularExpression("```([\\s\\S]*?)```"), "<pre><code>\\1</code></pre>");
-    html.replace(QRegularExpression("`([^`]+)`"), "<code>\\1</code>");
+    // 4. 处理链接
+    html.replace(QRegularExpression("\\[([^\\]]+)\\]\\(([^\\)]+)\\)"), "<a href=\"\\2\">\\1</a>");
 
-    // 转换粗体和斜体
-    html.replace(QRegularExpression("\\*\\*([^*]+)\\*\\*"), "<strong>\\1</strong>");
-    html.replace(QRegularExpression("\\*([^*]+)\\*"), "<em>\\1</em>");
+    // 5. 处理粗体和斜体
+    html.replace(QRegularExpression("\\*\\*([^*\n]+)\\*\\*"), "<strong>\\1</strong>");
+    html.replace(QRegularExpression("\\*([^*\n]+)\\*"), "<em>\\1</em>");
 
-    // 转换换行
-    html.replace("\n", "<br>");
+    // 6. 处理删除线
+    html.replace(QRegularExpression("~~([^~\n]+)~~"), "<del>\\1</del>");
+
+    // 7. 处理水平线
+    html.replace(QRegularExpression("^---+$", QRegularExpression::MultilineOption), "<hr>");
+    html.replace(QRegularExpression("^\\*\\*\\*+$", QRegularExpression::MultilineOption), "<hr>");
+
+    // 8. 处理引用
+    html.replace(QRegularExpression("^> (.+)$", QRegularExpression::MultilineOption), "<blockquote>\\1</blockquote>");
+
+    // 9. 处理列表项（简化处理）
+    html.replace(QRegularExpression("^- (.+)$", QRegularExpression::MultilineOption), "<li>\\1</li>");
+    html.replace(QRegularExpression("^\\* (.+)$", QRegularExpression::MultilineOption), "<li>\\1</li>");
+    html.replace(QRegularExpression("^\\+ (.+)$", QRegularExpression::MultilineOption), "<li>\\1</li>");
+    html.replace(QRegularExpression("^\\d+\\. (.+)$", QRegularExpression::MultilineOption), "<li>\\1</li>");
+
+    // 10. 简单包装列表项为ul标签
+    QStringList lines = html.split('\n');
+    QString result;
+    bool inList = false;
+
+    for (const QString& line : lines)
+    {
+        if (line.contains("<li>"))
+        {
+            if (!inList)
+            {
+                result += "<ul>\n";
+                inList = true;
+            }
+            result += line + "\n";
+        }
+        else
+        {
+            if (inList)
+            {
+                result += "</ul>\n";
+                inList = false;
+            }
+            result += line + "\n";
+        }
+    }
+    if (inList)
+    {
+        result += "</ul>\n";
+    }
+
+    // 11. 最后处理换行
+    result.replace("\n", "<br>");
 
     return QString("<html><head><style>"
-        "body { font-family: 'Microsoft YaHei UI', sans-serif; padding: 20px; }"
-        "h1 { color: #2c3e50; }"
-        "h2 { color: #34495e; }"
-        "h3 { color: #7f8c8d; }"
-        "code { background: #f8f9fa; padding: 2px 4px; border-radius: 3px; }"
-        "pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }"
-        "</style></head><body>") + html + "</body></html>";
+        "body { font-family: 'Microsoft YaHei UI', sans-serif; padding: 20px; line-height: 1.6; }"
+        "h1 { color: #000000; border-bottom: 2px solid #3498db; padding-bottom: 5px; margin-bottom: 10px; font-weight: bold; }"
+        "h2 { color: #000000; border-bottom: 1px solid #bdc3c7; padding-bottom: 3px; margin-bottom: 8px; }"
+        "h3 { color: #000000; margin-bottom: 6px; }"
+        "h4 { color: #000000; margin-bottom: 6px; }"
+        "code { background: #f8f9fa; padding: 2px 4px; border-radius: 3px; font-family: 'Consolas', monospace; }"
+        "pre { background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto; border-left: 4px solid #3498db; }"
+        "pre code { background: none; padding: 0; }"
+        "ul { margin: 10px 0; padding-left: 20px; }"
+        "li { margin: 5px 0; }"
+        "blockquote { border-left: 4px solid #3498db; margin: 10px 0; padding: 10px 20px; background: #ecf0f1; }"
+        "a { color: #3498db; text-decoration: none; }"
+        "a:hover { text-decoration: underline; }"
+        "hr { border: none; height: 1px; background: #bdc3c7; margin: 20px 0; }"
+        "del { color: #7f8c8d; }"
+        "</style></head><body>") + result + "</body></html>";
 }
