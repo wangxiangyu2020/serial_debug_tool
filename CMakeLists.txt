@@ -106,7 +106,7 @@ target_link_libraries(${PROJECT_NAME}
 # 设置最终生成的可执行文件名
 set_target_properties(${PROJECT_NAME} PROPERTIES
         OUTPUT_NAME "IKUN"  # 指定输出文件名（不带扩展名）
-        #        WIN32_EXECUTABLE ON
+#        WIN32_EXECUTABLE ON
 )
 
 # 添加 Windows 部署规则
