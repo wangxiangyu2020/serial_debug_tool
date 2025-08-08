@@ -10,11 +10,53 @@
 
 #include "ui/SettingsTab.h"
 
+
 SettingsTab::SettingsTab(QWidget* parent)
     : QWidget(parent)
 {
     this->setUI();
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/settings_tab.qss");
+}
+
+void SettingsTab::resizeEvent(QResizeEvent* event)
+{
+    QWidget::resizeEvent(event);
+
+    // 使用防抖处理resize
+    if (m_renderTimer)
+    {
+        m_renderTimer->start(100); // 100ms防抖
+        return;
+    }
+
+    m_renderTimer = new QTimer(this);
+    m_renderTimer->setSingleShot(true);
+    this->connect(m_renderTimer, &QTimer::timeout, this, [this]()
+    {
+        // 先尝试触发 resize 事件
+        m_pReadmeViewer->page()->runJavaScript("window.dispatchEvent(new Event('resize'));");
+
+        // 延迟检查内容是否正确显示，如果没有则重新加载
+        QTimer::singleShot(50, [this]()
+        {
+            m_pReadmeViewer->page()->runJavaScript("document.body.innerHTML", [this](const QVariant& result)
+            {
+                if (result.toString().isEmpty())
+                {
+                    // 如果内容为空，则重新加载
+                    QFile readmeFile(":/README.md");
+                    if (readmeFile.open(QIODevice::ReadOnly | QIODevice::Text))
+                    {
+                        QString markdownContent = QString::fromUtf8(readmeFile.readAll());
+                        QString htmlContent = convertMarkdownToHtml(markdownContent);
+                        m_pReadmeViewer->setHtml(htmlContent);
+                    }
+                }
+            });
+        });
+    });
+
+    m_renderTimer->start(100); // 100ms防抖
 }
 
 void SettingsTab::setUI()
@@ -30,6 +72,14 @@ void SettingsTab::createComponents()
 
     // 创建README文档查看器 - 使用WebEngineView
     m_pReadmeViewer = new QWebEngineView(this);
+
+    // 启用透明背景
+    QPalette pal = m_pReadmeViewer->palette();
+    pal.setColor(QPalette::Window, Qt::transparent);
+    m_pReadmeViewer->setPalette(pal);
+    // 设置背景透明
+    m_pReadmeViewer->setAttribute(Qt::WA_TranslucentBackground);
+    m_pReadmeViewer->page()->setBackgroundColor(Qt::transparent);
 
     // 加载README.md内容并转换为HTML
     QFile readmeFile(":/README.md");

@@ -19,6 +19,7 @@
 #include <QRegularExpression>
 #include <QTextEdit>
 #include <QVBoxLayout>
+#include <QTimer>
 
 class SettingsTab : public QWidget
 {
@@ -28,6 +29,9 @@ public:
     explicit SettingsTab(QWidget* parent = nullptr);
     ~SettingsTab() = default;
 
+protected:
+    void resizeEvent(QResizeEvent* event) override;
+
 private:
     void setUI();
     void createComponents();
@@ -35,6 +39,7 @@ private:
 private:
     QTabWidget* m_pTabWidget = nullptr;
     QWebEngineView* m_pReadmeViewer = nullptr;
+    QTimer* m_renderTimer = nullptr;
 
     QString convertMarkdownToHtml(const QString& markdown);
 };
