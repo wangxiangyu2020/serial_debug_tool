@@ -71,6 +71,7 @@ qt_add_resources(${PROJECT_NAME} "resources"
         resources/icons/export_series.svg
         resources/icons/start_series.svg
         resources/icons/stop_series.svg
+        resources/image/ikun.gif
         resources/qss/main_window.qss
         resources/qss/tab_bar.qss
         resources/qss/settings_tab.qss
@@ -106,7 +107,7 @@ target_link_libraries(${PROJECT_NAME}
 # 设置最终生成的可执行文件名
 set_target_properties(${PROJECT_NAME} PROPERTIES
         OUTPUT_NAME "IKUN"  # 指定输出文件名（不带扩展名）
-#        WIN32_EXECUTABLE ON
+        #        WIN32_EXECUTABLE ON
 )
 
 # 添加 Windows 部署规则
@@ -127,12 +128,12 @@ if (WIN32)
         )
     endforeach ()
 
-#    # 部署 WebEngine 进程文件 (关键!)
-#    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-#            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-#            "${QT_INSTALL_PATH}/bin/QtWebEngineProcess${DEBUG_SUFFIX}.exe"
-#            "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
-#    )
+    #    # 部署 WebEngine 进程文件 (关键!)
+    #    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    #            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    #            "${QT_INSTALL_PATH}/bin/QtWebEngineProcess${DEBUG_SUFFIX}.exe"
+    #            "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    #    )
 
     # 部署 WebEngine 资源
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
@@ -158,6 +159,13 @@ if (WIN32)
             "${QT_INSTALL_PATH}/plugins/imageformats/qsvg${DEBUG_SUFFIX}.dll"
             "${PLUGINS_DIR}/imageformats/"
     )
+
+#    # 添加 GIF 插件支持
+#    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+#            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+#            "${QT_INSTALL_PATH}/plugins/imageformats/qgif${DEBUG_SUFFIX}.dll"
+#            "${PLUGINS_DIR}/imageformats/"
+#    )
 
     # 平台插件
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
