@@ -36,6 +36,6 @@ void SplashScreen::setUI()
     // 设置启动画面大小
     this->resize(500, 300);
     this->setFixedSize(500, 300);
-    // 3秒后结束启动画面
-    QTimer::singleShot(8000, this, &SplashScreen::onAnimationFinished);
+    // 6秒后结束启动画面
+    QTimer::singleShot(6000, this, &SplashScreen::onAnimationFinished);
 }
