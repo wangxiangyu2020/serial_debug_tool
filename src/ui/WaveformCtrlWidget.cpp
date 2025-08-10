@@ -82,6 +82,7 @@ void WaveformCtrlWidget::setBtnStatus(bool actionClicked)
     m_pClearButton->setEnabled(actionClicked);
     m_pExportButton->setEnabled(actionClicked);
     m_pImportButton->setEnabled(actionClicked);
+    m_pSampleRateButton->setEnabled(actionClicked);
 }
 
 void WaveformCtrlWidget::onAddChannelBtnClicked()
