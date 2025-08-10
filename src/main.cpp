@@ -6,7 +6,11 @@
 
 int main(int argc, char* argv[])
 {
+    qputenv("QT_QPA_PLATFORM", "windows:fontengine=freetype");
     QApplication app(argc, argv);
+    QFont defaultFont("Microsoft YaHei UI", 9);
+    defaultFont.setStyleHint(QFont::SansSerif);
+    app.setFont(defaultFont);
 
     SplashScreen splash;
     QScopedPointer<MainWindow> mainWindow;

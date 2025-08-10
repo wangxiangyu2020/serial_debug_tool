@@ -19,15 +19,16 @@
 
 class StyleLoader : public QObject
 {
-  Q_OBJECT
+    Q_OBJECT
 
 public:
-  explicit StyleLoader(QObject* parent = nullptr);
-  ~StyleLoader() =  default;
-  // 从文件路径加载样式
-  static void loadStyleFromFile(QWidget* widget, const QString& filePath);
-  // 颜色指示器
-  static QString getColorHex(const QString& colorName);
+    explicit StyleLoader(QObject* parent = nullptr);
+    ~StyleLoader() = default;
+    // 从文件路径加载样式
+    static void loadStyleFromFile(QWidget* widget, const QString& filePath);
+    static QString loadStyleFromFileToString(const QString& filePath);
+    // 颜色指示器
+    static QString getColorHex(const QString& colorName);
 };
 
 #endif //STYLELOADER_H

@@ -84,13 +84,12 @@ private:
     bool m_isChannelDataProcess = false;
     // 通道数据相关
     static constexpr int MAX_QUEUE_SIZE = 4096; // 队列最大尺寸
-    // 并在每次调用时累积这个值
-    static constexpr double TIME_DELTA_US = 62.5; // 62.5 微秒
     mutable QMutex m_channelMutex;
     QQueue<char> m_dataQueue; // 数据队列
     QSet<QString> m_channelIds; // 有效通道ID集合
     QByteArray m_currentPoint; // 当前正在构建的数据点
-    qint64 m_lastTimestamp = 0; // 上一次采集的时间戳
+    double m_sampleRate = 0;
+    double m_lastTimestamp = 0; // 上一次采集的时间
     ChannelManager* m_channelManager = nullptr;
 };
 

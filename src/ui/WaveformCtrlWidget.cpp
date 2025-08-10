@@ -36,6 +36,8 @@ void WaveformCtrlWidget::createComponents()
     m_pImportButton->setObjectName("m_pImportButton");
     m_pExportButton = new QPushButton(this);
     m_pExportButton->setObjectName("m_pExportButton");
+    m_pSampleRateButton = new QPushButton(this);
+    m_pSampleRateButton->setObjectName("m_pSampleRateButton");
     m_pActionButton = new QPushButton(this);
     m_pActionButton->setObjectName("m_pActionButton");
     m_pActionButton->setProperty("actionClicked", false);
@@ -45,6 +47,7 @@ void WaveformCtrlWidget::createComponents()
     m_pClearButton->setToolTip("清除所有数据");
     m_pImportButton->setToolTip("从文件导入数据");
     m_pExportButton->setToolTip("导出数据到文件");
+    m_pSampleRateButton->setToolTip("设置采样间隔");
     m_pActionButton->setToolTip("开始数据采集");
 }
 
@@ -57,6 +60,7 @@ void WaveformCtrlWidget::createLayout()
     m_pMainLayout->addWidget(m_pClearButton);
     m_pMainLayout->addWidget(m_pImportButton);
     m_pMainLayout->addWidget(m_pExportButton);
+    m_pMainLayout->addWidget(m_pSampleRateButton);
     m_pMainLayout->addWidget(m_pActionButton);
 }
 
@@ -67,6 +71,7 @@ void WaveformCtrlWidget::connectSignals()
     this->connect(m_pClearButton, &QPushButton::clicked, this, &WaveformCtrlWidget::onClearBtnClicked);
     this->connect(m_pImportButton, &QPushButton::clicked, this, &WaveformCtrlWidget::onImportBtnClicked);
     this->connect(m_pExportButton, &QPushButton::clicked, this, &WaveformCtrlWidget::onExportBtnClicked);
+    this->connect(m_pSampleRateButton, &QPushButton::clicked, this, &WaveformCtrlWidget::onSampleRateBtnClicked);
     this->connect(m_pActionButton, &QPushButton::clicked, this, &WaveformCtrlWidget::onActionBtnClicked);
 }
 
@@ -133,6 +138,19 @@ void WaveformCtrlWidget::onExportBtnClicked()
 {
     ChannelManager* manager = ChannelManager::getInstance();
     emit manager->channelsExportData();
+}
+
+void WaveformCtrlWidget::onSampleRateBtnClicked()
+{
+    m_pSampleRateDialog = new SampleRateDialog(this);
+    m_pSampleRateDialog->setSampleRate(ChannelManager::getInstance()->getSampleRate());
+    if (m_pSampleRateDialog->exec() == QDialog::Accepted)
+    {
+        ChannelManager::getInstance()->setSampleRate(m_pSampleRateDialog->getSampleRate());
+        QString message = tr("采样间隔已设置为%1ms").arg(m_pSampleRateDialog->getSampleRate());
+        CMessageBox::showToast(this, message);
+    }
+    QTimer::singleShot(0, m_pSampleRateDialog, &SampleRateDialog::deleteLater);
 }
 
 void WaveformCtrlWidget::onActionBtnClicked()

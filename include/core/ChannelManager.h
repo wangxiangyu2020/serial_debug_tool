@@ -56,6 +56,9 @@ public:
     void startDataDispatch();
     void stopDataDispatch();
 
+    int getSampleRate() const;
+    void setSampleRate(int rate);
+
 private:
     explicit ChannelManager(QObject* parent = nullptr);
     ~ChannelManager() = default;
@@ -89,6 +92,7 @@ private:
     QQueue<QPair<QString, QVariant>> m_dataQueue; // 数据队列
     mutable QMutex m_queueMutex; // 队列互斥锁
     bool m_isDispatching = false; // 是否正在分发数据
+    int m_sampleRate = 100;
 };
 
 #endif // CHANNELMANAGER_H

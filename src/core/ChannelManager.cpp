@@ -155,6 +155,16 @@ void ChannelManager::stopDataDispatch()
     if (m_dataDispatchTimer->isActive()) m_dataDispatchTimer->stop();
 }
 
+int ChannelManager::getSampleRate() const
+{
+    return m_sampleRate;
+}
+
+void ChannelManager::setSampleRate(int rate)
+{
+    m_sampleRate = rate;
+}
+
 void ChannelManager::dispatchQueuedData()
 {
     QMutexLocker locker(&m_queueMutex);

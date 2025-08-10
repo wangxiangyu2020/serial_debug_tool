@@ -71,6 +71,7 @@ qt_add_resources(${PROJECT_NAME} "resources"
         resources/icons/export_series.svg
         resources/icons/start_series.svg
         resources/icons/stop_series.svg
+        resources/icons/sample_rate.svg
         resources/image/ikun.gif
         resources/qss/main_window.qss
         resources/qss/tab_bar.qss
@@ -87,6 +88,7 @@ qt_add_resources(${PROJECT_NAME} "resources"
         resources/qss/wave_form_ctrl_widget.qss
         resources/qss/add_channel_dialog.qss
         resources/qss/remove_channel_dialog.qss
+        resources/qss/sample_rate_dialog.qss
         resources/qss/dialog_base.qss
         resources/web/echarts.min.js
         resources/web/wave.html
@@ -106,7 +108,7 @@ target_link_libraries(${PROJECT_NAME}
 
 # 设置最终生成的可执行文件名
 set_target_properties(${PROJECT_NAME} PROPERTIES
-        OUTPUT_NAME "IKUN"  # 指定输出文件名（不带扩展名）
+        OUTPUT_NAME "iKUN"  # 指定输出文件名（不带扩展名）
         #        WIN32_EXECUTABLE ON
 )
 

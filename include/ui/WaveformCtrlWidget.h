@@ -17,6 +17,7 @@
 #include <QPushButton>
 #include "ui/AddChannelDialog.h"
 #include "ui/RemoveChannelDialog.h"
+#include "ui/SampleRateDialog.h"
 #include "core/ChannelManager.h"
 #include <QRandomGenerator>
 
@@ -43,6 +44,7 @@ private slots:
     void onClearBtnClicked();
     void onImportBtnClicked();
     void onExportBtnClicked();
+    void onSampleRateBtnClicked();
     void onActionBtnClicked();
 
 private:
@@ -53,8 +55,10 @@ private:
     QPushButton* m_pImportButton = nullptr;
     QPushButton* m_pExportButton = nullptr;
     QPushButton* m_pActionButton = nullptr;
+    QPushButton* m_pSampleRateButton = nullptr;
     AddChannelDialog* m_pAddChannelDialog = nullptr;
     RemoveChannelDialog* m_pRemoveChannelDialog = nullptr;
+    SampleRateDialog* m_pSampleRateDialog = nullptr;
 };
 
 #endif //WAVEFORMCTRLWIDGET_H

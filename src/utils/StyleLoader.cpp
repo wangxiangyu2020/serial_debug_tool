@@ -26,6 +26,22 @@ void StyleLoader::loadStyleFromFile(QWidget* widget, const QString& filePath)
     }
 }
 
+QString StyleLoader::loadStyleFromFileToString(const QString& filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QFile::ReadOnly))
+    {
+        qDebug() << "Cannot open stylesheet file:" << filePath;
+        return QString();
+    }
+
+    QTextStream stream(&file);
+    QString styleSheet = stream.readAll();
+    file.close();
+
+    return styleSheet;
+}
+
 QString StyleLoader::getColorHex(const QString& colorName)
 {
     static QMap<QString, QString> colorMap = {

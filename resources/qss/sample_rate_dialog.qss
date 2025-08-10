@@ -1,0 +1,96 @@
+/* SampleRateDialog 样式 */
+SampleRateDialog {
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid #dee2e6;
+    font-family: 'Segoe UI', 'Microsoft YaHei UI', sans-serif;
+}
+
+/* === 标题标签样式 === */
+SampleRateDialog QLabel#titleLabel {
+    color: #495057;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 2px 0;
+    background-color: transparent;
+    margin-bottom: 2px;
+    border: none;  /* 确保没有边框 */
+    border-bottom: none;  /* 确保没有下边框 */
+}
+
+/* === 采样率输入框样式 === */
+SampleRateDialog QSpinBox#sampleRateSpinBox {
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: #212529;
+    font-size: 14px;
+    min-height: 20px;
+    min-width: 150px;  /* 增加最小宽度 */
+    selection-background-color: #0d6efd;
+    selection-color: white;
+
+    /* 隐藏上下箭头 */
+    qproperty-buttonSymbols: NoButtons;
+}
+
+SampleRateDialog QSpinBox#sampleRateSpinBox:hover {
+    border-color: #0d6efd;
+}
+
+SampleRateDialog QSpinBox#sampleRateSpinBox:focus {
+    border-color: #0d6efd;
+    outline: 2px solid rgba(13, 110, 253, 0.25);
+}
+
+/* 移除上下箭头按钮的样式（以防万一） */
+SampleRateDialog QSpinBox#sampleRateSpinBox::up-button,
+SampleRateDialog QSpinBox#sampleRateSpinBox::down-button {
+    width: 0px;
+    height: 0px;
+    border: none;
+    background: none;
+}
+
+SampleRateDialog QSpinBox#sampleRateSpinBox::up-arrow,
+SampleRateDialog QSpinBox#sampleRateSpinBox::down-arrow {
+    width: 0px;
+    height: 0px;
+    border: none;
+}
+
+/* === 按钮样式 === */
+SampleRateDialog QPushButton {
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    min-height: 16px;
+    min-width: 80px;
+}
+
+SampleRateDialog QPushButton:hover {
+    background-color: #0b5ed7;
+}
+
+SampleRateDialog QPushButton:pressed {
+    background-color: #0a58ca;
+}
+
+/* 取消按钮样式 */
+SampleRateDialog QPushButton#cancelButton {
+    background-color: #6c757d;
+    color: white;
+}
+
+SampleRateDialog QPushButton#cancelButton:hover {
+    background-color: #5c636a;
+}
+
+SampleRateDialog QPushButton#cancelButton:pressed {
+    background-color: #545b62;
+}

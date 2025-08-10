@@ -291,12 +291,12 @@ void SerialPortManager::clearAllChannelData()
     m_channelIds.clear();
     m_dataQueue.clear();
     m_currentPoint.clear();
+    m_sampleRate = (double)m_channelManager->getSampleRate();
     m_lastTimestamp = 0;
 }
 
 void SerialPortManager::processDataPointInternal(const QByteArray& dataPoint)
 {
-    m_lastTimestamp += TIME_DELTA_US;
     double currentTime = m_lastTimestamp;
     int eqPos = dataPoint.indexOf('=');
     if (eqPos == -1) return;
@@ -310,6 +310,7 @@ void SerialPortManager::processDataPointInternal(const QByteArray& dataPoint)
     QVariantList point;
     point.reserve(2);
     point << currentTime << value;
+    m_lastTimestamp += m_sampleRate;
     m_channelManager->addChannelData(channelId, QVariant(std::move(point)));
 }
 
