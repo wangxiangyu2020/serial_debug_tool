@@ -162,6 +162,7 @@ void SerialPortManager::startWaveformRecording()
 {
     QMutexLocker locker(&m_channelMutex);
     m_channelManager = ChannelManager::getInstance();
+    m_sampleRate = static_cast<double>(m_channelManager->getSampleRate());
     this->clearAllChannelData();
     ChannelManager* manager = ChannelManager::getInstance();
     QList<ChannelInfo> channels = manager->getAllChannels();
@@ -289,20 +290,21 @@ QByteArray& SerialPortManager::generateTimestamp(const QString& data)
 void SerialPortManager::clearAllChannelData()
 {
     m_channelIds.clear();
+    m_channelTimestamps.clear();
     m_dataQueue.clear();
     m_currentPoint.clear();
-    m_sampleRate = (double)m_channelManager->getSampleRate();
     m_lastTimestamp = 0;
 }
 
 void SerialPortManager::processDataPointInternal(const QByteArray& dataPoint)
 {
-    double currentTime = m_lastTimestamp;
     int eqPos = dataPoint.indexOf('=');
     if (eqPos == -1) return;
     QByteArray channel = dataPoint.left(eqPos).trimmed();
     QByteArray data = dataPoint.mid(eqPos + 1).trimmed();
     QString channelId = QString::fromLatin1(channel);
+    if (!m_channelTimestamps.contains(channelId)) m_channelTimestamps[channelId] = m_sampleRate;
+    double currentTime = m_channelTimestamps[channelId];
     if (!m_channelIds.contains(channelId)) return;
     bool ok;
     double value = data.toDouble(&ok);
@@ -310,7 +312,7 @@ void SerialPortManager::processDataPointInternal(const QByteArray& dataPoint)
     QVariantList point;
     point.reserve(2);
     point << currentTime << value;
-    m_lastTimestamp += m_sampleRate;
+    m_channelTimestamps[channelId] += m_sampleRate;
     m_channelManager->addChannelData(channelId, QVariant(std::move(point)));
 }
 

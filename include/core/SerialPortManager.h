@@ -90,6 +90,7 @@ private:
     QByteArray m_currentPoint; // 当前正在构建的数据点
     double m_sampleRate = 0;
     double m_lastTimestamp = 0; // 上一次采集的时间
+    QMap<QString, double> m_channelTimestamps;
     ChannelManager* m_channelManager = nullptr;
 };
 
