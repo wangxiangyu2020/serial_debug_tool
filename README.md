@@ -2,13 +2,37 @@
 
 一个基于 Qt6 和 C++20 构建的现代化、功能丰富的串口调试工具。该应用程序为串口通信提供了直观的界面，支持多种数据格式、实时监控、专业级数据可视化和完全可定制的样式系统。集成了基于 ECharts 的波形显示功能，支持多通道数据管理和实时图表更新。
 
-## 🚀 核心特性
+## 📖 使用说明
+
+<!-- 此处预留使用说明位置，请自行补充 -->
+<!-- 包括但不限于：
+- 软件安装步骤
+- 基本操作指南
+- 串口配置方法
+- 波形显示使用
+- 数据保存和导出
+- 常见问题解答
+-->
+
+## 🚀 本地部署
+
+<!-- 此处预留本地部署说明位置，请自行补充 -->
+<!-- 包括但不限于：
+- 环境要求
+- 依赖安装
+- 编译步骤
+- 部署配置
+- 运行说明
+-->
+
+## 🌟 核心特性
 
 ### 🖥️ 现代化界面
+- **启动画面**: 专业的 SplashScreen 启动界面，提升用户体验
 - **无边框窗口**: 自定义 FramelessBase 基类，支持窗口拖拽和边缘调整大小
 - **自定义标题栏**: 集成最小化、最大化、关闭按钮的现代化标题栏
 - **标签页界面**: 三个主要功能标签页（串口配置、波形显示、设置）
-- **SVG 图标系统**: 17个可缩放的矢量图标，支持高DPI显示
+- **SVG 图标系统**: 18个可缩放的矢量图标，支持高DPI显示
 - **自定义对话框**: 带动画效果的圆角对话框系统
 
 ### 📡 串口通信
@@ -28,6 +52,7 @@
 - **自动滚动**: 可选的自动滚动到最新数据
 - **专业波形显示**: 基于 ECharts 的实时数据波形显示
 - **多通道支持**: 支持多个数据通道同时显示和管理
+- **采样率配置**: 支持自定义采样率设置，优化数据采集性能
 - **iKUN示波器**: 集成专业级示波器功能，支持数据点符号显示
 
 ### ⚡ 高级功能
@@ -39,18 +64,20 @@
 - **通道管理**: 单例模式的通道管理器，支持动态添加/删除通道
 - **Web引擎集成**: QWebEngineView 集成 ECharts 实现专业级数据可视化
 - **数据队列优化**: 支持大容量数据缓冲和批量处理 (60FPS刷新率)
+- **资源清理**: 程序退出时自动清理 WebEngine 缓存
 
 ## 📁 项目结构
 
 ```
 serial_debug_tool/
-├── src/                    # 源代码 (22个文件)
-│   ├── main.cpp           # 应用程序入口点
+├── src/                    # 源代码 (24个文件)
+│   ├── main.cpp           # 应用程序入口点 (包含SplashScreen集成)
 │   ├── core/              # 核心业务逻辑 (2个文件)
 │   │   ├── SerialPortManager.cpp          # 串口管理核心类
 │   │   └── ChannelManager.cpp             # 通道管理器 (单例模式)
-│   ├── ui/                # 用户界面组件 (19个文件)
+│   ├── ui/                # 用户界面组件 (21个文件)
 │   │   ├── MainWindow.cpp                 # 主窗口
+│   │   ├── SplashScreen.cpp               # 启动画面
 │   │   ├── TitleBar.cpp                   # 自定义标题栏
 │   │   ├── CTabWidget.cpp                 # 标签页容器
 │   │   ├── FramelessBase.cpp              # 无边框窗口基类
@@ -68,52 +95,55 @@ serial_debug_tool/
 │   │   ├── WaveformCtrlWidget.cpp         # 波形控制面板
 │   │   ├── AddChannelDialog.cpp           # 添加通道对话框
 │   │   ├── RemoveChannelDialog.cpp        # 移除通道对话框
+│   │   ├── SampleRateDialog.cpp           # 采样率配置对话框
 │   │   └── SettingsTab.cpp                # 设置标签页
 │   └── utils/             # 工具类 (3个文件)
 │       ├── StyleLoader.cpp               # QSS样式加载器
 │       ├── ThreadPoolManager.cpp         # 线程池管理器
 │       └── SerialPortSettings.cpp        # 串口参数配置工具
-├── include/               # 头文件 (与src结构对应，22个文件)
+├── include/               # 头文件 (与src结构对应，24个文件)
 │   ├── core/              # 核心模块头文件 (2个文件)
 │   │   ├── SerialPortManager.h
 │   │   └── ChannelManager.h
-│   ├── ui/                # UI组件头文件 (19个文件)
-│   │   ├── MainWindow.h, TitleBar.h, CTabWidget.h
+│   ├── ui/                # UI组件头文件 (21个文件)
+│   │   ├── MainWindow.h, SplashScreen.h, TitleBar.h, CTabWidget.h
 │   │   ├── FramelessBase.h, CDialogBase.h, CMessageBox.h
 │   │   ├── SerialPortConfigTab.h, SerialPortConnectConfigWidget.h
 │   │   ├── SerialPortReceiveSettingsWidget.h, SerialPortSendSettingsWidget.h
 │   │   ├── SerialPortDataReceiveWidget.h, SerialPortDataSendWidget.h
 │   │   ├── SerialPortRealTimeSaveWidget.h
 │   │   ├── WaveformTab.h, WaveformWidget.h, WaveformCtrlWidget.h
-│   │   ├── AddChannelDialog.h, RemoveChannelDialog.h
+│   │   ├── AddChannelDialog.h, RemoveChannelDialog.h, SampleRateDialog.h
 │   │   └── SettingsTab.h
 │   └── utils/             # 工具类头文件 (3个文件)
 ├── resources/             # 应用程序资源
-│   ├── icons/            # SVG 和 ICO 图标文件 (17个图标)
+│   ├── icons/            # SVG 和 ICO 图标文件 (18个图标)
 │   │   ├── 界面图标: logo.svg, serial.svg, waves.svg, settings.svg
 │   │   ├── 操作图标: send.svg, checkmark_blue.svg, down_arrow.svg
 │   │   ├── 波形图标: add_series.svg, remove_series.svg, clear_series.svg
 │   │   ├── 数据图标: import_series.svg, export_series.svg
-│   │   ├── 控制图标: start_series.svg, stop_series.svg
+│   │   ├── 控制图标: start_series.svg, stop_series.svg, sample_rate.svg
 │   │   └── 应用图标: ikun.ico, ikun.svg, un_dev.svg
-│   ├── qss/              # Qt 样式表文件 (15个样式文件)
+│   ├── qss/              # Qt 样式表文件 (17个样式文件)
 │   │   ├── 主界面: main_window.qss, title_bar.qss, tab_bar.qss
-│   │   ├── 对话框: dialog_base.qss, add_channel_dialog.qss, remove_channel_dialog.qss
+│   │   ├── 对话框: dialog_base.qss, add_channel_dialog.qss, remove_channel_dialog.qss, sample_rate_dialog.qss
 │   │   ├── 波形界面: wave_form_tab.qss, wave_form_ctrl_widget.qss
 │   │   ├── 串口组件: serial_prot_config_tab.qss
 │   │   ├── 串口配置: serial_port_connect_config_widget.qss
 │   │   ├── 串口设置: serial_port_receive_settings_widget.qss, serial_port_send_settings_widget.qss
 │   │   ├── 串口数据: serial_port_data_receive_widget.qss, serial_port_data_send_widget.qss
-│   │   └── 实时保存: serial_port_real_time_save_widget.qss
+│   │   ├── 实时保存: serial_port_real_time_save_widget.qss
+│   │   └── 设置页面: settings_tab.qss
 │   ├── web/              # Web资源 (ECharts集成，2个文件)
 │   │   ├── echarts.min.js                 # ECharts库文件 (压缩版)
 │   │   └── wave.html                      # 波形显示HTML页面
 │   └── version.rc        # Windows 版本资源
 ├── cmake-build-debug/     # 调试版本构建输出
 ├── cmake-build-release/   # 发布版本构建输出
-├── Release/              # 最终发布二进制文件 (IKUN.exe)
+├── Release/              # 最终发布二进制文件 (iKUN.exe)
 ├── tests/                # 单元测试目录 (待实现)
 ├── libs/                 # 外部库目录
+├── deploy.bat            # Windows 部署脚本
 └── CMakeLists.txt        # CMake 构建配置
 ```
 
@@ -151,52 +181,56 @@ graph TB
         G --> P[WaveformCtrlWidget]
         P --> Q[AddChannelDialog]
         P --> R[RemoveChannelDialog]
-        Q --> S[CDialogBase]
-        R --> S
+        P --> S[SampleRateDialog]
+        Q --> T[CDialogBase]
+        R --> T
+        S --> T
 
-        T[CMessageBox]
+        U[CMessageBox]
+        V[SplashScreen]
     end
 
     subgraph "核心层"
-        U[SerialPortManager]
-        U --> V[QSerialPort]
-        W[ChannelManager]
+        W[SerialPortManager]
+        W --> X[QSerialPort]
+        Y[ChannelManager]
     end
 
     subgraph "工具层"
-        X[StyleLoader]
-        Y[ThreadPoolManager]
-        Z[SerialPortSettings]
+        Z[StyleLoader]
+        AA[ThreadPoolManager]
+        BB[SerialPortSettings]
     end
 
     subgraph "资源"
-        AA[图标系统 - 17个SVG/ICO]
-        BB[样式系统 - 15个QSS]
-        CC[Web资源 - ECharts]
-        DD[版本资源]
+        CC[图标系统 - 18个SVG/ICO]
+        DD[样式系统 - 17个QSS]
+        EE[Web资源 - ECharts]
+        FF[版本资源]
+        GG[部署脚本]
     end
 
-    I --> U
-    L --> U
-    M --> U
-    O --> W
-    P --> W
+    I --> W
+    L --> W
+    M --> W
+    O --> Y
+    P --> Y
 
-    B --> X
-    E --> X
-    F --> X
-    G --> X
+    B --> Z
+    E --> Z
+    F --> Z
+    G --> Z
 
-    I --> Y
-    O --> CC
+    I --> AA
+    O --> EE
 
     style A fill:#e1f5fe
-    style U fill:#f3e5f5
     style W fill:#f3e5f5
-    style X fill:#e8f5e8
-    style Y fill:#e8f5e8
+    style Y fill:#f3e5f5
     style Z fill:#e8f5e8
-    style CC fill:#fff3e0
+    style AA fill:#e8f5e8
+    style BB fill:#e8f5e8
+    style EE fill:#fff3e0
 ```
 
 **架构说明**:
@@ -383,7 +417,17 @@ sequenceDiagram
   - 通道信息可视化显示 (颜色指示器 + 名称 + ID)
   - 专用的移除按钮样式 (红色主题)
 
-**对话框系统**:
+- **`SampleRateDialog`**: 采样率配置对话框
+  - 继承自 CDialogBase，带动画效果
+  - 支持自定义采样率设置
+  - 优化数据采集性能配置
+
+**其他UI组件**:
+- **`SplashScreen`**: 启动画面
+  - 专业的启动界面设计
+  - 异步加载主窗口
+  - 提升用户体验
+
 - **`CDialogBase`**: 对话框基类
   - 无边框圆角设计
   - 淡入动画效果 (QPropertyAnimation)
@@ -428,16 +472,17 @@ sequenceDiagram
   - 默认值设置支持
 
 #### **资源系统 (Resources)**
-- **图标系统**: 16个SVG矢量图标 + 1个ICO图标 (共17个)
+- **图标系统**: 17个SVG矢量图标 + 1个ICO图标 (共18个)
   - 串口功能图标：serial.svg, send.svg, checkmark_blue.svg
   - 波形功能图标：waves.svg, add_series.svg, remove_series.svg, clear_series.svg
   - 数据操作图标：import_series.svg, export_series.svg, start_series.svg, stop_series.svg
+  - 配置图标：sample_rate.svg (采样率配置)
   - 界面图标：logo.svg, settings.svg, down_arrow.svg, un_dev.svg
   - 应用图标：ikun.ico, ikun.svg
 
-- **样式系统**: 15个专用QSS样式表文件
+- **样式系统**: 17个专用QSS样式表文件
   - 主界面样式：main_window.qss, title_bar.qss, tab_bar.qss
-  - 对话框样式：dialog_base.qss, add_channel_dialog.qss, remove_channel_dialog.qss
+  - 对话框样式：dialog_base.qss, add_channel_dialog.qss, remove_channel_dialog.qss, sample_rate_dialog.qss
   - 波形样式：wave_form_tab.qss, wave_form_ctrl_widget.qss
   - 串口组件样式：8个 serial_port_*.qss 文件
     - serial_prot_config_tab.qss (配置标签页)
@@ -447,12 +492,15 @@ sequenceDiagram
     - serial_port_data_receive_widget.qss (数据接收)
     - serial_port_data_send_widget.qss (数据发送)
     - serial_port_real_time_save_widget.qss (实时保存)
+  - 设置页面样式：settings_tab.qss
 
 - **Web资源**: ECharts 集成 (2个文件)
   - echarts.min.js：ECharts 核心库 (压缩版)
   - wave.html：波形显示HTML页面，包含完整的图表配置和JavaScript交互
 
-- **版本资源**: Windows可执行文件元数据
+- **部署资源**:
+  - deploy.bat：Windows自动部署脚本，支持最小化部署
+  - version.rc：Windows可执行文件元数据
 
 ### 数据流架构
 
@@ -563,17 +611,19 @@ sequenceDiagram
 ## 🎨 自定义与扩展
 
 ### 样式定制
-- **主题修改**: 编辑 `resources/qss/` 中的15个QSS文件
+- **主题修改**: 编辑 `resources/qss/` 中的17个QSS文件
   - `main_window.qss`: 主窗口样式
   - `title_bar.qss`: 标题栏样式
   - `tab_bar.qss`: 标签页样式
   - `dialog_base.qss`: 对话框基础样式
   - `add_channel_dialog.qss`: 添加通道对话框样式
   - `remove_channel_dialog.qss`: 移除通道对话框样式
+  - `sample_rate_dialog.qss`: 采样率配置对话框样式
   - `wave_form_tab.qss`: 波形标签页样式
   - `wave_form_ctrl_widget.qss`: 波形控制面板样式
+  - `settings_tab.qss`: 设置标签页样式
   - `serial_port_*.qss`: 8个串口组件专用样式
-- **图标替换**: 替换 `resources/icons/` 中的17个SVG/ICO图标
+- **图标替换**: 替换 `resources/icons/` 中的18个SVG/ICO图标
 - **运行时更新**: StyleLoader 支持动态样式重载
 
 ### 功能扩展指南
@@ -600,19 +650,20 @@ sequenceDiagram
 - **图表渲染**: ECharts硬件加速，支持大数据量实时更新
 
 ### 项目规模统计
-- **源代码文件**: 22个 (.cpp文件)
-  - main.cpp (1个) + core (2个) + ui (19个) + utils (3个)
-- **头文件**: 22个 (.h文件)
+- **源代码文件**: 24个 (.cpp文件)
+  - main.cpp (1个) + core (2个) + ui (21个) + utils (3个)
+- **头文件**: 24个 (.h文件)
   - 与源文件一一对应的完整头文件结构
-- **UI组件**: 19个独立组件
-  - 包含完整的对话框系统和波形可视化组件
+- **UI组件**: 21个独立组件
+  - 包含完整的对话框系统、启动画面和波形可视化组件
 - **核心模块**: 2个 (SerialPortManager, ChannelManager)
 - **工具类**: 3个 (StyleLoader, ThreadPoolManager, SerialPortSettings)
-- **图标资源**: 16个SVG + 1个ICO (共17个)
-- **样式文件**: 15个QSS文件 (完整的样式系统)
+- **图标资源**: 17个SVG + 1个ICO (共18个)
+- **样式文件**: 17个QSS文件 (完整的样式系统)
 - **Web资源**: 2个文件 (ECharts库 + HTML页面)
-- **总文件数**: 约80个文件 (包含构建输出)
-- **代码行数**: 约10000行 (估算，包含注释和空行)
+- **部署脚本**: 1个 (deploy.bat Windows部署脚本)
+- **总文件数**: 约90个文件 (包含构建输出)
+- **代码行数**: 约12000行 (估算，包含注释和空行)
 
 ## 📝 许可证
 
@@ -638,16 +689,19 @@ sequenceDiagram
 
 ## ✨ 已实现的高级特性
 
+- ✅ **专业启动体验**: SplashScreen 启动画面，异步加载主窗口
 - ✅ **完整的波形可视化系统**: 基于ECharts的专业级数据可视化
 - ✅ **多通道数据管理**: 支持动态添加/删除数据通道，完整的通道管理对话框
+- ✅ **采样率配置**: SampleRateDialog 支持自定义采样率设置
 - ✅ **实时数据流**: 串口数据到波形图表的实时更新，60FPS刷新率
 - ✅ **现代化UI设计**: 无边框窗口、自定义对话框、动画效果
-- ✅ **完整的样式系统**: 15个专用QSS文件，支持主题定制
+- ✅ **完整的样式系统**: 17个专用QSS文件，支持主题定制
 - ✅ **线程安全架构**: 多线程数据处理，UI响应流畅
 - ✅ **资源管理系统**: 完整的图标、样式、Web资源管理
-- ✅ **双向通道操作**: AddChannelDialog 和 RemoveChannelDialog 完整实现
+- ✅ **三向通道操作**: AddChannelDialog、RemoveChannelDialog 和 SampleRateDialog 完整实现
 - ✅ **数据队列优化**: 支持大容量数据缓冲和性能优化
 - ✅ **Web引擎集成**: QWebEngineView 完美集成 ECharts 图表库
+- ✅ **自动化部署**: deploy.bat 脚本支持一键部署
 
 ## 🔮 发展路线
 
