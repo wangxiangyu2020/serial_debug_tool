@@ -55,6 +55,9 @@
 
     var symbolVisible = false; // 默认不显示数据点符号
 
+    // 添加通道来源跟踪
+    var channelSources = {}; // 记录通道来源：'manual' 或 'imported'
+
     // 默认配置
     var option = {
         animation: false, // 禁用动画以提高重绘性能
@@ -577,7 +580,7 @@
 
     // Qt调用的接口 - 添加新的数据系列
     // 修改Qt调用的接口 - 添加新的数据系列函数
-    function addSeries(name, color) {
+    function addSeries(name, color, source = 'manual') {
         // 标记有真实数据，清除示例
         if (!hasRealData) {
             hasRealData = true;
@@ -592,6 +595,8 @@
                 chartData[name].push([time, 0]);
             }
         }
+        // 记录通道来源
+        channelSources[name] = source;
 
         var currentOption = myChart.getOption();
         var seriesExists = currentOption.series.some(function (series) {
@@ -898,21 +903,47 @@
 
     // 清除所有数据
     function clearAllData() {
-        // 清除所有通道的数据
-        for (var seriesName in chartData) {
-            chartData[seriesName] = [];
-        }
-
         // 获取当前图表配置
         var currentOption = myChart.getOption();
 
-        // 清空所有系列的数据
+        // 分别处理手动创建和导入的通道
+        var seriesToKeep = [];
+        var legendToKeep = [];
+        var newSeriesIndexMap = {};
+
+        // 遍历现有系列，保留手动创建的通道
         currentOption.series.forEach(function (series) {
-            series.data = [];
+            const seriesName = series.name;
+
+            if (channelSources[seriesName] === 'manual') {
+                // 手动创建的通道：清空数据但保留通道
+                chartData[seriesName] = [];
+                series.data = [];
+                seriesToKeep.push(series);
+                legendToKeep.push(seriesName);
+                newSeriesIndexMap[seriesName] = seriesToKeep.length - 1;
+            } else {
+                // 导入的通道：完全移除
+                if (chartData[seriesName]) {
+                    delete chartData[seriesName];
+                }
+                if (channelSources[seriesName]) {
+                    delete channelSources[seriesName];
+                }
+            }
         });
 
-        // 更新图表显示
-        myChart.setOption(currentOption, false, false);
+        // 更新系列索引映射
+        seriesIndexMap = newSeriesIndexMap;
+
+        // 更新图表配置
+        myChart.setOption({
+            series: seriesToKeep,
+            legend: [{
+                data: legendToKeep,
+                top: 30
+            }]
+        }, {replaceMerge: ['series', 'legend']});
 
         // 重置坐标轴范围到初始值
         initialXAxisMin = 0;
@@ -921,7 +952,9 @@
         currentYAxisMax = initialYAxisMax;
 
         // 重置Y轴相关状态
-        hasRealData = false;
+        if (seriesToKeep.length === 0) {
+            hasRealData = false;
+        }
         userInteracted = false;
         yAxisAdjusted = false;
 
@@ -938,8 +971,10 @@
             }
         });
 
-        // 重新显示示例数据
-        setTimeout(showExampleData, 100);
+        // 如果没有保留的系列，重新显示示例数据
+        if (seriesToKeep.length === 0) {
+            setTimeout(showExampleData, 100);
+        }
     }
 
     // 移除系列
@@ -1045,6 +1080,10 @@
             // 清除现有数据
             clearAllData();
 
+            // 计算导入数据的X轴范围
+            let maxX = -Infinity;
+            let minX = Infinity;
+
             // 导入每个通道的数据
             for (const seriesName in importedData) {
                 if (importedData.hasOwnProperty(seriesName)) {
@@ -1054,11 +1093,35 @@
                     if (!chartData[seriesName]) {
                         const colors = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de'];
                         const colorIndex = Object.keys(chartData).length % colors.length;
-                        addSeries(seriesName, colors[colorIndex]);
+                        addSeries(seriesName, colors[colorIndex], 'imported');
+                    }
+
+                    // 计算X轴范围
+                    for (const point of points) {
+                        const x = point[0];
+                        if (x > maxX) maxX = x;
+                        if (x < minX) minX = x;
                     }
 
                     setSeriesData(seriesName, points);
                 }
+            }
+
+            // 更新X轴范围以适应导入的数据
+            if (maxX > -Infinity && minX < Infinity) {
+                const xRange = maxX - minX;
+                initialXAxisMin = Math.max(0, minX - xRange * 0.1);
+                initialXAxisMax = maxX + xRange * 0.1;
+
+                const xAxisInterval = calculateXAxisInterval(initialXAxisMax);
+
+                myChart.setOption({
+                    xAxis: {
+                        min: initialXAxisMin,
+                        max: initialXAxisMax,
+                        interval: xAxisInterval
+                    }
+                });
             }
 
             updateChart();
