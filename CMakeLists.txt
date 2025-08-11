@@ -5,7 +5,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
-# 公司
 #set(CMAKE_PREFIX_PATH "D:/software/Qt/6.5.3/msvc2019_64")
 #file(COPY "D:/software/Qt/6.5.3/msvc2019_64/resources" DESTINATION ${CMAKE_BINARY_DIR})
 #file(COPY "D:/software/Qt/6.5.3/msvc2019_64/translations" DESTINATION ${CMAKE_BINARY_DIR})
@@ -130,12 +129,12 @@ if (WIN32)
         )
     endforeach ()
 
-    #    # 部署 WebEngine 进程文件 (关键!)
-    #    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    #            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    #            "${QT_INSTALL_PATH}/bin/QtWebEngineProcess${DEBUG_SUFFIX}.exe"
-    #            "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
-    #    )
+    # 部署 WebEngine 进程文件 (关键!)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${QT_INSTALL_PATH}/bin/QtWebEngineProcess${DEBUG_SUFFIX}.exe"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    )
 
     # 部署 WebEngine 资源
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
@@ -162,12 +161,12 @@ if (WIN32)
             "${PLUGINS_DIR}/imageformats/"
     )
 
-#    # 添加 GIF 插件支持
-#    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-#            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-#            "${QT_INSTALL_PATH}/plugins/imageformats/qgif${DEBUG_SUFFIX}.dll"
-#            "${PLUGINS_DIR}/imageformats/"
-#    )
+    # 添加 GIF 插件支持
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${QT_INSTALL_PATH}/plugins/imageformats/qgif${DEBUG_SUFFIX}.dll"
+            "${PLUGINS_DIR}/imageformats/"
+    )
 
     # 平台插件
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
