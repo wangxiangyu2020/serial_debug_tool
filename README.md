@@ -42,37 +42,37 @@ https://gitee.com/wangxiangyu123444/serial_debug_tool.git
 
 - 编译配置
 
-  ![image-20250811162609104](resources/image/build_image/image-20250811162609104.png)
+  ![image-20250811162609104](resources/image/deployment_images/image-20250811162609104.png)
 
-  ![image-20250811162708402](resources/image/build_image/image-20250811162708402.png)
+  ![image-20250811162708402](resources/image/deployment_images/image-20250811162708402.png)
 
-  ![image-20250811162812406](resources/image/build_image/image-20250811162812406.png)
+  ![image-20250811162812406](resources/image/deployment_images/image-20250811162812406.png)
 
-  ![image-20250811163112883](resources/image/build_image/image-20250811163112883.png)
+  ![image-20250811163112883](resources/image/deployment_images/image-20250811163112883.png)
 
-  ![image-20250811163236258](resources/image/build_image/image-20250811163236258.png)
+  ![image-20250811163236258](resources/image/deployment_images/image-20250811163236258.png)
 
-  ![image-20250811163328766](resources/image/build_image/image-20250811163328766.png)
+  ![image-20250811163328766](resources/image/deployment_images/image-20250811163328766.png)
 
 - 部署配置
 
-  ![image-20250811163456461](resources/image/build_image/image-20250811163456461.png)
+  ![image-20250811163456461](resources/image/deployment_images/image-20250811163456461.png)
 
-  ![image-20250811163533250](resources/image/build_image/image-20250811163533250.png)
+  ![image-20250811163533250](resources/image/deployment_images/image-20250811163533250.png)
 
-  ![image-20250811163632299](resources/image/build_image/image-20250811163632299.png)
+  ![image-20250811163632299](resources/image/deployment_images/image-20250811163632299.png)
 
-  ![image-20250811163715815](resources/image/build_image/image-20250811163715815.png)
+  ![image-20250811163715815](resources/image/deployment_images/image-20250811163715815.png)
 
-  ![image-20250811163821579](resources/image/build_image/image-20250811163821579.png)
+  ![image-20250811163821579](resources/image/deployment_images/image-20250811163821579.png)
 
 - 运行说明
 
-  ![image-20250811163924850](resources/image/build_image/image-20250811163924850.png)
+  ![image-20250811163924850](resources/image/deployment_images/image-20250811163924850.png)
 
   运行时如果出现黑色控制台需要在CMakeList中恢复相关配置。（恢复的话用qDebug无法输出打印日志）
 
-  ![image-20250811164146928](resources/image/build_image/image-20250811164146928.png)
+  ![image-20250811164146928](resources/image/deployment_images/image-20250811164146928.png)
 
 ## 🌟 核心特性
 
