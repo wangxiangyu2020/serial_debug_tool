@@ -13,7 +13,6 @@ CMakeLists.txt.user
 
 ## 打包文件
 Release/
-iKUN/
 
 # Qt 编译中间文件
 *.pro.user
