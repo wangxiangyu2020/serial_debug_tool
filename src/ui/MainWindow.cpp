@@ -9,6 +9,7 @@
   */
 #include "ui/MainWindow.h"
 
+// 构造函数和析构函数
 MainWindow::MainWindow(QWidget* parent)
     : FramelessBase(parent)
 {
@@ -16,6 +17,7 @@ MainWindow::MainWindow(QWidget* parent)
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/main_window.qss");
 }
 
+// 私有方法
 void MainWindow::setUI()
 {
     this->setAttribute(Qt::WA_TranslucentBackground);

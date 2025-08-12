@@ -12,6 +12,7 @@
 
 static QPlainTextEdit* pSendTextEdit = nullptr;
 
+// 构造函数和析构函数
 SerialPortDataSendWidget::SerialPortDataSendWidget(QWidget* parent)
     : QWidget(parent)
 {
@@ -33,6 +34,21 @@ void SerialPortDataSendWidget::resizeEvent(QResizeEvent* event)
     m_pSendButton->setFixedHeight(textEditHeight);
 }
 
+// private slots
+void SerialPortDataSendWidget::onSendButtonClicked()
+{
+    auto serialPort = SerialPortManager::getInstance()->getSerialPort();
+    if (!serialPort->isOpen())
+    {
+        CMessageBox::showToast(tr("串口未打开"));
+        return;
+    }
+    // 获取发送数据并传给串口管理器进行处理
+    auto sendByteArray = m_pSendTextEdit->toPlainText().toLocal8Bit();
+    SerialPortManager::getInstance()->handleWriteData(sendByteArray);
+}
+
+// 私有方法
 void SerialPortDataSendWidget::setUI()
 {
     this->setAttribute(Qt::WA_StyledBackground);
@@ -86,17 +102,4 @@ void SerialPortDataSendWidget::createLayout()
 void SerialPortDataSendWidget::connectSignals()
 {
     this->connect(m_pSendButton, &QPushButton::clicked, this, &SerialPortDataSendWidget::onSendButtonClicked);
-}
-
-void SerialPortDataSendWidget::onSendButtonClicked()
-{
-    auto serialPort = SerialPortManager::getInstance()->getSerialPort();
-    if (!serialPort->isOpen())
-    {
-        CMessageBox::showToast(tr("串口未打开"));
-        return;
-    }
-    // 获取发送数据并传给串口管理器进行处理
-    auto sendByteArray = m_pSendTextEdit->toPlainText().toLocal8Bit();
-    SerialPortManager::getInstance()->handleWriteData(sendByteArray);
 }

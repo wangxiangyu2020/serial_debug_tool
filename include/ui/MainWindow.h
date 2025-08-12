@@ -29,7 +29,6 @@ public:
 private:
     void setUI();
 
-private:
     TitleBar* m_pTitleBar = nullptr;
     CTabWidget* m_pTabContainer = nullptr;
 };

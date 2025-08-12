@@ -36,13 +36,19 @@ class SerialPortConnectConfigWidget : public QWidget
     Q_OBJECT
 
 public:
+    // 构造函数和析构函数
     explicit SerialPortConnectConfigWidget(QWidget* parent = nullptr);
     ~SerialPortConnectConfigWidget() = default;
 
 protected:
+    // 事件处理方法
     bool eventFilter(QObject* watched, QEvent* event) override;
 
+private slots:
+    void onConnectButtonClicked();
+
 private:
+    // 私有方法
     void setUI();
     void createComponents();
     void componentPropertySettings();
@@ -50,27 +56,26 @@ private:
     void connectSignals();
     void detectionAvailablePorts();
 
-private slots:
-    void onConnectButtonClicked();
-
-private:
     // 下拉框组件
     QComboBox* m_pPortComboBox = nullptr;
     QComboBox* m_pBaudRateComboBox = nullptr;
     QComboBox* m_pDataBitsComboBox = nullptr;
     QComboBox* m_pStopBitsComboBox = nullptr;
     QComboBox* m_pParityComboBox = nullptr;
-    QComboBox* m_pFlowControlComboBox; // 流控制下拉框
-    // 其他辅助组件
+    QComboBox* m_pFlowControlComboBox = nullptr;
+
+    // 标签组件
     QLabel* m_pPortLabel = nullptr;
     QLabel* m_pBaudRateLabel = nullptr;
     QLabel* m_pDataBitsLabel = nullptr;
     QLabel* m_pStopBitsLabel = nullptr;
     QLabel* m_pParityLabel = nullptr;
-    QLabel* m_pFlowControlLabel; // 流控制标签
-    // 按钮
-    QPushButton* m_pConnectButton = nullptr; // 连接按钮
-    // 布局
+    QLabel* m_pFlowControlLabel = nullptr;
+
+    // 按钮组件
+    QPushButton* m_pConnectButton = nullptr;
+
+    // 布局成员
     QGridLayout* m_pMainLayout = nullptr;
 };
 

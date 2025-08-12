@@ -9,6 +9,7 @@
   */
 #include "ui/SerialPortConnectConfigWidget.h"
 
+// 构造函数和析构函数
 SerialPortConnectConfigWidget::SerialPortConnectConfigWidget(QWidget* parent)
     : QWidget(parent)
 {
@@ -18,6 +19,7 @@ SerialPortConnectConfigWidget::SerialPortConnectConfigWidget(QWidget* parent)
     ThreadPoolManager::addTask(&SerialPortConnectConfigWidget::detectionAvailablePorts, this);
 }
 
+// 事件处理方法
 bool SerialPortConnectConfigWidget::eventFilter(QObject* watched, QEvent* event)
 {
     if (event->type() == QEvent::Wheel)
@@ -33,6 +35,42 @@ bool SerialPortConnectConfigWidget::eventFilter(QObject* watched, QEvent* event)
     return QWidget::eventFilter(watched, event);
 }
 
+// private slots
+void SerialPortConnectConfigWidget::onConnectButtonClicked()
+{
+    bool isConnected = m_pConnectButton->property("connected").toBool();
+
+    if (!isConnected)
+    {
+        if (m_pPortComboBox->count() == 0)
+        {
+            CMessageBox::showToast("请选择端口");
+            return;
+        }
+        QMap<QString, QVariant> serialParams
+        {
+            {"portInfo", QVariant::fromValue(m_pPortComboBox->currentData().value<QSerialPortInfo>())},
+            {"baudRate", m_pBaudRateComboBox->currentData().value<QSerialPort::BaudRate>()},
+            {"dataBits", m_pDataBitsComboBox->currentData().value<QSerialPort::DataBits>()},
+            {"stopBits", m_pStopBitsComboBox->currentData().value<QSerialPort::StopBits>()},
+            {"parity", m_pParityComboBox->currentData().value<QSerialPort::Parity>()},
+            {"flowControl", m_pFlowControlComboBox->currentData().value<QSerialPort::FlowControl>()}
+        };
+        isConnected = SerialPortManager::getInstance()->openSerialPort(serialParams);
+    }
+    else
+    {
+        isConnected = !SerialPortManager::getInstance()->closeSerialPort();
+    }
+
+    m_pConnectButton->setProperty("connected", isConnected);
+    m_pConnectButton->setText(isConnected ? "断开" : "连接");
+    m_pConnectButton->style()->unpolish(m_pConnectButton);
+    m_pConnectButton->style()->polish(m_pConnectButton);
+    m_pConnectButton->update();
+}
+
+// 私有方法
 void SerialPortConnectConfigWidget::setUI()
 {
     this->setAttribute(Qt::WA_StyledBackground);
@@ -149,40 +187,6 @@ void SerialPortConnectConfigWidget::connectSignals()
 {
     this->connect(m_pConnectButton, &QPushButton::clicked, this,
                   &SerialPortConnectConfigWidget::onConnectButtonClicked);
-}
-
-void SerialPortConnectConfigWidget::onConnectButtonClicked()
-{
-    bool isConnected = m_pConnectButton->property("connected").toBool();
-
-    if (!isConnected)
-    {
-        if (m_pPortComboBox->count() == 0)
-        {
-            CMessageBox::showToast("请选择端口");
-            return;
-        }
-        QMap<QString, QVariant> serialParams
-        {
-            {"portInfo", QVariant::fromValue(m_pPortComboBox->currentData().value<QSerialPortInfo>())},
-            {"baudRate", m_pBaudRateComboBox->currentData().value<QSerialPort::BaudRate>()},
-            {"dataBits", m_pDataBitsComboBox->currentData().value<QSerialPort::DataBits>()},
-            {"stopBits", m_pStopBitsComboBox->currentData().value<QSerialPort::StopBits>()},
-            {"parity", m_pParityComboBox->currentData().value<QSerialPort::Parity>()},
-            {"flowControl", m_pFlowControlComboBox->currentData().value<QSerialPort::FlowControl>()}
-        };
-        isConnected = SerialPortManager::getInstance()->openSerialPort(serialParams);
-    }
-    else
-    {
-        isConnected = !SerialPortManager::getInstance()->closeSerialPort();
-    }
-
-    m_pConnectButton->setProperty("connected", isConnected);
-    m_pConnectButton->setText(isConnected ? "断开" : "连接");
-    m_pConnectButton->style()->unpolish(m_pConnectButton);
-    m_pConnectButton->style()->polish(m_pConnectButton);
-    m_pConnectButton->update();
 }
 
 void SerialPortConnectConfigWidget::detectionAvailablePorts()

@@ -13,6 +13,7 @@
 static SerialPortDataReceiveWidget* pSerialPortDataReceiveWidget = nullptr;
 static QPlainTextEdit* pReceiveTextEdit = nullptr;
 
+// 构造函数和析构函数
 SerialPortDataReceiveWidget::SerialPortDataReceiveWidget(QWidget* parent)
     : QWidget(parent)
 {
@@ -59,6 +60,26 @@ bool SerialPortDataReceiveWidget::eventFilter(QObject* watched, QEvent* event)
     return QWidget::eventFilter(watched, event);
 }
 
+// private slots
+void SerialPortDataReceiveWidget::displayReceiveData(const QByteArray& data)
+{
+    // 暂停重绘以提高性能
+    m_pReceiveTextEdit->setUpdatesEnabled(false);
+    // 获取当前滚动条位置
+    QScrollBar* vScroll = m_pReceiveTextEdit->verticalScrollBar();
+    bool atBottom = vScroll->value() == vScroll->maximum();
+    QString receivedString = QString::fromUtf8(data).trimmed();
+    m_pReceiveTextEdit->appendPlainText(receivedString);
+    // 恢复自动滚动（如果启用且之前已在底部）
+    if (atBottom)
+    {
+        vScroll->setValue(vScroll->maximum());
+    }
+    // 恢复重绘
+    m_pReceiveTextEdit->setUpdatesEnabled(true);
+}
+
+// 私有方法
 void SerialPortDataReceiveWidget::setUI()
 {
     this->setAttribute(Qt::WA_StyledBackground);
@@ -145,22 +166,4 @@ void SerialPortDataReceiveWidget::connectSignals()
         file.close();
         CMessageBox::showToast(this, "数据已保存至" + fileName);
     });
-}
-
-void SerialPortDataReceiveWidget::displayReceiveData(const QByteArray& data)
-{
-    // 暂停重绘以提高性能
-    m_pReceiveTextEdit->setUpdatesEnabled(false);
-    // 获取当前滚动条位置
-    QScrollBar* vScroll = m_pReceiveTextEdit->verticalScrollBar();
-    bool atBottom = vScroll->value() == vScroll->maximum();
-    QString receivedString = QString::fromUtf8(data).trimmed();
-    m_pReceiveTextEdit->appendPlainText(receivedString);
-    // 恢复自动滚动（如果启用且之前已在底部）
-    if (atBottom)
-    {
-        vScroll->setValue(vScroll->maximum());
-    }
-    // 恢复重绘
-    m_pReceiveTextEdit->setUpdatesEnabled(true);
 }

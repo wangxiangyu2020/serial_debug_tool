@@ -10,6 +10,7 @@
 
 #include "ui/CDialogBase.h"
 
+// 构造函数和析构函数
 CDialogBase::CDialogBase(QWidget* parent, const QString& title, const QSize& size)
     : QDialog(parent)
 {
@@ -21,6 +22,7 @@ CDialogBase::CDialogBase(QWidget* parent, const QString& title, const QSize& siz
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/dialog_base.qss");
 }
 
+// 事件处理方法
 void CDialogBase::paintEvent(QPaintEvent* event)
 {
     Q_UNUSED(event);
@@ -36,6 +38,7 @@ void CDialogBase::paintEvent(QPaintEvent* event)
     painter.drawRoundedRect(rect().adjusted(0, 0, -1, -1), 12, 12);
 }
 
+// 重写基类虚函数
 void CDialogBase::onConfirmClicked()
 {
     this->accept();
@@ -46,6 +49,7 @@ void CDialogBase::onCancelClicked()
     this->reject();
 }
 
+// 私有方法
 void CDialogBase::setUI()
 {
     this->setWindowFlags(Qt::FramelessWindowHint | Qt::Dialog);

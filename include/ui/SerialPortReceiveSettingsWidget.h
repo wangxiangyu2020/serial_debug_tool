@@ -27,29 +27,32 @@ class SerialPortReceiveSettingsWidget : public QWidget
     Q_OBJECT
 
 public:
+    // 构造函数和析构函数
     explicit SerialPortReceiveSettingsWidget(QWidget* parent = nullptr);
     ~SerialPortReceiveSettingsWidget() = default;
 
+    // 获取方法
     QCheckBox* getSaveToFileCheckBox();
-
-private:
-    void setUI();
-    void createComponents();
-    void createLayout();
-    void connectSignals();
 
 signals:
     void sigSaveToFile(bool status);
 
 private:
-    // 组件
+    // 私有方法
+    void setUI();
+    void createComponents();
+    void createLayout();
+    void connectSignals();
+
+    // UI组件成员
     QLabel* m_pTitleLabel = nullptr;
     QCheckBox* m_pSaveToFileCheckBox = nullptr;
     QCheckBox* m_pDisplayTimestampCheckBox = nullptr;
     QCheckBox* m_pHexDisplayCheckBox = nullptr;
     QPushButton* m_pSaveDataButton = nullptr;
     QPushButton* m_pClearDataButton = nullptr;
-    // 布局
+
+    // 布局成员
     QVBoxLayout* m_pMainLayout = nullptr;
     QHBoxLayout* m_pButtonLayout = nullptr;
 };

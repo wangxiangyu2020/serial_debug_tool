@@ -10,6 +10,7 @@
 #include "ui/SerialPortReceiveSettingsWidget.h"
 
 
+// 构造函数和析构函数
 SerialPortReceiveSettingsWidget::SerialPortReceiveSettingsWidget(QWidget* parent)
     : QWidget(parent)
 {

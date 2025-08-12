@@ -5,11 +5,13 @@
 #include <QMovie>
 #include <QTimer>
 
+// 构造函数和析构函数
 SplashScreen::SplashScreen(QWidget* parent) : QWidget(parent)
 {
     this->setUI();
 }
 
+// private slots
 void SplashScreen::onAnimationFinished()
 {
     m_pMovie->stop();
@@ -17,6 +19,7 @@ void SplashScreen::onAnimationFinished()
     this->close();
 }
 
+// 私有方法
 void SplashScreen::setUI()
 {
     this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);

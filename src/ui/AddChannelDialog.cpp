@@ -11,6 +11,7 @@
 #include "ui/AddChannelDialog.h"
 #include "utils/StyleLoader.h"
 
+// 构造函数和析构函数
 AddChannelDialog::AddChannelDialog(QWidget* parent)
     : CDialogBase(parent, "添加通道", QSize(450, 400))
 {
@@ -19,6 +20,7 @@ AddChannelDialog::AddChannelDialog(QWidget* parent)
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/add_channel_dialog.qss");
 }
 
+// 获取方法
 QString AddChannelDialog::getChannelName() const
 {
     return m_pNameEdit->text();
@@ -34,6 +36,7 @@ QString AddChannelDialog::getChannelColor() const
     return m_pColorCombo->currentData().toString();
 }
 
+// 配置方法
 void AddChannelDialog::setExistingChannels(const QList<ChannelInfo>& channels)
 {
     m_pChannelListWidget->clear();
@@ -90,6 +93,7 @@ void AddChannelDialog::setExistingChannels(const QList<ChannelInfo>& channels)
     }
 }
 
+// 重写基类虚函数
 void AddChannelDialog::createComponents()
 {
     // 输入区域组件
@@ -167,6 +171,7 @@ void AddChannelDialog::onConfirmClicked()
     CDialogBase::onConfirmClicked();
 }
 
+// 私有方法
 void AddChannelDialog::setUI()
 {
     // 手动调用初始化方法

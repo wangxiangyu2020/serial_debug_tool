@@ -29,28 +29,34 @@ class SerialPortConfigTab : public QWidget
     Q_OBJECT
 
 public:
+    // 构造函数和析构函数
     explicit SerialPortConfigTab(QWidget* parent = nullptr);
     ~SerialPortConfigTab() = default;
 
 private:
+    // 私有方法
     void setUI();
     void createComponents();
     void createLayout();
     void connectSignals();
     void readySaveFile(bool status);
 
-private:
+    // 布局成员
     QHBoxLayout* m_pMainLayout = nullptr;
     QVBoxLayout* m_pSettingsLayout = nullptr;
     QVBoxLayout* m_pContentLayout = nullptr;
     QWidget* m_pSettingsPanel = nullptr;
     QWidget* m_pContentPanel = nullptr;
+
+    // UI组件成员
     SerialPortConnectConfigWidget* m_pSerialPortConfigWidget = nullptr;
     SerialPortReceiveSettingsWidget* m_pSerialPortReceiveSettingsWidget = nullptr;
     SerialPortSendSettingsWidget* m_pSerialPortSendSettingsWidget = nullptr;
     SerialPortDataReceiveWidget* m_pSerialPortDataReceiveWidget = nullptr;
     SerialPortDataSendWidget* m_pSerialPortDataSendWidget = nullptr;
     SerialPortRealTimeSaveWidget* m_pSerialPortRealTimeSaveWidget = nullptr;
+
+    // 文件对象
     QFile* m_pSaveFile = nullptr;
 };
 

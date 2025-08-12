@@ -10,6 +10,7 @@
 
 #include "ui/SerialPortRealTimeSaveWidget.h"
 
+// 构造函数和析构函数
 SerialPortRealTimeSaveWidget::SerialPortRealTimeSaveWidget(QWidget* parent)
     : QWidget(parent), currentPosition(0), movingRight(true)
 {
@@ -17,14 +18,7 @@ SerialPortRealTimeSaveWidget::SerialPortRealTimeSaveWidget(QWidget* parent)
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/serial_port_real_time_save_widget.qss");
 }
 
-void SerialPortRealTimeSaveWidget::setUI()
-{
-    this->setAttribute(Qt::WA_StyledBackground);
-    this->createComponents();
-    this->createLayout();
-    this->connectSignals();
-}
-
+// 事件处理方法
 bool SerialPortRealTimeSaveWidget::eventFilter(QObject* watched, QEvent* event)
 {
     if (watched == m_pSavePathDisplayTextEdit)
@@ -52,6 +46,44 @@ bool SerialPortRealTimeSaveWidget::eventFilter(QObject* watched, QEvent* event)
         }
     }
     return QWidget::eventFilter(watched, event);
+}
+
+// private slots
+void SerialPortRealTimeSaveWidget::moveIcon()
+{
+    if (!m_pProgressBar || !m_pIconLabel) return;
+    int maxPosition = m_pProgressBar->width() - m_pIconLabel->width();
+    int yPos = (m_pProgressBar->height() - m_pIconLabel->height()) / 2;
+    // 更新位置
+    if (movingRight)
+    {
+        currentPosition += moveStep;
+        if (currentPosition >= maxPosition)
+        {
+            currentPosition = maxPosition;
+            movingRight = false;
+        }
+    }
+    else
+    {
+        currentPosition -= moveStep;
+        if (currentPosition <= 0)
+        {
+            currentPosition = 0;
+            movingRight = true;
+        }
+    }
+    // 移动图标（在进度条内部）
+    m_pIconLabel->move(currentPosition, yPos);
+}
+
+// 私有方法
+void SerialPortRealTimeSaveWidget::setUI()
+{
+    this->setAttribute(Qt::WA_StyledBackground);
+    this->createComponents();
+    this->createLayout();
+    this->connectSignals();
 }
 
 void SerialPortRealTimeSaveWidget::createComponents()
@@ -132,32 +164,4 @@ void SerialPortRealTimeSaveWidget::connectSignals()
         m_pTimer->start(50);
         m_pSavePathDisplayTextEdit->setPlainText(path);
     });
-}
-
-void SerialPortRealTimeSaveWidget::moveIcon()
-{
-    if (!m_pProgressBar || !m_pIconLabel) return;
-    int maxPosition = m_pProgressBar->width() - m_pIconLabel->width();
-    int yPos = (m_pProgressBar->height() - m_pIconLabel->height()) / 2;
-    // 更新位置
-    if (movingRight)
-    {
-        currentPosition += moveStep;
-        if (currentPosition >= maxPosition)
-        {
-            currentPosition = maxPosition;
-            movingRight = false;
-        }
-    }
-    else
-    {
-        currentPosition -= moveStep;
-        if (currentPosition <= 0)
-        {
-            currentPosition = 0;
-            movingRight = true;
-        }
-    }
-    // 移动图标（在进度条内部）
-    m_pIconLabel->move(currentPosition, yPos);
 }

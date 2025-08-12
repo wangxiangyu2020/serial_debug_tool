@@ -20,20 +20,24 @@ class RemoveChannelDialog : public CDialogBase
     Q_OBJECT
 
 public:
+    // 构造函数和析构函数
     explicit RemoveChannelDialog(QWidget* parent = nullptr);
 
+    // 配置方法
     void setExistingChannels(const QList<ChannelInfo>& channels);
 
 protected:
+    // 重写基类虚函数
     void createComponents() override;
     void createContentLayout() override;
     void connectSignals() override;
     void onConfirmClicked() override;
 
 private:
+    // 私有方法
     void setUI();
 
-private:
+    // UI组件成员
     QListWidget* m_pChannelListWidget = nullptr;
 };
 

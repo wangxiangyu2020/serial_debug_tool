@@ -10,12 +10,14 @@
 
 #include "ui/WaveformWidget.h"
 
+// 构造函数和析构函数
 WaveformWidget::WaveformWidget(QWidget* parent)
     : QWidget(parent)
 {
     this->setUI();
 }
 
+// 事件处理方法
 void WaveformWidget::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
@@ -65,6 +67,124 @@ void WaveformWidget::resizeEvent(QResizeEvent* event)
     m_renderTimer->start(100); // 100ms防抖
 }
 
+// private slots
+void WaveformWidget::onPageLoadFinished(bool status)
+{
+    if (!status) return;
+    m_pageLoaded = true;
+}
+
+void WaveformWidget::onAddSeries(const QString& name, const QString& color)
+{
+    if (!m_pageLoaded) return;
+    QString jsCode = QString("addSeries('%1', '%2')").arg(name, StyleLoader::getColorHex(color));
+    this->executeJS(jsCode);
+}
+
+void WaveformWidget::onChannelDataAdded(const QString& channelId, const QVariant& data)
+{
+    if (!m_pageLoaded) return;
+
+    ChannelManager* manager = ChannelManager::getInstance();
+    if (!manager) return;
+
+    ChannelInfo channel = manager->getChannel(channelId);
+    if (!data.canConvert<QVariantList>()) return;
+
+    QVariantList pointList = data.toList();
+    if (pointList.size() < 2) return;
+
+    // 使用互斥锁保护数据访问
+    {
+        QMutexLocker locker(&m_dataMutex);
+        // 将数据添加到待处理队列
+        DataPoint point;
+        point.channelName = channel.name;
+        point.timestamp = pointList[0].toDouble();
+        point.value = pointList[1].toDouble();
+        m_pendingData.enqueue(point);
+
+        if (m_pendingData.size() >= MAX_QUEUE_SIZE) m_pendingData.dequeue();
+
+        // 如果没有计划更新，则安排一次更新
+        if (m_updateScheduled) return;
+
+        m_updateScheduled = true;
+        // 只有不在 resize 过程中才启动定时器
+        if (!m_isResizing) m_updateTimer->start(16); // 约60FPS
+        // 如果在 resize 过程中，数据会被保留，等待 resize 结束后处理
+    }
+}
+
+void WaveformWidget::onProcessPendingData()
+{
+    // 在resize过程中暂时不更新图表
+    if (m_isResizing)
+    {
+        // 只有在有待处理数据时才重新调度
+        QMutexLocker locker(&m_dataMutex);
+        if (!m_pendingData.isEmpty() && !m_updateTimer->isActive()) m_updateTimer->start(50);
+        return;
+    }
+
+    // 批量处理队列中的数据
+    QJsonObject seriesDataObject;
+    {
+        QMutexLocker locker(&m_dataMutex);
+        if (!m_pageLoaded || m_pendingData.isEmpty())
+        {
+            m_updateScheduled = false;
+            if (m_updateTimer->isActive()) m_updateTimer->stop();
+            return;
+        }
+
+        // 按通道名分组处理数据
+        QHash<QString, QJsonArray> channelData;
+
+        // 批量处理，每次最多处理1000个数据点
+        const int BATCH_SIZE = 1000;
+        int processed = 0;
+
+        while (!m_pendingData.isEmpty() && processed < BATCH_SIZE)
+        {
+            DataPoint point = m_pendingData.dequeue();
+
+            QJsonArray pointArray;
+            pointArray.append(point.timestamp);
+            pointArray.append(point.value);
+
+            channelData[point.channelName].append(pointArray);
+            processed++;
+        }
+
+        // 转换为最终的JSON对象
+        for (auto it = channelData.begin(); it != channelData.end(); ++it)
+        {
+            seriesDataObject[it.key()] = it.value();
+        }
+
+        // 如果队列还有数据，继续调度处理
+        if (!m_pendingData.isEmpty())
+        {
+            m_updateTimer->start(16);
+        }
+        else
+        {
+            m_updateScheduled = false;
+        }
+    }
+
+    // 发送数据到JavaScript
+    if (!seriesDataObject.isEmpty())
+    {
+        QJsonDocument doc(seriesDataObject);
+        QString jsonStr = QString::fromUtf8(doc.toJson(QJsonDocument::Compact));
+        QString jsCode = QString("batchAddDataPoints(%1);").arg(jsonStr);
+        this->executeJS(jsCode);
+    }
+}
+
+// 私有方法
 void WaveformWidget::setUI()
 {
     this->setAttribute(Qt::WA_StyledBackground);
@@ -255,121 +375,4 @@ void WaveformWidget::clearAllData()
 {
     m_pendingData.clear();
     this->executeJS("clearAllData()");
-}
-
-void WaveformWidget::onPageLoadFinished(bool status)
-{
-    if (!status) return;
-    m_pageLoaded = true;
-}
-
-void WaveformWidget::onAddSeries(const QString& name, const QString& color)
-{
-    if (!m_pageLoaded) return;
-    QString jsCode = QString("addSeries('%1', '%2')").arg(name, StyleLoader::getColorHex(color));
-    this->executeJS(jsCode);
-}
-
-void WaveformWidget::onChannelDataAdded(const QString& channelId, const QVariant& data)
-{
-    if (!m_pageLoaded) return;
-
-    ChannelManager* manager = ChannelManager::getInstance();
-    if (!manager) return;
-
-    ChannelInfo channel = manager->getChannel(channelId);
-    if (!data.canConvert<QVariantList>()) return;
-
-    QVariantList pointList = data.toList();
-    if (pointList.size() < 2) return;
-
-    // 使用互斥锁保护数据访问
-    {
-        QMutexLocker locker(&m_dataMutex);
-        // 将数据添加到待处理队列
-        DataPoint point;
-        point.channelName = channel.name;
-        point.timestamp = pointList[0].toDouble();
-        point.value = pointList[1].toDouble();
-        m_pendingData.enqueue(point);
-
-        if (m_pendingData.size() >= MAX_QUEUE_SIZE) m_pendingData.dequeue();
-
-        // 如果没有计划更新，则安排一次更新
-        if (m_updateScheduled) return;
-
-        m_updateScheduled = true;
-        // 只有不在 resize 过程中才启动定时器
-        if (!m_isResizing) m_updateTimer->start(16); // 约60FPS
-        // 如果在 resize 过程中，数据会被保留，等待 resize 结束后处理
-    }
-}
-
-// 新增处理待处理数据的函数
-void WaveformWidget::onProcessPendingData()
-{
-    // 在resize过程中暂时不更新图表
-    if (m_isResizing)
-    {
-        // 只有在有待处理数据时才重新调度
-        QMutexLocker locker(&m_dataMutex);
-        if (!m_pendingData.isEmpty() && !m_updateTimer->isActive()) m_updateTimer->start(50);
-        return;
-    }
-
-    // 批量处理队列中的数据
-    QJsonObject seriesDataObject;
-    {
-        QMutexLocker locker(&m_dataMutex);
-        if (!m_pageLoaded || m_pendingData.isEmpty())
-        {
-            m_updateScheduled = false;
-            if (m_updateTimer->isActive()) m_updateTimer->stop();
-            return;
-        }
-
-        // 按通道名分组处理数据
-        QHash<QString, QJsonArray> channelData;
-
-        // 批量处理，每次最多处理1000个数据点
-        const int BATCH_SIZE = 1000;
-        int processed = 0;
-
-        while (!m_pendingData.isEmpty() && processed < BATCH_SIZE)
-        {
-            DataPoint point = m_pendingData.dequeue();
-
-            QJsonArray pointArray;
-            pointArray.append(point.timestamp);
-            pointArray.append(point.value);
-
-            channelData[point.channelName].append(pointArray);
-            processed++;
-        }
-
-        // 转换为最终的JSON对象
-        for (auto it = channelData.begin(); it != channelData.end(); ++it)
-        {
-            seriesDataObject[it.key()] = it.value();
-        }
-
-        // 如果队列还有数据，继续调度处理
-        if (!m_pendingData.isEmpty())
-        {
-            m_updateTimer->start(16);
-        }
-        else
-        {
-            m_updateScheduled = false;
-        }
-    }
-
-    // 发送数据到JavaScript
-    if (!seriesDataObject.isEmpty())
-    {
-        QJsonDocument doc(seriesDataObject);
-        QString jsonStr = QString::fromUtf8(doc.toJson(QJsonDocument::Compact));
-        QString jsCode = QString("batchAddDataPoints(%1);").arg(jsonStr);
-        this->executeJS(jsCode);
-    }
 }

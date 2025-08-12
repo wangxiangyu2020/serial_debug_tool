@@ -27,13 +27,15 @@ class CTabWidget : public QTabWidget
     Q_OBJECT
 
 public:
+    // 构造函数和析构函数
     explicit CTabWidget(QWidget* parent = nullptr);
     ~CTabWidget() = default;
 
 private:
+    // 私有方法
     void setUI();
 
-private:
+    // UI组件成员
     SerialPortConfigTab* m_pSerialPortConfigTab = nullptr;
     WaveformTab* m_pWaveformTab = nullptr;
     SettingsTab* m_pSettingsTab = nullptr;

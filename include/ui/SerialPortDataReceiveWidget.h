@@ -30,32 +30,37 @@ class SerialPortDataReceiveWidget : public QWidget
     Q_OBJECT
 
 public:
+    // 构造函数和析构函数
     explicit SerialPortDataReceiveWidget(QWidget* parent = nullptr);
     ~SerialPortDataReceiveWidget() = default;
 
+    // 静态方法
     static SerialPortDataReceiveWidget* getSerialPortDataReceiveWidget();
     static QPlainTextEdit* getReceiveTextEdit();
-
-protected:
-    bool eventFilter(QObject* watched, QEvent* event) override;
-
-private:
-    void setUI();
-    void createComponents();
-    void createLayout();
-    void connectSignals();
-
-private slots:
-    void displayReceiveData(const QByteArray& data);
 
 signals:
     void sigClearReceiveData();
     void sigSaveToFile();
 
+protected:
+    // 事件处理方法
+    bool eventFilter(QObject* watched, QEvent* event) override;
+
+private slots:
+    void displayReceiveData(const QByteArray& data);
+
 private:
+    // 私有方法
+    void setUI();
+    void createComponents();
+    void createLayout();
+    void connectSignals();
+
+    // 布局成员
     QVBoxLayout* m_pMainLayout = nullptr;
+
+    // UI组件成员
     QPlainTextEdit* m_pReceiveTextEdit = nullptr;
-    QCheckBox* m_pAutoScrollCheckbox = nullptr;
 };
 
 #endif //SERIALPORTDATARECEIVEWIDGET_H

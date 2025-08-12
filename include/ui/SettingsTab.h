@@ -26,22 +26,26 @@ class SettingsTab : public QWidget
     Q_OBJECT
 
 public:
+    // 构造函数和析构函数
     explicit SettingsTab(QWidget* parent = nullptr);
     ~SettingsTab() = default;
 
 protected:
+    // 事件处理方法
     void resizeEvent(QResizeEvent* event) override;
 
 private:
+    // 私有方法
     void setUI();
     void createComponents();
+    QString convertMarkdownToHtml(const QString& markdown);
 
-private:
+    // UI组件成员
     QTabWidget* m_pTabWidget = nullptr;
     QWebEngineView* m_pReadmeViewer = nullptr;
-    QTimer* m_renderTimer = nullptr;
 
-    QString convertMarkdownToHtml(const QString& markdown);
+    // 定时器对象
+    QTimer* m_renderTimer = nullptr;
 };
 
 #endif //SETTINGSTAB_H

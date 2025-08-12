@@ -11,19 +11,22 @@ class SplashScreen : public QWidget
     Q_OBJECT
 
 public:
+    // 构造函数和析构函数
     explicit SplashScreen(QWidget* parent = nullptr);
-
-private slots:
-    void onAnimationFinished();
 
 signals:
     void finished();
 
+private slots:
+    void onAnimationFinished();
+
 private:
+    // 私有方法
+    void setUI();
+
+    // UI组件成员
     QLabel* m_pMovieLabel = nullptr;
     QMovie* m_pMovie = nullptr;
-
-    void setUI();
 };
 
 #endif // SPLASHSCREEN_H

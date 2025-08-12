@@ -28,15 +28,9 @@ class WaveformCtrlWidget : public QWidget
     Q_OBJECT
 
 public:
+    // 构造函数和析构函数
     explicit WaveformCtrlWidget(QWidget* parent = nullptr);
     ~WaveformCtrlWidget() = default;
-
-private:
-    void setUI();
-    void createComponents();
-    void createLayout();
-    void connectSignals();
-    void setBtnStatus(bool actionClicked);
 
 private slots:
     void onAddChannelBtnClicked();
@@ -48,7 +42,17 @@ private slots:
     void onActionBtnClicked();
 
 private:
+    // 私有方法
+    void setUI();
+    void createComponents();
+    void createLayout();
+    void connectSignals();
+    void setBtnStatus(bool actionClicked);
+
+    // 布局成员
     QHBoxLayout* m_pMainLayout = nullptr;
+
+    // 按钮成员
     QPushButton* m_pAddChannelButton = nullptr;
     QPushButton* m_pRemoveChannelButton = nullptr;
     QPushButton* m_pClearButton = nullptr;
@@ -56,6 +60,8 @@ private:
     QPushButton* m_pExportButton = nullptr;
     QPushButton* m_pActionButton = nullptr;
     QPushButton* m_pSampleRateButton = nullptr;
+
+    // 对话框成员
     AddChannelDialog* m_pAddChannelDialog = nullptr;
     RemoveChannelDialog* m_pRemoveChannelDialog = nullptr;
     SampleRateDialog* m_pSampleRateDialog = nullptr;

@@ -14,7 +14,6 @@ int main(int argc, char* argv[])
 
     SplashScreen splash;
     QScopedPointer<MainWindow> mainWindow;
-
     QObject::connect(&splash, &SplashScreen::finished, [&]()
     {
         mainWindow.reset(new MainWindow());

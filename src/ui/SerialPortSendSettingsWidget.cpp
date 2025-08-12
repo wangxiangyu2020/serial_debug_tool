@@ -12,6 +12,7 @@
 
 static QCheckBox* timedSendCheckBox = nullptr;
 
+// 构造函数和析构函数
 SerialPortSendSettingsWidget::SerialPortSendSettingsWidget(QWidget* parent)
     : QWidget(parent)
 {

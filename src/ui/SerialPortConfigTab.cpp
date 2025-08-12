@@ -10,6 +10,7 @@
 
 #include "ui/SerialPortConfigTab.h"
 
+// 构造函数和析构函数
 SerialPortConfigTab::SerialPortConfigTab(QWidget* parent)
     : QWidget(parent), m_pSaveFile(nullptr)
 {
@@ -17,6 +18,7 @@ SerialPortConfigTab::SerialPortConfigTab(QWidget* parent)
     StyleLoader::loadStyleFromFile(this, ":resources/qss/serial_prot_config_tab.qss");
 }
 
+// 私有方法
 void SerialPortConfigTab::setUI()
 {
     this->setAttribute(Qt::WA_StyledBackground);

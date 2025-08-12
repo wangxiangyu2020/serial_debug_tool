@@ -11,6 +11,7 @@
 #include "ui/SettingsTab.h"
 
 
+// 构造函数和析构函数
 SettingsTab::SettingsTab(QWidget* parent)
     : QWidget(parent)
 {
@@ -18,6 +19,7 @@ SettingsTab::SettingsTab(QWidget* parent)
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/settings_tab.qss");
 }
 
+// 事件处理方法
 void SettingsTab::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
@@ -59,6 +61,7 @@ void SettingsTab::resizeEvent(QResizeEvent* event)
     m_renderTimer->start(100); // 100ms防抖
 }
 
+// 私有方法
 void SettingsTab::setUI()
 {
     this->setAttribute(Qt::WA_StyledBackground);

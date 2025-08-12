@@ -28,19 +28,23 @@ class CDialogBase : public QDialog
     Q_OBJECT
 
 public:
+    // 构造函数和析构函数
     explicit CDialogBase(QWidget* parent = nullptr,
                          const QString& title = "",
                          const QSize& size = QSize(320, 200));
     virtual ~CDialogBase() = default;
 
 protected:
+    // 事件处理方法
     void paintEvent(QPaintEvent* event) override;
+
     // 子类可重写的虚函数
     virtual void createComponents() = 0;
     virtual void createContentLayout() = 0;
     virtual void connectSignals() = 0;
     virtual void onConfirmClicked();
     virtual void onCancelClicked();
+
     // 提供给子类使用的布局和组件
     QVBoxLayout* m_pMainLayout = nullptr;
     QVBoxLayout* m_pContentLayout = nullptr;
@@ -50,13 +54,14 @@ protected:
     QPushButton* m_pCancelButton = nullptr;
 
 private:
+    // 私有方法
     void setUI();
     void createBaseComponents();
     void createBaseLayout();
     void connectBaseSignals();
     void setupAnimation();
 
-private:
+    // 动画对象
     QGraphicsOpacityEffect* m_pOpacityEffect = nullptr;
     QPropertyAnimation* m_pFadeAnimation = nullptr;
 };

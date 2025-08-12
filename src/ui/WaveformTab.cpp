@@ -10,6 +10,7 @@
 
 #include "ui/WaveformTab.h"
 
+// 构造函数和析构函数
 WaveformTab::WaveformTab(QWidget* parent)
     : QWidget(parent)
 {
@@ -17,6 +18,7 @@ WaveformTab::WaveformTab(QWidget* parent)
     StyleLoader::loadStyleFromFile(this, ":resources/qss/wave_form_tab.qss");
 }
 
+// 私有方法
 void WaveformTab::setUI()
 {
     this->setAttribute(Qt::WA_StyledBackground);

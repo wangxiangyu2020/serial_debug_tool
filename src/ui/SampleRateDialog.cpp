@@ -12,6 +12,7 @@
 
 #include <QStyle>
 
+// 构造函数和析构函数
 SampleRateDialog::SampleRateDialog(QWidget* parent)
     : CDialogBase(parent, "采样间隔设置", QSize(300, 150)) // 修改标题
 {
@@ -35,17 +36,19 @@ SampleRateDialog::SampleRateDialog(QWidget* parent)
     }, Qt::QueuedConnection);
 }
 
-// 添加获取和设置采样率值的方法
+// 获取方法
 int SampleRateDialog::getSampleRate() const
 {
     return m_pSampleRateSpinBox->value();
 }
 
+// 配置方法
 void SampleRateDialog::setSampleRate(int rate)
 {
     m_pSampleRateSpinBox->setValue(rate);
 }
 
+// 重写基类虚函数
 void SampleRateDialog::createComponents()
 {
     // 创建数值输入框
@@ -87,6 +90,7 @@ void SampleRateDialog::onConfirmClicked()
     CDialogBase::onConfirmClicked();
 }
 
+// 私有方法
 void SampleRateDialog::setUI()
 {
     this->setAttribute(Qt::WA_StyledBackground, true);

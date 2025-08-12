@@ -25,28 +25,34 @@ class TitleBar : public QWidget
     Q_OBJECT
 
 public:
+    // 构造函数和析构函数
     explicit TitleBar(QWidget* parent = nullptr);
     ~TitleBar() = default;
 
-private:
-    void setUI();
+signals:
+    void sigClosed();
+
+protected:
+    // 事件处理方法
     void mousePressEvent(QMouseEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
     void mouseDoubleClickEvent(QMouseEvent* event) override;
 
-private slots :
+private slots:
     void onClicked();
 
-signals:
-    void sigClosed();
-
 private:
+    // 私有方法
+    void setUI();
+
+    // UI组件成员
     QPushButton* m_pLogoBtn = nullptr;
     QPushButton* m_pMinBtn = nullptr;
     QPushButton* m_pMaxBtn = nullptr;
     QPushButton* m_pCloseBtn = nullptr;
 
+    // 状态变量
     bool m_dragging = false;
     QPoint m_dragStartPosition;
 };

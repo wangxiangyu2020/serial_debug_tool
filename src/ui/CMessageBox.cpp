@@ -9,6 +9,7 @@
   */
 #include "ui/CMessageBox.h"
 
+// 构造函数和析构函数
 CMessageBox::CMessageBox(QWidget* parent, const QString& message, int displayTime)
     : QDialog(parent)
 {
@@ -51,23 +52,7 @@ CMessageBox::CMessageBox(QWidget* parent, const QString& message, int displayTim
     connect(m_pFadeAnimation, &QPropertyAnimation::finished, this, &QDialog::accept);
 }
 
-void CMessageBox::paintEvent(QPaintEvent* event)
-{
-    Q_UNUSED(event);
-
-    QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
-
-    // 绘制背景
-    QPainterPath path;
-    path.addRoundedRect(rect(), 10, 10);
-    painter.fillPath(path, QColor(74, 144, 226, 220)); // 半透明蓝色背景
-
-    // 绘制边框
-    painter.setPen(QPen(QColor(255, 255, 255, 100), 1));
-    painter.drawRoundedRect(rect().adjusted(0, 0, -1, -1), 10, 10);
-}
-
+// 主要业务方法
 void CMessageBox::showToast()
 {
     show();
@@ -126,6 +111,7 @@ void CMessageBox::showToast()
     m_pTimer->start();
 }
 
+// 静态方法
 void CMessageBox::showToast(const QString& message)
 {
     CMessageBox* toast = new CMessageBox(nullptr, message, 1500); // 显示1.5秒
@@ -140,6 +126,25 @@ void CMessageBox::showToast(QWidget* parent, const QString& message)
     toast->setAttribute(Qt::WA_DeleteOnClose); // 自动删除
 }
 
+// 事件处理方法
+void CMessageBox::paintEvent(QPaintEvent* event)
+{
+    Q_UNUSED(event);
+
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    // 绘制背景
+    QPainterPath path;
+    path.addRoundedRect(rect(), 10, 10);
+    painter.fillPath(path, QColor(74, 144, 226, 220)); // 半透明蓝色背景
+
+    // 绘制边框
+    painter.setPen(QPen(QColor(255, 255, 255, 100), 1));
+    painter.drawRoundedRect(rect().adjusted(0, 0, -1, -1), 10, 10);
+}
+
+// private slots
 void CMessageBox::fadeOut()
 {
     // 开始淡出动画

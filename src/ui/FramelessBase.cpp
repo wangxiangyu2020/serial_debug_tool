@@ -10,7 +10,7 @@
 
 #include "ui/FramelessBase.h"
 
-// 构造函数，初始化 FramelessBase 类
+// 构造函数和析构函数
 FramelessBase::FramelessBase(QWidget* parent, int borderSize)
     : QWidget(parent, Qt::FramelessWindowHint | Qt::WindowMinMaxButtonsHint), // 设置窗口为无边框并启用最小化/最大化按钮
       m_borderSize(borderSize), // 初始化边框大小
@@ -29,7 +29,7 @@ FramelessBase::FramelessBase(QWidget* parent, int borderSize)
     initBorderWidgets();
 }
 
-// 设置边框大小
+// 配置方法
 void FramelessBase::setBorderSize(int size)
 {
     if (size > 0 && size != m_borderSize)
@@ -79,145 +79,7 @@ void FramelessBase::setBorderVisible(bool visible)
     }
 }
 
-// 初始化边框控件
-void FramelessBase::initBorderWidgets()
-{
-    m_borderTop = new QWidget(this);
-    m_borderRight = new QWidget(this);
-    m_borderBottom = new QWidget(this);
-    m_borderLeft = new QWidget(this);
-    // 边框控件不拦截鼠标事件
-    m_borderTop->setAttribute(Qt::WA_TransparentForMouseEvents);
-    m_borderRight->setAttribute(Qt::WA_TransparentForMouseEvents);
-    m_borderBottom->setAttribute(Qt::WA_TransparentForMouseEvents);
-    m_borderLeft->setAttribute(Qt::WA_TransparentForMouseEvents);
-
-    setBorderColor(m_borderColor);
-
-    m_borderTop->setFixedHeight(m_borderSize);
-    m_borderRight->setFixedWidth(m_borderSize);
-    m_borderBottom->setFixedHeight(m_borderSize);
-    m_borderLeft->setFixedWidth(m_borderSize);
-
-    updateBorderVisibility(false);
-}
-
-// 更新边框的可见性
-void FramelessBase::updateBorderVisibility(bool visible)
-{
-    if (m_borderTop) m_borderTop->setVisible(visible); // 设置顶部边框可见性
-    if (m_borderRight) m_borderRight->setVisible(visible); // 设置右侧边框可见性
-    if (m_borderBottom) m_borderBottom->setVisible(visible); // 设置底部边框可见性
-    if (m_borderLeft) m_borderLeft->setVisible(visible); // 设置左侧边框可见性
-
-    if (visible)
-    {
-        // 如果边框可见
-        // 更新边框位置
-        m_borderTop->setGeometry(0, 0, width(), m_borderSize);
-        m_borderRight->setGeometry(width() - m_borderSize, 0, m_borderSize, height());
-        m_borderBottom->setGeometry(0, height() - m_borderSize, width(), m_borderSize);
-        m_borderLeft->setGeometry(0, 0, m_borderSize, height());
-    }
-}
-
-// 检查是否启用了拉伸功能
-bool FramelessBase::isResizeEnabled() const
-{
-    return m_resizingEnabled && !isMaximized(); // 仅在未最大化时启用拉伸
-}
-
-// 检查点是否在拉伸区域内
-bool FramelessBase::isPointInResizeArea(const QPoint& point) const
-{
-    // 放宽底部和右侧的判断，防止 off-by-one 问题
-    return (point.y() >= height() - m_borderSize && point.y() < height()) || // 底部边框
-        (point.x() >= width() - m_borderSize && point.x() < width()) || // 右侧边框
-        (point.y() >= 0 && point.y() < m_borderSize) || // 顶部边框
-        (point.x() >= 0 && point.x() < m_borderSize); // 左侧边框
-}
-
-// 更新光标形状
-void FramelessBase::updateCursorShape(const QPoint& point)
-{
-    if (!isResizeEnabled())
-    {
-        // 如果未启用拉伸
-        unsetCursor(); // 重置光标
-        return;
-    }
-
-    // 判断光标所在的边框位置
-    bool atTop = (point.y() >= 0 && point.y() < m_borderSize);
-    bool atRight = (point.x() >= width() - m_borderSize && point.x() < width());
-    bool atBottom = (point.y() >= height() - m_borderSize && point.y() < height());
-    bool atLeft = (point.x() >= 0 && point.x() < m_borderSize);
-
-    // 根据位置设置光标形状
-    if (atTop && atLeft)
-    {
-        setCursor(Qt::SizeFDiagCursor); // 左上角
-    }
-    else if (atTop && atRight)
-    {
-        setCursor(Qt::SizeBDiagCursor); // 右上角
-    }
-    else if (atBottom && atLeft)
-    {
-        setCursor(Qt::SizeBDiagCursor); // 左下角
-    }
-    else if (atBottom && atRight)
-    {
-        setCursor(Qt::SizeFDiagCursor); // 右下角
-    }
-    else if (atTop || atBottom)
-    {
-        setCursor(Qt::SizeVerCursor); // 上下边框
-    }
-    else if (atLeft || atRight)
-    {
-        setCursor(Qt::SizeHorCursor); // 左右边框
-    }
-    else
-    {
-        unsetCursor(); // 重置光标
-    }
-}
-
-// 获取拉伸的边缘
-Qt::Edges FramelessBase::getResizeEdges(const QPoint& point) const
-{
-    Qt::Edges edges = Qt::Edges(); // 初始化为空
-
-    if (point.y() >= 0 && point.y() < m_borderSize) edges |= Qt::TopEdge;
-    if (point.x() >= width() - m_borderSize && point.x() < width()) edges |= Qt::RightEdge;
-    if (point.y() >= height() - m_borderSize && point.y() < height()) edges |= Qt::BottomEdge;
-    if (point.x() >= 0 && point.x() < m_borderSize) edges |= Qt::LeftEdge;
-
-    return edges;
-}
-
-// 处理窗口拉伸
-void FramelessBase::handleResize(const QPoint& point)
-{
-    if (!windowHandle()) return; // 如果没有窗口句柄，直接返回
-
-    Qt::Edges edges = getResizeEdges(point); // 获取拉伸边缘
-    if (edges != Qt::Edges())
-    {
-        // 如果边缘有效
-        windowHandle()->startSystemResize(edges); // 开始系统级拉伸
-    }
-}
-
-// 处理窗口大小调整事件
-void FramelessBase::resizeEvent(QResizeEvent* event)
-{
-    QWidget::resizeEvent(event); // 调用基类的 resizeEvent
-    updateBorderVisibility(m_borderVisible); // 更新边框可见性
-}
-
-// 事件过滤器
+// 事件处理方法
 bool FramelessBase::eventFilter(QObject* obj, QEvent* event)
 {
     if (!isResizeEnabled())
@@ -286,4 +148,136 @@ bool FramelessBase::eventFilter(QObject* obj, QEvent* event)
     }
 
     return QWidget::eventFilter(obj, event); // 调用基类的事件过滤器
+}
+
+void FramelessBase::resizeEvent(QResizeEvent* event)
+{
+    QWidget::resizeEvent(event); // 调用基类的 resizeEvent
+    updateBorderVisibility(m_borderVisible); // 更新边框可见性
+}
+
+// 重写基类虚函数
+bool FramelessBase::isResizeEnabled() const
+{
+    return m_resizingEnabled && !isMaximized(); // 仅在未最大化时启用拉伸
+}
+
+bool FramelessBase::isPointInResizeArea(const QPoint& point) const
+{
+    // 放宽底部和右侧的判断，防止 off-by-one 问题
+    return (point.y() >= height() - m_borderSize && point.y() < height()) || // 底部边框
+        (point.x() >= width() - m_borderSize && point.x() < width()) || // 右侧边框
+        (point.y() >= 0 && point.y() < m_borderSize) || // 顶部边框
+        (point.x() >= 0 && point.x() < m_borderSize); // 左侧边框
+}
+
+void FramelessBase::updateCursorShape(const QPoint& point)
+{
+    if (!isResizeEnabled())
+    {
+        // 如果未启用拉伸
+        unsetCursor(); // 重置光标
+        return;
+    }
+
+    // 判断光标所在的边框位置
+    bool atTop = (point.y() >= 0 && point.y() < m_borderSize);
+    bool atRight = (point.x() >= width() - m_borderSize && point.x() < width());
+    bool atBottom = (point.y() >= height() - m_borderSize && point.y() < height());
+    bool atLeft = (point.x() >= 0 && point.x() < m_borderSize);
+
+    // 根据位置设置光标形状
+    if (atTop && atLeft)
+    {
+        setCursor(Qt::SizeFDiagCursor); // 左上角
+    }
+    else if (atTop && atRight)
+    {
+        setCursor(Qt::SizeBDiagCursor); // 右上角
+    }
+    else if (atBottom && atLeft)
+    {
+        setCursor(Qt::SizeBDiagCursor); // 左下角
+    }
+    else if (atBottom && atRight)
+    {
+        setCursor(Qt::SizeFDiagCursor); // 右下角
+    }
+    else if (atTop || atBottom)
+    {
+        setCursor(Qt::SizeVerCursor); // 上下边框
+    }
+    else if (atLeft || atRight)
+    {
+        setCursor(Qt::SizeHorCursor); // 左右边框
+    }
+    else
+    {
+        unsetCursor(); // 重置光标
+    }
+}
+
+void FramelessBase::handleResize(const QPoint& point)
+{
+    if (!windowHandle()) return; // 如果没有窗口句柄，直接返回
+
+    Qt::Edges edges = getResizeEdges(point); // 获取拉伸边缘
+    if (edges != Qt::Edges())
+    {
+        // 如果边缘有效
+        windowHandle()->startSystemResize(edges); // 开始系统级拉伸
+    }
+}
+
+void FramelessBase::updateBorderVisibility(bool visible)
+{
+    if (m_borderTop) m_borderTop->setVisible(visible); // 设置顶部边框可见性
+    if (m_borderRight) m_borderRight->setVisible(visible); // 设置右侧边框可见性
+    if (m_borderBottom) m_borderBottom->setVisible(visible); // 设置底部边框可见性
+    if (m_borderLeft) m_borderLeft->setVisible(visible); // 设置左侧边框可见性
+
+    if (visible)
+    {
+        // 如果边框可见
+        // 更新边框位置
+        m_borderTop->setGeometry(0, 0, width(), m_borderSize);
+        m_borderRight->setGeometry(width() - m_borderSize, 0, m_borderSize, height());
+        m_borderBottom->setGeometry(0, height() - m_borderSize, width(), m_borderSize);
+        m_borderLeft->setGeometry(0, 0, m_borderSize, height());
+    }
+}
+
+// 私有方法
+void FramelessBase::initBorderWidgets()
+{
+    m_borderTop = new QWidget(this);
+    m_borderRight = new QWidget(this);
+    m_borderBottom = new QWidget(this);
+    m_borderLeft = new QWidget(this);
+    // 边框控件不拦截鼠标事件
+    m_borderTop->setAttribute(Qt::WA_TransparentForMouseEvents);
+    m_borderRight->setAttribute(Qt::WA_TransparentForMouseEvents);
+    m_borderBottom->setAttribute(Qt::WA_TransparentForMouseEvents);
+    m_borderLeft->setAttribute(Qt::WA_TransparentForMouseEvents);
+
+    setBorderColor(m_borderColor);
+
+    m_borderTop->setFixedHeight(m_borderSize);
+    m_borderRight->setFixedWidth(m_borderSize);
+    m_borderBottom->setFixedHeight(m_borderSize);
+    m_borderLeft->setFixedWidth(m_borderSize);
+
+    updateBorderVisibility(false);
+}
+
+Qt::Edges FramelessBase::getResizeEdges(const QPoint& point) const
+{
+    Qt::Edges edges = Qt::Edges(); // 初始化为空
+
+    if (point.y() >= 0 && point.y() < m_borderSize) edges |= Qt::TopEdge;
+    if (point.x() >= width() - m_borderSize && point.x() < width()) edges |= Qt::RightEdge;
+    if (point.y() >= height() - m_borderSize && point.y() < height()) edges |= Qt::BottomEdge;
+    if (point.x() >= 0 && point.x() < m_borderSize) edges |= Qt::LeftEdge;
+
+    return edges;
 }

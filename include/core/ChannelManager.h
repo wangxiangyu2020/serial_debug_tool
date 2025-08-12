@@ -26,10 +26,7 @@ struct ChannelInfo
     QString color;
 
     ChannelInfo() = default;
-
-    ChannelInfo(const QString& i, const QString& n, const QString& c) : id(i), name(n), color(c)
-    {
-    }
+    ChannelInfo(const QString& i, const QString& n, const QString& c) : id(i), name(n), color(c) {}
 };
 
 class ChannelManager : public QObject
@@ -37,61 +34,74 @@ class ChannelManager : public QObject
     Q_OBJECT
 
 public:
+    // 静态工厂方法/单例方法
     static ChannelManager* getInstance();
 
-    // 通道操作
+    // 拷贝控制
+    ChannelManager(const ChannelManager&) = delete;
+    ChannelManager& operator=(const ChannelManager&) = delete;
+
+    // 通道操作方法
     bool addChannel(const QString& id, const QString& name, const QString& color);
     bool removeChannel(const QString& id);
     bool updateChannel(const QString& id, const QString& name, const QString& newColor);
     void clearChannels();
-    // 查询操作
+
+    // 查询操作方法
     QList<ChannelInfo> getAllChannels() const;
     ChannelInfo getChannel(const QString& id) const;
     bool hasChannel(const QString& id) const;
     int getChannelCount() const;
-    // 通道数据crud操作
+
+    // 通道数据操作方法
     void addChannelData(const QString& channelId, const QVariant& data);
     void clearAllChannelData();
 
+    // 数据分发控制方法
     void startDataDispatch();
     void stopDataDispatch();
 
+    // 采样率配置方法
     int getSampleRate() const;
     void setSampleRate(int rate);
-
-private:
-    explicit ChannelManager(QObject* parent = nullptr);
-    ~ChannelManager() = default;
-
-    ChannelManager(const ChannelManager&) = delete;
-    ChannelManager& operator=(const ChannelManager&) = delete;
-
-private slots:
-    void dispatchQueuedData(); //
 
 signals:
     void channelAdded(const QString& name, const QString& color);
     void channelRemoved(const QString& name);
     void channelUpdated(const QString& name, const QString& color);
     void channelsCleared();
-
     void channelDataAdded(const QString& channelId, const QVariant& data);
     void channelDataProcess(bool status);
     void channelsDataAllCleared();
     void importChannelsData();
     void channelsExportData();
 
+private slots:
+    void dispatchQueuedData();
+
 private:
+    // 构造函数和析构函数
+    explicit ChannelManager(QObject* parent = nullptr);
+    ~ChannelManager() = default;
+
+    // 静态成员变量
     static ChannelManager* m_instance;
     static QMutex m_mutex;
-    QMap<QString, ChannelInfo> m_channels; // 改为存储完整的ChannelInfo
+
+    // 核心数据成员
+    QMap<QString, ChannelInfo> m_channels;
+    QQueue<QPair<QString, QVariant>> m_dataQueue;
+
+    // 定时器对象
+    QTimer* m_dataDispatchTimer = nullptr;
+
+    // 同步对象
     mutable QMutex m_dataMutex;
-    // 通道数据相关
     mutable QMutex m_channelDataMutex;
-    QTimer* m_dataDispatchTimer = nullptr; // 数据分发定时器
-    QQueue<QPair<QString, QVariant>> m_dataQueue; // 数据队列
-    mutable QMutex m_queueMutex; // 队列互斥锁
-    bool m_isDispatching = false; // 是否正在分发数据
+    mutable QMutex m_queueMutex;
+
+    // 配置变量
+    bool m_isDispatching = false;
     int m_sampleRate = 100;
 };
 

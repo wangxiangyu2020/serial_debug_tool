@@ -9,6 +9,7 @@
   */
 #include "ui/RemoveChannelDialog.h"
 
+// 构造函数和析构函数
 RemoveChannelDialog::RemoveChannelDialog(QWidget* parent)
     : CDialogBase(parent, "移除通道", QSize(450, 300))
 {
@@ -17,6 +18,7 @@ RemoveChannelDialog::RemoveChannelDialog(QWidget* parent)
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/remove_channel_dialog.qss");
 }
 
+// 配置方法
 void RemoveChannelDialog::setExistingChannels(const QList<ChannelInfo>& channels)
 {
     m_pChannelListWidget->clear();
@@ -73,6 +75,7 @@ void RemoveChannelDialog::setExistingChannels(const QList<ChannelInfo>& channels
     }
 }
 
+// 重写基类虚函数
 void RemoveChannelDialog::createComponents()
 {
     // 已添加通道列表
@@ -125,6 +128,7 @@ void RemoveChannelDialog::onConfirmClicked()
     CDialogBase::onConfirmClicked();
 }
 
+// 私有方法
 void RemoveChannelDialog::setUI()
 {
     this->createComponents();

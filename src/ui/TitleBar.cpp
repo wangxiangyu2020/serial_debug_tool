@@ -10,6 +10,7 @@
 
 #include "ui/TitleBar.h"
 
+// 构造函数和析构函数
 TitleBar::TitleBar(QWidget* parent)
     : QWidget(parent)
 {
@@ -17,6 +18,36 @@ TitleBar::TitleBar(QWidget* parent)
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/title_bar.qss");
 }
 
+// private slots
+void TitleBar::onClicked()
+{
+    QPushButton* pBtn = qobject_cast<QPushButton*>(sender());
+    QWidget* pWindow = this->window();
+
+    if (pBtn == m_pMinBtn)
+    {
+        pWindow->showMinimized();
+    }
+    else if (pBtn == m_pMaxBtn)
+    {
+        if (pWindow->isMaximized())
+        {
+            pWindow->showNormal();
+            m_pMaxBtn->setText("□");
+        }
+        else
+        {
+            pWindow->showMaximized();
+            m_pMaxBtn->setText("❐");
+        }
+    }
+    else if (pBtn == m_pCloseBtn)
+    {
+        emit sigClosed();
+    }
+}
+
+// 私有方法
 void TitleBar::setUI()
 {
     this->setAttribute(Qt::WA_StyledBackground);
@@ -63,6 +94,7 @@ void TitleBar::setUI()
     this->connect(m_pCloseBtn, &QPushButton::clicked, this, &TitleBar::onClicked);
 }
 
+// 事件处理方法
 void TitleBar::mousePressEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton)
@@ -111,32 +143,4 @@ void TitleBar::mouseReleaseEvent(QMouseEvent* event)
 void TitleBar::mouseDoubleClickEvent(QMouseEvent* event)
 {
     emit m_pMaxBtn->clicked();
-}
-
-void TitleBar::onClicked()
-{
-    QPushButton* pBtn = qobject_cast<QPushButton*>(sender());
-    QWidget* pWindow = this->window();
-
-    if (pBtn == m_pMinBtn)
-    {
-        pWindow->showMinimized();
-    }
-    else if (pBtn == m_pMaxBtn)
-    {
-        if (pWindow->isMaximized())
-        {
-            pWindow->showNormal();
-            m_pMaxBtn->setText("□");
-        }
-        else
-        {
-            pWindow->showMaximized();
-            m_pMaxBtn->setText("❐");
-        }
-    }
-    else if (pBtn == m_pCloseBtn)
-    {
-        emit sigClosed();
-    }
 }

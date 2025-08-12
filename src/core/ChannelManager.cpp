@@ -16,14 +16,6 @@
 ChannelManager* ChannelManager::m_instance = nullptr;
 QMutex ChannelManager::m_mutex;
 
-ChannelManager::ChannelManager(QObject* parent)
-    : QObject(parent)
-{
-    m_dataDispatchTimer = new QTimer(this);
-    m_dataDispatchTimer->setInterval(16); // 约60FPS
-    this->connect(m_dataDispatchTimer, &QTimer::timeout, this, &ChannelManager::dispatchQueuedData);
-}
-
 ChannelManager* ChannelManager::getInstance()
 {
     if (m_instance == nullptr)
@@ -35,6 +27,14 @@ ChannelManager* ChannelManager::getInstance()
         }
     }
     return m_instance;
+}
+
+ChannelManager::ChannelManager(QObject* parent)
+    : QObject(parent)
+{
+    m_dataDispatchTimer = new QTimer(this);
+    m_dataDispatchTimer->setInterval(16); // 约60FPS
+    this->connect(m_dataDispatchTimer, &QTimer::timeout, this, &ChannelManager::dispatchQueuedData);
 }
 
 bool ChannelManager::addChannel(const QString& id, const QString& name, const QString& color)

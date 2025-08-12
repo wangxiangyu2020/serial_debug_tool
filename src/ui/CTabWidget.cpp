@@ -10,6 +10,7 @@
 
 #include "ui/CTabWidget.h"
 
+// 构造函数和析构函数
 CTabWidget::CTabWidget(QWidget* parent)
     : QTabWidget(parent)
 {
@@ -17,6 +18,7 @@ CTabWidget::CTabWidget(QWidget* parent)
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/tab_bar.qss");
 }
 
+// 私有方法
 void CTabWidget::setUI()
 {
     this->setAttribute(Qt::WA_StyledBackground);
