@@ -78,7 +78,7 @@ void SerialPortConfigTab::connectSignals()
                   {
                       this->readySaveFile(status);
                   });
-    this->connect(SerialPortConnectConfigWidget::getSerialPortManager(), &SerialPortManager::sigReceiveData,
+    this->connect(SerialPortManager::getInstance(), &SerialPortManager::sigReceiveData,
                   [this](const QByteArray& data)
                   {
                       Qt::CheckState state = m_pSerialPortReceiveSettingsWidget->getSaveToFileCheckBox()->checkState();

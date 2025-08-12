@@ -90,8 +90,7 @@ void SerialPortDataSendWidget::connectSignals()
 
 void SerialPortDataSendWidget::onSendButtonClicked()
 {
-    SerialPortManager* serialPortManager = SerialPortConnectConfigWidget::getSerialPortManager();
-    auto serialPort = serialPortManager->getSerialPort();
+    auto serialPort = SerialPortManager::getInstance()->getSerialPort();
     if (!serialPort->isOpen())
     {
         CMessageBox::showToast(tr("串口未打开"));
@@ -99,5 +98,5 @@ void SerialPortDataSendWidget::onSendButtonClicked()
     }
     // 获取发送数据并传给串口管理器进行处理
     auto sendByteArray = m_pSendTextEdit->toPlainText().toLocal8Bit();
-    serialPortManager->handleWriteData(sendByteArray);
+    SerialPortManager::getInstance()->handleWriteData(sendByteArray);
 }

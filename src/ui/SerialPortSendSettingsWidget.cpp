@@ -87,15 +87,15 @@ void SerialPortSendSettingsWidget::connectSignals()
 {
     this->connect(m_pHexSendCheckBox, &QCheckBox::toggled, [this](bool checked)
     {
-        emit SerialPortConnectConfigWidget::getSerialPortManager()->sigHexSend(checked);
+        emit SerialPortManager::getInstance()->sigHexSend(checked);
     });
     this->connect(m_pShowSendStringCheckBox, &QCheckBox::toggled, [this](bool checked)
     {
-        emit SerialPortConnectConfigWidget::getSerialPortManager()->sigSendStringDisplay(checked);
+        emit SerialPortManager::getInstance()->sigSendStringDisplay(checked);
     });
     this->connect(m_pTimedSendCheckBox, &QCheckBox::toggled, [this](bool checked)
     {
-        if (!SerialPortConnectConfigWidget::getSerialPortManager()->getSerialPort()->isOpen())
+        if (!SerialPortManager::getInstance()->getSerialPort()->isOpen())
         {
             CMessageBox::showToast(tr("请先打开串口"));
             m_pTimedSendCheckBox->setChecked(false);
@@ -103,6 +103,6 @@ void SerialPortSendSettingsWidget::connectSignals()
         }
         this->m_pIntervalEdit->setEnabled(!checked);
         double timers = this->m_pIntervalEdit->text().toDouble();
-        emit SerialPortConnectConfigWidget::getSerialPortManager()->sigTimedSend(checked, timers);
+        emit SerialPortManager::getInstance()->sigTimedSend(checked, timers);
     });
 }

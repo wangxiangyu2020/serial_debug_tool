@@ -56,8 +56,6 @@ private:
     QVBoxLayout* m_pMainLayout = nullptr;
     QPlainTextEdit* m_pReceiveTextEdit = nullptr;
     QCheckBox* m_pAutoScrollCheckbox = nullptr;
-
-    SerialPortManager* m_pSerialPortManager = nullptr;
 };
 
 #endif //SERIALPORTDATARECEIVEWIDGET_H

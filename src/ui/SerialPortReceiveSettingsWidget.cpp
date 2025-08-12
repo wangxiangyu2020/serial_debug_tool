@@ -87,11 +87,11 @@ void SerialPortReceiveSettingsWidget::connectSignals()
     });
     this->connect(m_pHexDisplayCheckBox, &QCheckBox::toggled, [this](bool checked)
     {
-        emit SerialPortConnectConfigWidget::getSerialPortManager()->sigHexDisplay(checked);
+        emit SerialPortManager::getInstance()->sigHexDisplay(checked);
     });
     this->connect(m_pDisplayTimestampCheckBox, &QCheckBox::toggled, [this](bool checked)
     {
-        emit SerialPortConnectConfigWidget::getSerialPortManager()->sigDisplayTimestamp(checked);
+        emit SerialPortManager::getInstance()->sigDisplayTimestamp(checked);
     });
     this->connect(m_pSaveToFileCheckBox, &QCheckBox::toggled, [this](bool checked)
     {

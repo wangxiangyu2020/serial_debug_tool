@@ -14,7 +14,7 @@ static SerialPortDataReceiveWidget* pSerialPortDataReceiveWidget = nullptr;
 static QPlainTextEdit* pReceiveTextEdit = nullptr;
 
 SerialPortDataReceiveWidget::SerialPortDataReceiveWidget(QWidget* parent)
-    : QWidget(parent), m_pSerialPortManager(new SerialPortManager(this))
+    : QWidget(parent)
 {
     this->setUI();
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/serial_port_data_receive_widget.qss");
@@ -100,13 +100,13 @@ void SerialPortDataReceiveWidget::createLayout()
 
 void SerialPortDataReceiveWidget::connectSignals()
 {
-    this->connect(SerialPortConnectConfigWidget::getSerialPortManager(), &SerialPortManager::sigReceiveData, this,
+    this->connect(SerialPortManager::getInstance(), &SerialPortManager::sigReceiveData, this,
                   &SerialPortDataReceiveWidget::displayReceiveData);
     this->connect(this, &SerialPortDataReceiveWidget::sigClearReceiveData, [this]()
     {
         m_pReceiveTextEdit->clear();
     });
-    this->connect(SerialPortConnectConfigWidget::getSerialPortManager(), &SerialPortManager::sigSendData2Receive,
+    this->connect(SerialPortManager::getInstance(), &SerialPortManager::sigSendData2Receive,
                   [this](const QByteArray& data)
                   {
                       this->displayReceiveData(data);

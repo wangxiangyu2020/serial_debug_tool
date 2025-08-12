@@ -13,10 +13,55 @@
 #include "ui/SerialPortDataSendWidget.h"
 #include "ui/SerialPortSendSettingsWidget.h"
 
+// 静态成员定义
+SerialPortManager* SerialPortManager::m_pInstance = nullptr;
+QMutex SerialPortManager::m_mutex;
+
+// 静态工厂方法/单例方法
+SerialPortManager* SerialPortManager::getInstance()
+{
+    if (m_pInstance == nullptr)
+    {
+        QMutexLocker locker(&m_mutex);
+        if (m_pInstance == nullptr) m_pInstance = new SerialPortManager();
+    }
+    return m_pInstance;
+}
+
+// 构造函数
 SerialPortManager::SerialPortManager(QObject* parent)
     : QObject(parent), m_pSerialPort(new QSerialPort(this))
 {
     this->connectSignals();
+}
+
+// 主要业务方法
+bool SerialPortManager::openSerialPort(const QMap<QString, QVariant>& serialParams)
+{
+    QMutexLocker locker(&m_serialMutex);
+    if (m_pSerialPort->isOpen())
+    {
+        this->closeSerialPort();
+        QThread::msleep(100);
+    }
+    this->configureSerialPort(serialParams);
+    if (!m_pSerialPort->open(QIODevice::ReadWrite))
+    {
+        this->handlerError(m_pSerialPort->error());
+        return false;
+    }
+    return true;
+}
+
+bool SerialPortManager::closeSerialPort()
+{
+    QMutexLocker locker(&m_serialMutex);
+    if (m_pSerialPort->isOpen())
+    {
+        m_pSerialPort->close();
+        return true;
+    }
+    return false;
 }
 
 QSerialPort* SerialPortManager::getSerialPort() const
@@ -24,6 +69,21 @@ QSerialPort* SerialPortManager::getSerialPort() const
     return m_pSerialPort;
 }
 
+void SerialPortManager::startWaveformRecording()
+{
+    QMutexLocker locker(&m_channelMutex);
+    m_channelManager = ChannelManager::getInstance();
+    m_sampleRate = static_cast<double>(m_channelManager->getSampleRate());
+    this->clearAllChannelData();
+    ChannelManager* manager = ChannelManager::getInstance();
+    QList<ChannelInfo> channels = manager->getAllChannels();
+    for (const auto& channel : channels)
+    {
+        m_channelIds.insert(channel.id);
+    }
+}
+
+// 配置方法
 void SerialPortManager::setHexSendStatus(bool status)
 {
     m_isHexSend = status;
@@ -49,41 +109,13 @@ void SerialPortManager::setChannelDataProcess(bool status)
     m_isChannelDataProcess = status;
 }
 
+// 获取方法
 bool SerialPortManager::getChannelDataProcess()
 {
     return m_isChannelDataProcess;
 }
 
-bool SerialPortManager::openSerialPort(const QMap<QString, QVariant>& serialParams)
-{
-    QMutexLocker locker(&m_serialMutex);
-    if (m_pSerialPort->isOpen())
-    {
-        this->closeSerialPort();
-        QThread::msleep(100);
-    }
-    // 串口配置
-    this->configureSerialPort(serialParams);
-    // 尝试打开串口
-    if (!m_pSerialPort->open(QIODevice::ReadWrite))
-    {
-        this->handlerError(m_pSerialPort->error());
-        return false;
-    }
-    return true;
-}
-
-bool SerialPortManager::closeSerialPort()
-{
-    QMutexLocker locker(&m_serialMutex);
-    if (m_pSerialPort->isOpen())
-    {
-        m_pSerialPort->close();
-        return true;
-    }
-    return false;
-}
-
+// 数据处理方法
 void SerialPortManager::handleWriteData(const QByteArray& writeByteArray)
 {
     if (m_isSendStringDisplay)
@@ -106,6 +138,20 @@ void SerialPortManager::handleReadData(const QByteArray& readByteArray)
     emit sigReceiveData(showByteArray);
 }
 
+void SerialPortManager::handleChannelData(const QByteArray& data)
+{
+    ThreadPoolManager::addTask([this, data]()
+    {
+        QMutexLocker locker(&m_channelMutex);
+        for (char c : data)
+        {
+            m_dataQueue.enqueue(c);
+        }
+        this->processQueueInternal();
+    });
+}
+
+// 静态错误处理
 void SerialPortManager::handlerError(QSerialPort::SerialPortError error)
 {
     if (error == QSerialPort::NoError) return;
@@ -145,56 +191,34 @@ void SerialPortManager::handlerError(QSerialPort::SerialPortError error)
     CMessageBox::showToast(errorMsg);
 }
 
-void SerialPortManager::handleChannelData(const QByteArray& data)
+// 私有槽函数
+void SerialPortManager::onReadyRead()
 {
-    ThreadPoolManager::addTask([this, data]()
-    {
-        QMutexLocker locker(&m_channelMutex);
-        for (char c : data)
-        {
-            m_dataQueue.enqueue(c);
-        }
-        this->processQueueInternal();
-    });
+    this->serialPortRead();
 }
 
-void SerialPortManager::startWaveformRecording()
-{
-    QMutexLocker locker(&m_channelMutex);
-    m_channelManager = ChannelManager::getInstance();
-    m_sampleRate = static_cast<double>(m_channelManager->getSampleRate());
-    this->clearAllChannelData();
-    ChannelManager* manager = ChannelManager::getInstance();
-    QList<ChannelInfo> channels = manager->getAllChannels();
-    for (const auto& channel : channels)
-    {
-        m_channelIds.insert(channel.id);
-    }
-}
-
+// 私有方法
 void SerialPortManager::connectSignals()
 {
-    SerialPortManager* manager = SerialPortConnectConfigWidget::getSerialPortManager();
     ChannelManager* channelManager = ChannelManager::getInstance();
-    if (!manager) return;
-    this->connect(manager->getSerialPort(), &QSerialPort::readyRead, manager, &SerialPortManager::onReadyRead);
-    this->connect(manager, &SerialPortManager::sigHexDisplay, [manager](bool isHex)
+    this->connect(this->getSerialPort(), &QSerialPort::readyRead, this, &SerialPortManager::onReadyRead);
+    this->connect(this, &SerialPortManager::sigHexDisplay, [this](bool isHex)
     {
-        manager->setHexDisplayStatus(isHex);
+        this->setHexDisplayStatus(isHex);
     });
-    this->connect(manager, &SerialPortManager::sigHexSend, [manager](bool isHex)
+    this->connect(this, &SerialPortManager::sigHexSend, [this](bool isHex)
     {
-        manager->setHexSendStatus(isHex);
+        this->setHexSendStatus(isHex);
     });
-    this->connect(manager, &SerialPortManager::sigSendData, [manager](const QByteArray& data)
+    this->connect(this, &SerialPortManager::sigSendData, [this](const QByteArray& data)
     {
-        manager->serialPortWrite(data);
+        this->serialPortWrite(data);
     });
-    this->connect(manager, &SerialPortManager::sigSendStringDisplay, [manager](bool isDisplay)
+    this->connect(this, &SerialPortManager::sigSendStringDisplay, [this](bool isDisplay)
     {
-        manager->setSendStringDisplayStatus(isDisplay);
+        this->setSendStringDisplayStatus(isDisplay);
     });
-    this->connect(manager, &SerialPortManager::sigTimedSend, [this, manager](bool isTimed, double interval)
+    this->connect(this, &SerialPortManager::sigTimedSend, [this](bool isTimed, double interval)
     {
         static QPointer<QTimer> timedSendTimer;
         if (timedSendTimer)
@@ -204,35 +228,33 @@ void SerialPortManager::connectSignals()
         }
         if (!isTimed)
             return;
-        // 创建新的定时器
         timedSendTimer = new QTimer(this);
-        connect(timedSendTimer, &QTimer::timeout, [manager]()
+        connect(timedSendTimer, &QTimer::timeout, [this]()
         {
-            if (!manager->getSerialPort()->isOpen())
+            if (!this->getSerialPort()->isOpen())
             {
                 SerialPortSendSettingsWidget::getTimedSendCheckBox()->setChecked(false);
                 timedSendTimer->stop();
                 return;
             }
             QByteArray sendByteArray = SerialPortDataSendWidget::getSendTextEdit()->toPlainText().toLocal8Bit();
-            manager->handleWriteData(sendByteArray);
+            this->handleWriteData(sendByteArray);
         });
-        // 启动定时器，间隔为interval秒转换为毫秒
         int intervalMs = static_cast<int>(interval * 1000);
         timedSendTimer->start(intervalMs);
     });
-    this->connect(manager, &SerialPortManager::sigDisplayTimestamp, [manager](bool isDisplay)
+    this->connect(this, &SerialPortManager::sigDisplayTimestamp, [this](bool isDisplay)
     {
-        manager->setTimestampStatus(isDisplay);
+        this->setTimestampStatus(isDisplay);
     });
-    this->connect(channelManager, &ChannelManager::channelDataProcess, [manager](bool status)
+    this->connect(channelManager, &ChannelManager::channelDataProcess, [this](bool status)
     {
-        if (status) manager->startWaveformRecording();
-        manager->setChannelDataProcess(status);
+        if (status) this->startWaveformRecording();
+        this->setChannelDataProcess(status);
     });
-    this->connect(channelManager, &ChannelManager::channelsDataAllCleared, [manager]()
+    this->connect(channelManager, &ChannelManager::channelsDataAllCleared, [this]()
     {
-        manager->clearAllChannelData();
+        this->clearAllChannelData();
     });
 }
 
@@ -251,7 +273,7 @@ void SerialPortManager::configureSerialPort(const QMap<QString, QVariant>& seria
     m_pSerialPort->setParity(parity);
     m_pSerialPort->setStopBits(stopBits);
     m_pSerialPort->setFlowControl(flowControl);
-    m_pSerialPort->setReadBufferSize(1024 * 1024); // 1MB缓冲区
+    m_pSerialPort->setReadBufferSize(1024 * 1024);
 }
 
 void SerialPortManager::serialPortWrite(const QByteArray& data)
@@ -273,7 +295,6 @@ void SerialPortManager::serialPortRead()
         QMutexLocker locker(&m_serialMutex);
         if (this->getChannelDataProcess())
             this->handleChannelData(readByteArray);
-        // 处理读取到的数据
         this->handleReadData(readByteArray);
     });
 }
@@ -318,7 +339,6 @@ void SerialPortManager::processDataPointInternal(const QByteArray& dataPoint)
 
 void SerialPortManager::processQueueInternal()
 {
-    // 添加一个保护性检查，避免队列过大导致内存问题
     if (m_dataQueue.size() > MAX_QUEUE_SIZE)
     {
         m_dataQueue.clear();
@@ -328,7 +348,6 @@ void SerialPortManager::processQueueInternal()
     while (!m_dataQueue.isEmpty())
     {
         char ch = m_dataQueue.dequeue();
-        // 遇到分隔符时处理数据点
         if (ch == ',')
         {
             if (!m_currentPoint.isEmpty())
@@ -338,12 +357,6 @@ void SerialPortManager::processQueueInternal()
             }
             continue;
         }
-        // 普通字符添加到当前数据点
         m_currentPoint.append(ch);
     }
-}
-
-void SerialPortManager::onReadyRead()
-{
-    this->serialPortRead();
 }
