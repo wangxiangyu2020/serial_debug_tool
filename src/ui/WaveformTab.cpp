@@ -15,7 +15,7 @@ WaveformTab::WaveformTab(QWidget* parent)
     : QWidget(parent)
 {
     this->setUI();
-    StyleLoader::loadStyleFromFile(this, ":resources/qss/wave_form_tab.qss");
+    StyleLoader::loadStyleFromFile(this, ":/resources/qss/wave_form_tab.qss");
 }
 
 // 私有方法

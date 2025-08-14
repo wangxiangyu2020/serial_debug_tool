@@ -1,0 +1,131 @@
+TcpNetworkConfigTab {
+    background-color: #f8f9fa;
+    border-left: 1px solid #000000;
+    border-right: 1px solid #000000;
+    border-bottom: 1px solid #000000;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+/* === 标签样式 === */
+QLabel {
+    color: #495057;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 0;
+    background-color: transparent;
+}
+
+/* === 紧凑型下拉框样式 === */
+QComboBox {
+    background-color: white;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 3px 6px;
+    min-height: 26px;
+    max-width: 140px;
+    min-width: 100px;
+    font-size: 12px;
+    color: #212529;
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 18px;
+    border-left: 1px solid #ced4da;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    background-color: #e9ecef;
+}
+
+QComboBox::down-arrow {
+    image: url(:/resources/icons/down_arrow.svg);
+    width: 9px;
+    height: 9px;
+}
+
+/* === 下拉框状态效果 === */
+QComboBox:hover {
+    border-color: #80bdff;
+}
+
+QComboBox:on {
+    border: 1px solid #80bdff;
+}
+
+/* === 下拉列表项样式 - 完全移除阴影效果 === */
+QComboBox QAbstractItemView {
+    background-color: white;
+    border: 1px solid #ced4da; /* 移除所有边框效果 */
+    border-radius: 4px;
+    font-size: 12px;
+    padding: 2px;
+
+    /* 完全移除阴影效果 */
+    background-clip: border;
+    margin: 0;
+    padding: 0;
+
+    /* 优化选中项样式 */
+    selection-background-color: #e3f2fd;
+    selection-color: #0d6efd;
+
+    /* 移除所有装饰效果 */
+    outline: 0;
+}
+
+/* 选中项悬停效果 */
+QComboBox QAbstractItemView::item {
+    padding: 2px 4px;
+    background-color: transparent;
+    border: none;
+}
+
+QComboBox QAbstractItemView::item:hover {
+    background-color: #f0f7ff;
+    color: #0a58ca;
+    border: none;
+}
+
+QComboBox QAbstractItemView::item:selected {
+    background-color: #e3f2fd;
+    color: #0d6efd;
+    border: none;
+}
+
+/* === 下拉框滑动条美化，仅影响 QComboBox 下拉列表 === */
+QComboBox QAbstractItemView QScrollBar:vertical {
+    background: #f1f3f4;
+    width: 8px;
+    margin: 2px 0 2px 0;
+    border-radius: 4px;
+}
+
+QComboBox QAbstractItemView QScrollBar::handle:vertical {
+    background: #b0c4de;
+    min-height: 20px;
+    border-radius: 4px;
+}
+
+QComboBox QAbstractItemView QScrollBar::handle:vertical:hover {
+    background: #90a4ae;
+}
+
+QComboBox QAbstractItemView QScrollBar::add-line:vertical,
+QComboBox QAbstractItemView QScrollBar::sub-line:vertical {
+    background: none;
+    height: 0px;
+}
+
+QComboBox QAbstractItemView QScrollBar::up-arrow:vertical,
+QComboBox QAbstractItemView QScrollBar::down-arrow:vertical {
+    background: none;
+    width: 0px;
+    height: 0px;
+}
+
+QComboBox QAbstractItemView QScrollBar::add-page:vertical,
+QComboBox QAbstractItemView QScrollBar::sub-page:vertical {
+    background: none;
+}

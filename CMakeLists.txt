@@ -91,6 +91,8 @@ qt_add_resources(${PROJECT_NAME} "resources"
         resources/qss/remove_channel_dialog.qss
         resources/qss/sample_rate_dialog.qss
         resources/qss/dialog_base.qss
+        resources/qss/tcp_network_config_tab.qss
+        resources/qss/tcp_network_client_wdiget.qss
         resources/web/echarts.min.js
         resources/web/wave.html
         README.md

@@ -1,0 +1,203 @@
+TcpNetworkClientWidget {
+    background-color: #f8f9fa; /* Light gray background from sample */
+    border: 1px solid #dee2e6;  /* A slightly softer border color */
+    border-radius: 8px;
+}
+
+/* === GroupBox Style === */
+QGroupBox {
+    background-color: transparent;
+    border: 1px solid #e9ecef; /* Light border to separate sections */
+    border-radius: 6px;
+    margin-top: 12px; /* Space for the title */
+    padding: 15px 10px 10px 10px;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 5px;
+    left: 10px; /* Position title slightly indented */
+    color: #495057;
+    font-size: 13px;
+    font-weight: 600;
+    background-color: #f8f9fa; /* Match parent background */
+}
+
+
+/* === Label Style === */
+QLabel {
+    color: #495057;
+    font-size: 12px;
+    font-weight: 500;
+    background-color: transparent;
+    padding: 2px;
+}
+
+
+/* === LineEdit Style (IP, Port, Interval) === */
+QLineEdit {
+    background-color: white;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    color: #212529;
+    min-height: 22px;
+}
+
+QLineEdit:hover {
+    border-color: #adb5bd;
+}
+
+QLineEdit:focus {
+    border-color: #86b7fe; /* Blue glow on focus */
+    /* Note: QSS does not support the 'box-shadow' property like CSS. */
+    /* A colored border is the simplest QSS-only way to indicate focus. */
+}
+
+QLineEdit:disabled {
+    background-color: #e9ecef;
+    color: #6c757d;
+}
+
+
+/* === PushButton Style === */
+QPushButton {
+    border-radius: 4px;
+    padding: 5px 15px;
+    font-size: 12px;
+    font-weight: 500;
+    min-height: 22px;
+}
+
+/* --- Primary buttons --- */
+/* Style for main action buttons like 'Connect' and 'Send'. */
+/* This uses an ID selector, so ensure you set the objectName in your C++ code! */
+/* e.g., m_pSendButton->setObjectName("m_pSendButton"); */
+QPushButton#m_pConnectButton,
+QPushButton#m_pSendButton {
+    color: white;
+    background-color: #0d6efd; /* Primary blue */
+    border: 1px solid #0d6efd;
+}
+
+QPushButton#m_pConnectButton:hover,
+QPushButton#m_pSendButton:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+QPushButton#m_pConnectButton:pressed,
+QPushButton#m_pSendButton:pressed {
+    background-color: #0a58ca;
+    border-color: #0a53be;
+}
+
+/* --- Secondary button --- */
+QPushButton#m_pClearDataButton {
+    color: white;
+    background-color: #0d6efd; /* Primary blue */
+    border: 1px solid #0d6efd;
+}
+
+QPushButton#m_pClearDataButton:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+QPushButton#m_pClearDataButton:pressed {
+    background-color: #0a58ca;
+    border-color: #0a53be;
+}
+
+
+/* === PlainTextEdit Style (Receive and Send areas) === */
+QPlainTextEdit {
+    background-color: #ffffff;
+    color: #212529;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 5px;
+    font-family: "Consolas", "Courier New", monospace; /* Consistent with your code */
+    font-size: 13px;
+}
+
+QPlainTextEdit:hover {
+    border-color: #adb5bd;
+}
+
+QPlainTextEdit:focus {
+    border-color: #86b7fe;
+}
+
+QPlainTextEdit:read-only {
+    background-color: #f8f9fa; /* Slightly different background for read-only */
+}
+
+
+/* === CheckBox Style === */
+QCheckBox {
+    color: #495057;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 1px 0 1px 15px;
+    spacing: 6px;
+    background-color: transparent;
+}
+
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    background-color: #ffffff;
+}
+
+QCheckBox::indicator:hover {
+    border-color: #80bdff;
+}
+
+QCheckBox::indicator:checked {
+    image: url(:/resources/icons/checkmark_blue.svg);
+    background-color: #ffffff;
+    border: 1px solid #ced4da;
+}
+
+/* === Global ScrollBar Style (For PlainTextEdit etc.) === */
+QScrollBar:vertical {
+    background: #f1f3f4;
+    width: 10px;
+    margin: 0;
+    border-radius: 5px;
+}
+
+QScrollBar::handle:vertical {
+    background: #d3d9e0;
+    min-height: 25px;
+    border-radius: 5px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #b0b8c2;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+
+/* === Status Label Style === */
+/* Using objectName selector for specificity */
+QLabel#m_pStatusLabel {
+    color: #6c757d;
+    font-size: 12px;
+    padding: 5px 10px;
+    background-color: #e9ecef;
+    border-top: 1px solid #dee2e6;
+    /* To make it span the full width, it should be outside main layout's margins */
+}
