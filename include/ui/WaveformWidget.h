@@ -11,7 +11,7 @@
 #ifndef WAVEFORMWIDGET_H
 #define WAVEFORMWIDGET_H
 
-#include <Qwidget>
+#include <QWidget>
 #include "utils/StyleLoader.h"
 #include <QWebEngineView>
 #include <QWebEngineSettings>

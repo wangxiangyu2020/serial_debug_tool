@@ -129,7 +129,7 @@ void SerialPortRealTimeSaveWidget::createComponents()
     m_pIconLabel->setAlignment(Qt::AlignCenter);
     m_pIconLabel->setObjectName("progressIcon");
     // 使用 QIcon 替代 QPixmap，提供更好的兼容性
-    QIcon icon(":/resources/icons/ikun.svg"); // 左箭头图标
+    QIcon icon(":/resources/icons/silder_ikun.svg"); // 左箭头图标
     QPixmap pixmap = icon.pixmap(iconSize, iconSize);
     m_pIconLabel->setPixmap(pixmap);
     // 将进度条添加到容器，并设置容器的布局

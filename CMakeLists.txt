@@ -71,6 +71,8 @@ qt_add_resources(${PROJECT_NAME} "resources"
         resources/icons/start_series.svg
         resources/icons/stop_series.svg
         resources/icons/sample_rate.svg
+        resources/icons/tcp_network.svg
+        resources/icons/silder_ikun.svg
         resources/image/ikun.gif
         resources/qss/main_window.qss
         resources/qss/tab_bar.qss

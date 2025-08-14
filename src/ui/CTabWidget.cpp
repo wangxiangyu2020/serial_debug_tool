@@ -30,8 +30,10 @@ void CTabWidget::setUI()
     m_pSerialPortConfigTab = new SerialPortConfigTab();
     m_pWaveformTab = new WaveformTab();
     m_pSettingsTab = new SettingsTab();
+    m_pTcpNetworkConfigTab = new TcpNetworkConfigTab();
 
     this->addTab(m_pSerialPortConfigTab, QIcon(":/resources/icons/serial.svg"), "");
+    this->addTab(m_pTcpNetworkConfigTab, QIcon(":/resources/icons/tcp_network.svg"), "");
     this->addTab(m_pWaveformTab, QIcon(":/resources/icons/waves.svg"), "");
     this->addTab(m_pSettingsTab, QIcon(":/resources/icons/settings.svg"), "");
     this->setIconSize(QSize(24, 24));

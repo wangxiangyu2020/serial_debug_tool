@@ -16,6 +16,7 @@
 #include "ui/SettingsTab.h"
 #include "ui/WaveformTab.h"
 #include "ui/SerialPortConfigTab.h"
+#include "ui/TcpNetworkConfigTab.h"
 #include "utils/StyleLoader.h"
 #include <QTabWidget>
 #include <QTabBar>
@@ -39,6 +40,7 @@ private:
     SerialPortConfigTab* m_pSerialPortConfigTab = nullptr;
     WaveformTab* m_pWaveformTab = nullptr;
     SettingsTab* m_pSettingsTab = nullptr;
+    TcpNetworkConfigTab* m_pTcpNetworkConfigTab = nullptr;
 };
 
 #endif //TABCONTAINER_H

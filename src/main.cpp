@@ -14,13 +14,15 @@ int main(int argc, char* argv[])
 
     SplashScreen splash;
     QScopedPointer<MainWindow> mainWindow;
-    QObject::connect(&splash, &SplashScreen::finished, [&]()
-    {
-        mainWindow.reset(new MainWindow());
-        mainWindow->show();
-    });
-
-    splash.show();
+    // QObject::connect(&splash, &SplashScreen::finished, [&]()
+    // {
+    //     mainWindow.reset(new MainWindow());
+    //     mainWindow->show();
+    // });
+    //
+    // splash.show();
+    mainWindow.reset(new MainWindow());
+    mainWindow->show();
 
     int result = app.exec();
 
