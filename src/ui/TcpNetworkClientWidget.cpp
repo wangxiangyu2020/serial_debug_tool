@@ -64,6 +64,7 @@ void TcpNetworkClientWidget::createComponents()
     m_pServerIpLineEdit->setPlaceholderText("请输入服务器IP地址"); // 设置提示文字
     m_pPortLabel = new QLabel("端口:", m_pNetworkConfigGroupBox);
     m_pPortLineEdit = new QLineEdit(m_pNetworkConfigGroupBox);
+    m_pPortLineEdit->setMaximumWidth(100);
     m_pPortLineEdit->setPlaceholderText("请输入端口号");
     // 为端口号输入框添加校验器，只允许输入数字
     m_pPortValidator = new QIntValidator(0, 65535, m_pNetworkConfigGroupBox);

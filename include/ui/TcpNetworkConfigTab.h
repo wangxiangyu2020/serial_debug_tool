@@ -17,6 +17,7 @@
 #include <QVBoxLayout>
 #include "utils/StyleLoader.h"
 #include "ui/TcpNetworkClientWidget.h"
+#include "ui/TcpNetworkServerWidget.h"
 #include <QEvent>
 #include <QAbstractItemView>
 
@@ -44,7 +45,7 @@ private:
     QVBoxLayout* m_pMainLayout = nullptr;
 
     TcpNetworkClientWidget* m_pClientWidget = nullptr;
-    QWidget* m_pServerWidget = nullptr;
+    TcpNetworkServerWidget* m_pServerWidget = nullptr;
 };
 
 #endif //TCPNETWORKCONFIGTAB_H

@@ -50,8 +50,7 @@ void TcpNetworkConfigTab::createComponents()
 
     m_pClientWidget = new TcpNetworkClientWidget(this);
 
-    m_pServerWidget = new QWidget(this);
-    m_pServerWidget->setStyleSheet("background-color: rgb(255, 255, 200);");
+    m_pServerWidget = new TcpNetworkServerWidget(this);
     m_pServerWidget->hide();
 
     // 安装事件过滤器

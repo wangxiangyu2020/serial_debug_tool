@@ -1,15 +1,16 @@
-TcpNetworkClientWidget {
-    background-color: #f8f9fa; /* Light gray background from sample */
-    border: 1px solid #dee2e6;  /* A slightly softer border color */
+TcpNetworkServerWidget {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
     border-radius: 8px;
 }
 
-/* === GroupBox Style === */
+
+/* === GroupBox Style (Consistent with Client) === */
 QGroupBox {
     background-color: transparent;
-    border: 1px solid #e9ecef; /* Light border to separate sections */
+    border: 1px solid #e9ecef;
     border-radius: 6px;
-    margin-top: 12px; /* Space for the title */
+    margin-top: 12px;
     padding: 15px 10px 10px 10px;
 }
 
@@ -17,15 +18,15 @@ QGroupBox::title {
     subcontrol-origin: margin;
     subcontrol-position: top left;
     padding: 0 5px;
-    left: 10px; /* Position title slightly indented */
+    left: 10px;
     color: #495057;
     font-size: 13px;
     font-weight: 600;
-    background-color: #f8f9fa; /* Match parent background */
+    background-color: #f8f9fa;
 }
 
 
-/* === Label Style === */
+/* === Label Style (Consistent with Client) === */
 QLabel {
     color: #495057;
     font-size: 12px;
@@ -35,7 +36,7 @@ QLabel {
 }
 
 
-/* === LineEdit Style (IP, Port, Interval) === */
+/* === LineEdit Style (Port, Interval) (Consistent with Client) === */
 QLineEdit {
     background-color: white;
     border: 1px solid #ced4da;
@@ -51,9 +52,7 @@ QLineEdit:hover {
 }
 
 QLineEdit:focus {
-    border-color: #86b7fe; /* Blue glow on focus */
-    /* Note: QSS does not support the 'box-shadow' property like CSS. */
-    /* A colored border is the simplest QSS-only way to indicate focus. */
+    border-color: #86b7fe;
 }
 
 QLineEdit:disabled {
@@ -62,7 +61,7 @@ QLineEdit:disabled {
 }
 
 
-/* === PushButton Style === */
+/* === PushButton Style (Consistent with Client) === */
 QPushButton {
     border-radius: 4px;
     padding: 5px 15px;
@@ -71,33 +70,27 @@ QPushButton {
     min-height: 22px;
 }
 
-/* --- Primary buttons --- */
-/* Style for main action buttons like 'Connect' and 'Send'. */
-/* This uses an ID selector, so ensure you set the objectName in your C++ code! */
-/* e.g., m_pSendButton->setObjectName("m_pSendButton"); */
-QPushButton#m_pConnectButton,
-QPushButton#m_pSendButton {
+/* Primary buttons (Start Listen, Send) */
+QPushButton#m_pStartListenButton, QPushButton#m_pSendButton {
     color: white;
-    background-color: #0d6efd; /* Primary blue */
+    background-color: #0d6efd;
     border: 1px solid #0d6efd;
 }
 
-QPushButton#m_pConnectButton:hover,
-QPushButton#m_pSendButton:hover {
+QPushButton#m_pStartListenButton:hover, QPushButton#m_pSendButton:hover {
     background-color: #0b5ed7;
     border-color: #0a58ca;
 }
 
-QPushButton#m_pConnectButton:pressed,
-QPushButton#m_pSendButton:pressed {
+QPushButton#m_pStartListenButton:pressed, QPushButton#m_pSendButton:pressed {
     background-color: #0a58ca;
     border-color: #0a53be;
 }
 
-/* --- Secondary button --- */
+/* Secondary button (Clear) */
 QPushButton#m_pClearDataButton {
     color: white;
-    background-color: #0d6efd; /* Primary blue */
+    background-color: #0d6efd;
     border: 1px solid #0d6efd;
 }
 
@@ -112,14 +105,15 @@ QPushButton#m_pClearDataButton:pressed {
 }
 
 
-/* === PlainTextEdit Style (Receive and Send areas) === */
+/* === PlainTextEdit Style (Consistent with Client) === */
+/* This will apply to Receive, Send, and Connected Client areas */
 QPlainTextEdit {
     background-color: #ffffff;
     color: #212529;
     border: 1px solid #ced4da;
     border-radius: 4px;
     padding: 5px;
-    font-family: "Consolas", "Courier New", monospace; /* Consistent with your code */
+    font-family: "Consolas", "Courier New", monospace;
     font-size: 13px;
 }
 
@@ -132,11 +126,11 @@ QPlainTextEdit:focus {
 }
 
 QPlainTextEdit:read-only {
-    background-color: #f8f9fa; /* Slightly different background for read-only */
+    background-color: #f8f9fa;
 }
 
 
-/* === CheckBox Style === */
+/* === CheckBox Style (Consistent with Client) === */
 QCheckBox {
     color: #495057;
     font-size: 12px;
@@ -164,7 +158,53 @@ QCheckBox::indicator:checked {
     border: 1px solid #ced4da;
 }
 
-/* === Global ScrollBar Style (For PlainTextEdit etc.) === */
+/* === ComboBox Style (Send Target) === */
+QComboBox {
+    background-color: white;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    color: #212529;
+    min-height: 22px;
+}
+
+QComboBox:hover {
+    border-color: #adb5bd;
+}
+
+QComboBox:on { /* When the dropdown is open */
+    border-color: #86b7fe;
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 20px;
+    border-left: 1px solid #ced4da;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+QComboBox::down-arrow {
+    image: url(:/resources/icons/down_arrow.svg); /* Requires a down arrow icon */
+    width: 10px;
+    height: 10px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    font-size: 12px;
+    padding: 4px;
+    selection-background-color: #e3f2fd;
+    selection-color: #0d6efd;
+    outline: 0px;
+}
+
+
+/* === Global ScrollBar Style (Consistent with Client) === */
 QScrollBar:vertical {
     background: #f1f3f4;
     width: 10px;
@@ -182,11 +222,8 @@ QScrollBar::handle:vertical:hover {
     background: #b0b8c2;
 }
 
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-    height: 0px;
-}
-
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
 QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    height: 0px;
     background: none;
 }
-
