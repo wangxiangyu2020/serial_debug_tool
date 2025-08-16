@@ -45,7 +45,7 @@ public slots:
     // 以客户端模式启动
     void startClient(const QString& address, quint16 port);
     // 以服务端模式启动
-    void startServer(quint16 port);
+    void startServer(const QString& address, quint16 port);
     // 停止当前所有网络活动，并重置为空闲状态
     void stop();
     // 发送数据处理器
@@ -58,9 +58,9 @@ public slots:
 
 signals:
     // 专用于客户端的状态信息变化信号
-    void clientStatusChanged(const QString &status);
+    void clientStatusChanged(const QString& status);
     // 专用于服务端的状态信息变化信号
-    void serverStatusChanged(const QString &status, int connectionCount = 0);
+    void serverStatusChanged(const QString& status, int connectionCount = 0);
     // 收到数据信号
     void dataReceived(const QString& sourceInfo, const QByteArray& data);
     // 新客户端连接信号（仅服务端）

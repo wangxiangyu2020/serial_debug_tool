@@ -21,6 +21,10 @@
 #include <QCheckBox>
 #include <QVBoxLayout>
 #include <QComboBox>
+#include <QHostAddress>
+#include "ui/CMessageBox.h"
+#include "core/TcpNetworkManager.h"
+#include <QScrollBar>
 
 #include "utils/StyleLoader.h"
 
@@ -32,9 +36,18 @@ public:
     explicit TcpNetworkServerWidget(QWidget* parent = nullptr);
     virtual ~TcpNetworkServerWidget() = default;
 
+signals:
+    void startListenRequested(const QString&, quint16);
+    void stopListenRequested();
+
 protected:
     // 事件处理方法
     bool eventFilter(QObject* watched, QEvent* event) override;
+
+private slots:
+    void onListenButtonClicked();
+    void onStatusChanged(const QString& status, int connectionCount);
+    void onClientConnected(const QString& clientInfo, QTcpSocket* clientSocket);
 
 private:
     void setUI();
@@ -44,6 +57,8 @@ private:
     void setTextEditProperty(QPlainTextEdit* textEdit);
 
     QGroupBox* m_pNetworkConfigGroupBox = nullptr;
+    QLabel* m_pServerIpLabel = nullptr;
+    QComboBox* m_pServerIpComboBox = nullptr;
     QLabel* m_pPortLabel = nullptr;
     QLineEdit* m_pPortLineEdit = nullptr;
     QIntValidator* m_pPortValidator = nullptr;
@@ -70,10 +85,11 @@ private:
     QPushButton* m_pSendButton = nullptr;
 
     QLabel* m_pStatusTextLabel = nullptr;
-    QLabel* m_pStatusPortLabel = nullptr;
     QLabel* m_pConnectionCountLabel = nullptr;
 
     QVBoxLayout* m_pMainLayout = nullptr;
+
+    bool isListen = false;
 };
 
 #endif //TCPNETWORKSERVERWIDGET_H

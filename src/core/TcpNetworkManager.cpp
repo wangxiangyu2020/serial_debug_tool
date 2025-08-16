@@ -45,7 +45,7 @@ void TcpNetworkManager::startClient(const QString& address, quint16 port)
     m_pClientSocket->connectToHost(address, port);
 }
 
-void TcpNetworkManager::startServer(quint16 port)
+void TcpNetworkManager::startServer(const QString& address, quint16 port)
 {
     if (m_currentMode != Mode::Idle)
     {
@@ -56,7 +56,7 @@ void TcpNetworkManager::startServer(quint16 port)
     m_currentMode = Mode::Server;
     m_pTcpServer = new QTcpServer(this);
     this->connect(m_pTcpServer, &QTcpServer::newConnection, this, &TcpNetworkManager::onNewConnection);
-    if (m_pTcpServer->listen(QHostAddress::Any, port))
+    if (m_pTcpServer->listen(QHostAddress(address), port))
     {
         emit serverStatusChanged(QString("监听中... 端口: %1").arg(port));
     }
@@ -86,7 +86,7 @@ void TcpNetworkManager::stop()
         m_pTcpServer->close();
         m_pTcpServer->deleteLater();
         m_pTcpServer = nullptr;
-        emit serverStatusChanged("状态: 未连接");
+        emit serverStatusChanged("状态: 未监听");
     }
     m_currentMode = Mode::Idle;
 }
@@ -154,6 +154,11 @@ void TcpNetworkManager::onNewConnection()
             QString clientInfo = QString("%1:%2").arg(clientSocket->peerAddress().toString(),
                                                       QString::number(clientSocket->peerPort()));
             emit clientConnected(clientInfo, clientSocket);
+            if (m_pTcpServer && m_pTcpServer->isListening())
+            {
+                QString status = QString("监听中... 端口: %1").arg(m_pTcpServer->serverPort());
+                emit serverStatusChanged(status, m_connectedClients.count());
+            }
         }
     }
 }
@@ -243,6 +248,12 @@ void TcpNetworkManager::onClientDisconnected()
         m_connectedClients.removeAll(socket);
         socket->deleteLater(); // 安全地删除socket
         emit clientDisconnected(clientInfo, socket); // 传递socket指针用于UI移除
+        // 【关键】再次发射状态更新信号，包含最新的客户端数量
+        if (m_pTcpServer && m_pTcpServer->isListening())
+        {
+            QString status = QString("监听中... 端口: %1").arg(m_pTcpServer->serverPort());
+            emit serverStatusChanged(status, m_connectedClients.count());
+        }
     }
 }
 

@@ -74,7 +74,6 @@ QPushButton {
 QPushButton#m_pStartListenButton, QPushButton#m_pSendButton {
     color: white;
     background-color: #0d6efd;
-    border: 1px solid #0d6efd;
 }
 
 QPushButton#m_pStartListenButton:hover, QPushButton#m_pSendButton:hover {
@@ -85,6 +84,19 @@ QPushButton#m_pStartListenButton:hover, QPushButton#m_pSendButton:hover {
 QPushButton#m_pStartListenButton:pressed, QPushButton#m_pSendButton:pressed {
     background-color: #0a58ca;
     border-color: #0a53be;
+}
+
+/* 连接状态样式 */
+QPushButton#m_pStartListenButton[connected="true"] {
+    background-color: #dc3545;
+}
+
+QPushButton#m_pStartListenButton[connected="true"]:hover {
+    background-color: #c82333;
+}
+
+QPushButton#m_pStartListenButton[connected="true"]:pressed {
+    background-color: #bd2130;
 }
 
 /* Secondary button (Clear) */

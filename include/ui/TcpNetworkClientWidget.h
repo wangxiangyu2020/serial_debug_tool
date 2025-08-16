@@ -27,6 +27,8 @@
 #include <core/TcpNetworkManager.h>
 #include <QStyle>
 #include <QScrollBar>
+#include <QComboBox>
+#include <QFileDialog>
 
 class TcpNetworkClientWidget : public QWidget
 {
@@ -55,6 +57,7 @@ private slots:
     void onStatusChanged(const QString& status);
     void onSendButtonClicked();
     void onDisplayReceiveData(const QString& sourceInfo, const QByteArray& data);
+    void onSaveDataButtonClicked();
     void onTimedSendCheckBoxClicked(bool status);
 
 private:
@@ -65,7 +68,7 @@ private:
 
     QGroupBox* m_pNetworkConfigGroupBox = nullptr;
     QLabel* m_pServerIpLabel = nullptr;
-    QLineEdit* m_pServerIpLineEdit = nullptr;
+    QComboBox* m_pServerIpComboBox = nullptr;
     QLabel* m_pPortLabel = nullptr;
     QLineEdit* m_pPortLineEdit = nullptr;
     QIntValidator* m_pPortValidator = nullptr;
@@ -76,6 +79,7 @@ private:
 
     QCheckBox* m_pDisplayTimestampCheckBox = nullptr;
     QCheckBox* m_pHexDisplayCheckBox = nullptr;
+    QPushButton* m_pSaveDataButton = nullptr;
     QPushButton* m_pClearDataButton = nullptr;
 
     QGroupBox* m_pSendDataGroupBox = nullptr;

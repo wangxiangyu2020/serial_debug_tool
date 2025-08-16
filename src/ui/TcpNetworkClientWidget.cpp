@@ -52,11 +52,13 @@ void TcpNetworkClientWidget::onConnectButtonClicked()
 {
     if (isConnected)
     {
+        m_pServerIpComboBox->setEnabled(true);
+        m_pPortLineEdit->setEnabled(true);
         emit stopConnectionRequested();
         return;
     }
 
-    QString ipStr = m_pServerIpLineEdit->text().trimmed();
+    QString ipStr = m_pServerIpComboBox->currentText().trimmed();
     QString portStr = m_pPortLineEdit->text().trimmed();
     // 校验IP地址/主机名
     QHostAddress address(ipStr);
@@ -74,6 +76,8 @@ void TcpNetworkClientWidget::onConnectButtonClicked()
         return;
     }
 
+    m_pServerIpComboBox->setEnabled(false);
+    m_pPortLineEdit->setEnabled(false);
     emit startConnectionRequested(ipStr, port);
 }
 
@@ -82,10 +86,7 @@ void TcpNetworkClientWidget::onStatusChanged(const QString& status)
     m_pStatusLabel->setText(status);
     // 直接根据状态文本判断连接状态
     isConnected = status.contains("已连接");
-    if (!isConnected && !status.contains("已断开"))
-    {
-        return; // 既不是已连接也不是已断开，直接返回
-    }
+    if (!isConnected && !status.contains("已断开")) return; // 既不是已连接也不是已断开，直接返回
     m_pConnectButton->setProperty("connected", isConnected);
     m_pConnectButton->setText(isConnected ? "断开" : "连接");
     m_pConnectButton->style()->unpolish(m_pConnectButton);
@@ -121,6 +122,21 @@ void TcpNetworkClientWidget::onDisplayReceiveData(const QString& sourceInfo, con
     if (atBottom) vScroll->setValue(vScroll->maximum());
     // 恢复重绘
     m_pReceiveTextEdit->setUpdatesEnabled(true);
+}
+
+void TcpNetworkClientWidget::onSaveDataButtonClicked()
+{
+    QString fileName = QFileDialog::getSaveFileName(this,
+                                                    tr("保存数据"),
+                                                    QDir::homePath(),
+                                                    tr("文本文件 (*.txt)"));
+    if (fileName.isEmpty()) return;
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return;
+    QTextStream out(&file);
+    out << m_pReceiveTextEdit->toPlainText();
+    file.close();
+    CMessageBox::showToast(this, "数据已保存至" + fileName);
 }
 
 void TcpNetworkClientWidget::onTimedSendCheckBoxClicked(bool status)
@@ -163,8 +179,12 @@ void TcpNetworkClientWidget::createComponents()
     m_pNetworkConfigGroupBox = new QGroupBox("网络配置", this);
     // 2. 创建内部的所有控件
     m_pServerIpLabel = new QLabel("服务器IP:", m_pNetworkConfigGroupBox);
-    m_pServerIpLineEdit = new QLineEdit(m_pNetworkConfigGroupBox);
-    m_pServerIpLineEdit->setPlaceholderText("请输入服务器IP地址"); // 设置提示文字
+    m_pServerIpComboBox = new QComboBox(m_pNetworkConfigGroupBox);
+    m_pServerIpComboBox->setEditable(true);
+    m_pServerIpComboBox->lineEdit()->setPlaceholderText("请选择或输入服务器IP");
+    m_pServerIpComboBox->addItem("127.0.0.1");
+    m_pServerIpComboBox->addItem("0.0.0.0");
+    m_pServerIpComboBox->addItem("192.168.1.1");
     m_pPortLabel = new QLabel("端口:", m_pNetworkConfigGroupBox);
     m_pPortLineEdit = new QLineEdit(m_pNetworkConfigGroupBox);
     m_pPortLineEdit->setMaximumWidth(100);
@@ -191,6 +211,8 @@ void TcpNetworkClientWidget::createComponents()
 
     m_pDisplayTimestampCheckBox = new QCheckBox(tr("显示时间戳"));
     m_pHexDisplayCheckBox = new QCheckBox(tr("十六进制显示"));
+    m_pSaveDataButton = new QPushButton(tr("保存数据"));
+    m_pSaveDataButton->setObjectName("m_pSaveDataButton");
     m_pClearDataButton = new QPushButton(tr("清空数据"));
     m_pClearDataButton->setObjectName("m_pClearDataButton");
 
@@ -217,7 +239,7 @@ void TcpNetworkClientWidget::createLayout()
 {
     QHBoxLayout* networkCnfgLayout = new QHBoxLayout();
     networkCnfgLayout->addWidget(m_pServerIpLabel);
-    networkCnfgLayout->addWidget(m_pServerIpLineEdit);
+    networkCnfgLayout->addWidget(m_pServerIpComboBox);
     networkCnfgLayout->addSpacing(10); // 添加一点固定间距
     networkCnfgLayout->addWidget(m_pPortLabel);
     networkCnfgLayout->addWidget(m_pPortLineEdit);
@@ -231,6 +253,7 @@ void TcpNetworkClientWidget::createLayout()
     receiveToolLayout->addWidget(m_pDisplayTimestampCheckBox);
     receiveToolLayout->addWidget(m_pHexDisplayCheckBox);
     receiveToolLayout->addStretch();
+    receiveToolLayout->addWidget(m_pSaveDataButton);
     receiveToolLayout->addWidget(m_pClearDataButton);
 
     QHBoxLayout* sendToolLayout = new QHBoxLayout();
@@ -282,6 +305,7 @@ void TcpNetworkClientWidget::connectSignals()
     });
     this->connect(this, &TcpNetworkClientWidget::hexDisplay, TcpNetworkManager::getInstance(),
                   &TcpNetworkManager::setHexDisplayStatus);
+    this->connect(m_pSaveDataButton, &QPushButton::clicked, this, &TcpNetworkClientWidget::onSaveDataButtonClicked);
     this->connect(m_pClearDataButton, &QPushButton::clicked, [this]()
     {
         m_pReceiveTextEdit->clear();

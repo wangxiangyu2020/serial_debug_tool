@@ -10,6 +10,7 @@
 
 #include "ui/TcpNetworkServerWidget.h"
 
+
 TcpNetworkServerWidget::TcpNetworkServerWidget(QWidget* parent)
     : QWidget(parent)
 {
@@ -46,6 +47,70 @@ bool TcpNetworkServerWidget::eventFilter(QObject* watched, QEvent* event)
     return QWidget::eventFilter(watched, event);
 }
 
+void TcpNetworkServerWidget::onListenButtonClicked()
+{
+    if (isListen)
+    {
+        m_pServerIpComboBox->setEnabled(true);
+        m_pPortLineEdit->setEnabled(true);
+        m_pConnectedClientTextEdit->clear();
+        while (m_pSendClientComboBox->count() > 1)
+        {
+            m_pSendClientComboBox->removeItem(1); // 总是移除索引为1的项
+        }
+        emit stopListenRequested();
+        return;
+    }
+
+    QString ipStr = m_pServerIpComboBox->currentText().trimmed();
+    QString portStr = m_pPortLineEdit->text().trimmed();
+    QHostAddress address(ipStr);
+    if (address.isNull() && ipStr.toLower() != "localhost")
+    {
+        CMessageBox::showToast(this, "IP地址或主机名无效");
+        return;
+    }
+    bool isPortOk;
+    quint16 port = portStr.toUShort(&isPortOk);
+    if (!isPortOk || port == 0)
+    {
+        CMessageBox::showToast(this, "端口号必须是 1-65535 之间的数字");
+        return;
+    }
+
+    m_pServerIpComboBox->setEnabled(false);
+    m_pPortLineEdit->setEnabled(false);
+    emit startListenRequested(ipStr, port);
+}
+
+void TcpNetworkServerWidget::onStatusChanged(const QString& status, int connectionCount)
+{
+    m_pStatusTextLabel->setText(status);
+    m_pConnectionCountLabel->setText(QString("当前连接数：%1").arg(connectionCount));
+    isListen = status.contains("监听中");
+    if (!isListen && (!status.contains("监听失败") && !status.contains("未监听"))) return;
+    m_pStartListenButton->setProperty("connected", isListen);
+    m_pStartListenButton->setText(isListen ? "停止监听" : "开始监听");
+    m_pStartListenButton->style()->unpolish(m_pStartListenButton);
+    m_pStartListenButton->style()->polish(m_pStartListenButton);
+    m_pStartListenButton->update();
+}
+
+void TcpNetworkServerWidget::onClientConnected(const QString& clientInfo, QTcpSocket* clientSocket)
+{
+    m_pSendClientComboBox->addItem(clientInfo, QVariant::fromValue(clientSocket));
+    // 暂停重绘以提高性能
+    m_pConnectedClientTextEdit->setUpdatesEnabled(false);
+    // 获取当前滚动条位置
+    QScrollBar* vScroll = m_pConnectedClientTextEdit->verticalScrollBar();
+    bool atBottom = vScroll->value() == vScroll->maximum();
+    m_pConnectedClientTextEdit->appendPlainText(clientInfo);
+    // 恢复自动滚动（如果启用且之前已在底部）
+    if (atBottom) vScroll->setValue(vScroll->maximum());
+    // 恢复重绘
+    m_pConnectedClientTextEdit->setUpdatesEnabled(true);
+}
+
 void TcpNetworkServerWidget::setUI()
 {
     this->setAttribute(Qt::WA_StyledBackground);
@@ -57,6 +122,13 @@ void TcpNetworkServerWidget::setUI()
 void TcpNetworkServerWidget::createComponents()
 {
     m_pNetworkConfigGroupBox = new QGroupBox("网络配置", this);
+    m_pServerIpLabel = new QLabel("监听地址: ", m_pNetworkConfigGroupBox);
+    m_pServerIpComboBox = new QComboBox(m_pNetworkConfigGroupBox);
+    m_pServerIpComboBox->setEditable(true);
+    m_pServerIpComboBox->lineEdit()->setPlaceholderText("请选择或输入服务器IP");
+    m_pServerIpComboBox->addItem("127.0.0.1");
+    m_pServerIpComboBox->addItem("0.0.0.0");
+    m_pServerIpComboBox->addItem("192.168.1.1");
     m_pPortLabel = new QLabel("监听端口: ", m_pNetworkConfigGroupBox);
     m_pPortLineEdit = new QLineEdit(m_pNetworkConfigGroupBox);
     m_pPortLineEdit->setPlaceholderText("请输入端口号");
@@ -99,15 +171,15 @@ void TcpNetworkServerWidget::createComponents()
 
     m_pStatusTextLabel = new QLabel("状态: 未监听", this);
     m_pStatusTextLabel->setObjectName("m_pStatusTextLabel");
-    m_pStatusPortLabel = new QLabel("端口:",this);
-    m_pStatusPortLabel->setObjectName("m_pStatusPortLabel");
-    m_pConnectionCountLabel = new QLabel(" | 当前连接数: ",this);
+    m_pConnectionCountLabel = new QLabel(" 当前连接数: 0", this);
     m_pConnectionCountLabel->setObjectName("m_pConnectionCountLabel");
 }
 
 void TcpNetworkServerWidget::createLayout()
 {
     QHBoxLayout* networkCnfgLayout = new QHBoxLayout();
+    networkCnfgLayout->addWidget(m_pServerIpLabel);
+    networkCnfgLayout->addWidget(m_pServerIpComboBox);
     networkCnfgLayout->addWidget(m_pPortLabel);
     networkCnfgLayout->addWidget(m_pPortLineEdit);
     networkCnfgLayout->addWidget(m_pStartListenButton);
@@ -155,7 +227,6 @@ void TcpNetworkServerWidget::createLayout()
 
     QHBoxLayout* statusLayout = new QHBoxLayout();
     statusLayout->addWidget(m_pStatusTextLabel);
-    statusLayout->addWidget(m_pStatusPortLabel);
     statusLayout->addWidget(m_pConnectionCountLabel);
     statusLayout->addStretch();
 
@@ -171,6 +242,15 @@ void TcpNetworkServerWidget::createLayout()
 
 void TcpNetworkServerWidget::connectSignals()
 {
+    this->connect(m_pStartListenButton, &QPushButton::clicked, this, &TcpNetworkServerWidget::onListenButtonClicked);
+    this->connect(this, &TcpNetworkServerWidget::startListenRequested, TcpNetworkManager::getInstance(),
+                  &TcpNetworkManager::startServer);
+    this->connect(this, &TcpNetworkServerWidget::stopListenRequested, TcpNetworkManager::getInstance(),
+                  &TcpNetworkManager::stop);
+    this->connect(TcpNetworkManager::getInstance(), &TcpNetworkManager::serverStatusChanged, this,
+                  &TcpNetworkServerWidget::onStatusChanged);
+    this->connect(TcpNetworkManager::getInstance(), &TcpNetworkManager::clientConnected, this,
+                  &TcpNetworkServerWidget::onClientConnected);
 }
 
 void TcpNetworkServerWidget::setTextEditProperty(QPlainTextEdit* textEdit)
