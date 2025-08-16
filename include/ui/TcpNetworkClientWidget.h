@@ -22,6 +22,11 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include "utils/StyleLoader.h"
+#include "ui/CMessageBox.h"
+#include <QHostAddress>
+#include <core/TcpNetworkManager.h>
+#include <QStyle>
+#include <QScrollBar>
 
 class TcpNetworkClientWidget : public QWidget
 {
@@ -31,9 +36,26 @@ public:
     explicit TcpNetworkClientWidget(QWidget* parent = nullptr);
     virtual ~TcpNetworkClientWidget() = default;
 
+signals:
+    void startConnectionRequested(const QString&, quint16);
+    void stopConnectionRequested();
+    void sendDataRequested(const QByteArray& data);
+    void displayTimestamp(bool status);
+    void hexDisplay(bool status);
+    void hexSend(bool status);
+    void startTimedSendRequested(double interval, const QByteArray& data);
+    void stopTimedSendRequested();
+
 protected:
     // 事件处理方法
     bool eventFilter(QObject* watched, QEvent* event) override;
+
+private slots:
+    void onConnectButtonClicked();
+    void onStatusChanged(const QString& status);
+    void onSendButtonClicked();
+    void onDisplayReceiveData(const QString& sourceInfo, const QByteArray& data);
+    void onTimedSendCheckBoxClicked(bool status);
 
 private:
     void setUI();
@@ -68,6 +90,8 @@ private:
 
 
     QVBoxLayout* m_pMainLayout = nullptr;
+
+    bool isConnected = false;
 };
 
 #endif //TCPNETWORKCLIENTWIDGET_H

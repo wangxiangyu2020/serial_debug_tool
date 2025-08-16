@@ -1,6 +1,8 @@
 // main.cpp
 #include <QApplication>
 #include "ui/SplashScreen.h"
+#include "core/TcpNetworkManager.h"
+#include "utils/ThreadSetup.h"
 #include "ui/MainWindow.h"
 #include <QWebEngineProfile>
 
@@ -11,6 +13,9 @@ int main(int argc, char* argv[])
     QFont defaultFont("Microsoft YaHei UI", 9);
     defaultFont.setStyleHint(QFont::SansSerif);
     app.setFont(defaultFont);
+
+    // 工作线程
+    AppSetup::setupManagerInThread<TcpNetworkManager>(&app, "TcpNetworkManagerThread");
 
     SplashScreen splash;
     QScopedPointer<MainWindow> mainWindow;

@@ -134,7 +134,7 @@ void SerialPortManager::handleReadData(const QByteArray& readByteArray)
     QString formattedData = isHex
                                 ? QString::fromLatin1(readByteArray.toHex(' ').toUpper())
                                 : QString::fromUtf8(readByteArray);
-    QByteArray showByteArray = m_isDisplayTimestamp ? this->generateTimestamp(formattedData) : formattedData.toUtf8();
+    QByteArray showByteArray = m_isDisplayTimestamp ? this->generateTimestamp(formattedData) : formattedData.toLocal8Bit();
     emit sigReceiveData(showByteArray);
 }
 

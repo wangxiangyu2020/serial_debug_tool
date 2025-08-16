@@ -79,19 +79,29 @@ QPushButton#m_pConnectButton,
 QPushButton#m_pSendButton {
     color: white;
     background-color: #0d6efd; /* Primary blue */
-    border: 1px solid #0d6efd;
 }
 
 QPushButton#m_pConnectButton:hover,
 QPushButton#m_pSendButton:hover {
     background-color: #0b5ed7;
-    border-color: #0a58ca;
 }
 
 QPushButton#m_pConnectButton:pressed,
 QPushButton#m_pSendButton:pressed {
     background-color: #0a58ca;
-    border-color: #0a53be;
+}
+
+/* 连接状态样式 */
+QPushButton#m_pConnectButton[connected="true"] {
+    background-color: #dc3545;
+}
+
+QPushButton#m_pConnectButton[connected="true"]:hover {
+    background-color: #c82333;
+}
+
+QPushButton#m_pConnectButton[connected="true"]:pressed {
+    background-color: #bd2130;
 }
 
 /* --- Secondary button --- */

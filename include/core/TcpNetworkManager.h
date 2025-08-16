@@ -16,6 +16,10 @@
 #include <QTcpSocket>
 #include <QTcpServer>
 #include <QList>
+#include <QDebug>
+#include <QDateTime>
+#include <QPlainTextEdit>
+#include <QTimer>
 
 class TcpNetworkManager : public QObject
 {
@@ -44,14 +48,19 @@ public slots:
     void startServer(quint16 port);
     // 停止当前所有网络活动，并重置为空闲状态
     void stop();
-    // 发送数据（客户端模式下）或向所有客户端广播（服务端模式下）
-    void sendData(const QByteArray& data);
-    // 向特定客户端发送数据（仅服务端模式）
-    void sendDataToClient(QTcpSocket* client, const QByteArray& data);
+    // 发送数据处理器
+    void handleWriteData(const QByteArray& data);
+    void setDisplayTimestampStatus(bool status);
+    void setHexDisplayStatus(bool status);
+    void setHexSendStatus(bool status);
+    void startTimedSend(double interval, const QByteArray& data);
+    void stopTimedSend();
 
 signals:
-    // 状态信息变化信号
-    void statusChanged(const QString& status);
+    // 专用于客户端的状态信息变化信号
+    void clientStatusChanged(const QString &status);
+    // 专用于服务端的状态信息变化信号
+    void serverStatusChanged(const QString &status, int connectionCount = 0);
     // 收到数据信号
     void dataReceived(const QString& sourceInfo, const QByteArray& data);
     // 新客户端连接信号（仅服务端）
@@ -64,14 +73,22 @@ private slots:
     void onNewConnection();
     // 客户端：处理Socket状态变化
     void onSocketStateChanged(QAbstractSocket::SocketState socketState);
+    // 发送数据（客户端模式下）或向所有客户端广播（服务端模式下）
+    void sendData(const QByteArray& data);
+    // 向特定客户端发送数据（仅服务端模式）
+    void sendDataToClient(QTcpSocket* client, const QByteArray& data);
     // 客户端/服务端：处理数据接收
     void onReadyRead();
+    // 接收数据处理器
+    void handleReadData(const QString& sourceInfo, const QByteArray& data);
     // 服务端：处理客户端断开连接
     void onClientDisconnected();
 
 private:
     explicit TcpNetworkManager(QObject* parent = nullptr);
     ~TcpNetworkManager() = default;
+
+    QByteArray& generateTimestamp(const QString& data);
 
     static TcpNetworkManager* m_pInstance;
     static QMutex m_mutex;
@@ -80,6 +97,13 @@ private:
     QTcpSocket* m_pClientSocket;
     QTcpServer* m_pTcpServer;
     QList<QTcpSocket*> m_connectedClients; // 服务端模式下的客户端列表
+
+    bool m_displayTimestamp = false;
+    bool m_hexDisplay = false;
+    bool m_hexSend = false;
+
+    QTimer* m_pTimedSendTimer;
+    QByteArray m_timedSendData;
 };
 
 #endif //TCPNETWORKMANAGER_H
