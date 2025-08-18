@@ -126,7 +126,7 @@ void TcpNetworkClientWidget::onSendButtonClicked()
     emit sendDataRequested(m_pSendTextEdit->toPlainText().toLocal8Bit());
 }
 
-void TcpNetworkClientWidget::onDisplayReceiveData(const QString& sourceInfo, const QByteArray& data)
+void TcpNetworkClientWidget::onDisplayReceiveData(const QByteArray& data)
 {
     if (!isConnected) return;
     // 暂停重绘以提高性能

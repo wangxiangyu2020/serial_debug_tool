@@ -166,7 +166,7 @@ void TcpNetworkServerWidget::onHexSendChanged(bool status)
     emit stateChanged(m_currentState.displayTimestamp, m_currentState.hexDisplay, m_currentState.hexSend);
 }
 
-void TcpNetworkServerWidget::onDisplayReceiveData(const QString& sourceInfo, const QByteArray& data)
+void TcpNetworkServerWidget::onDisplayReceiveData(const QByteArray& data)
 {
     if (!isListen) return;
     // 暂停重绘以提高性能
@@ -174,7 +174,7 @@ void TcpNetworkServerWidget::onDisplayReceiveData(const QString& sourceInfo, con
     // 获取当前滚动条位置
     QScrollBar* vScroll = m_pReceiveTextEdit->verticalScrollBar();
     bool atBottom = vScroll->value() == vScroll->maximum();
-    QString receivedString = "from " + sourceInfo + ": " + QString::fromUtf8(data).trimmed();
+    QString receivedString = QString::fromUtf8(data).trimmed();
     m_pReceiveTextEdit->appendPlainText(receivedString);
     // 恢复自动滚动（如果启用且之前已在底部）
     if (atBottom) vScroll->setValue(vScroll->maximum());

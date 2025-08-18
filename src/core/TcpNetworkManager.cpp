@@ -234,10 +234,12 @@ void TcpNetworkManager::handleReadData(const QString& sourceInfo, const QByteArr
     QString formattedData = m_hexDisplay
                                 ? QString::fromLatin1(data.toHex(' ').toUpper())
                                 : QString::fromUtf8(data);
+    // 在最前面加上传输端信息
+    formattedData.prepend("from " + sourceInfo + ": ");
     QByteArray showByteArray = m_displayTimestamp
                                    ? this->generateTimestamp(formattedData)
                                    : formattedData.toLocal8Bit();
-    emit dataReceived(sourceInfo, showByteArray);
+    emit dataReceived(showByteArray);
 }
 
 void TcpNetworkManager::onClientDisconnected()

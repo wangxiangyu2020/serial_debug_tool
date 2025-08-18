@@ -62,7 +62,7 @@ signals:
     // 专用于服务端的状态信息变化信号
     void serverStatusChanged(const QString& status, int connectionCount = 0);
     // 收到数据信号
-    void dataReceived(const QString& sourceInfo, const QByteArray& data);
+    void dataReceived(const QByteArray& data);
     // 新客户端连接信号（仅服务端）
     void clientConnected(const QString& clientInfo, QTcpSocket* clientSocket);
     // 客户端断开连接信号（仅服务端）

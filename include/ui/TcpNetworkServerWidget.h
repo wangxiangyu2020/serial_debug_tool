@@ -63,7 +63,7 @@ private slots:
     void onDisplayTimestampChanged(bool status);
     void onHexDisplayChanged(bool status);
     void onHexSendChanged(bool status);
-    void onDisplayReceiveData(const QString& sourceInfo, const QByteArray& data);
+    void onDisplayReceiveData(const QByteArray& data);
     void onSendButtonClicked();
     void onTimedSendCheckBoxClicked(bool status);
     void onSaveDataButtonClicked();

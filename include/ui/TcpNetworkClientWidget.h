@@ -61,7 +61,7 @@ private slots:
     void onConnectButtonClicked();
     void onStatusChanged(const QString& status);
     void onSendButtonClicked();
-    void onDisplayReceiveData(const QString& sourceInfo, const QByteArray& data);
+    void onDisplayReceiveData(const QByteArray& data);
     void onSaveDataButtonClicked();
     void onTimedSendCheckBoxClicked(bool status);
     void onDisplayTimestampChanged(bool status);
