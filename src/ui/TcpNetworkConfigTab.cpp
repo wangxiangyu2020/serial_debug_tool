@@ -32,6 +32,20 @@ bool TcpNetworkConfigTab::eventFilter(QObject* watched, QEvent* event)
     return QWidget::eventFilter(watched, event);
 }
 
+void TcpNetworkConfigTab::onClientStateUpdated(bool displayTimestamp, bool hexDisplay, bool hexSend)
+{
+    m_clientState.displayTimestamp = displayTimestamp;
+    m_clientState.hexDisplay = hexDisplay;
+    m_clientState.hexSend = hexSend;
+}
+
+void TcpNetworkConfigTab::onServerStateUpdated(bool displayTimestamp, bool hexDisplay, bool hexSend)
+{
+    m_serverState.displayTimestamp = displayTimestamp;
+    m_serverState.hexDisplay = hexDisplay;
+    m_serverState.hexSend = hexSend;
+}
+
 void TcpNetworkConfigTab::setUI()
 {
     this->setAttribute(Qt::WA_StyledBackground);
@@ -79,11 +93,21 @@ void TcpNetworkConfigTab::connectSignals()
         {
             m_pClientWidget->show();
             m_pServerWidget->hide();
+            emit applyClientState(m_clientState);
         }
         else if (index == 1)
         {
             m_pClientWidget->hide();
             m_pServerWidget->show();
+            emit applyServerState(m_serverState);
         }
     });
+    // 连接客户端状态更新
+    this->connect(this, &TcpNetworkConfigTab::applyClientState, m_pClientWidget, &TcpNetworkClientWidget::onApplyState);
+    this->connect(m_pClientWidget, &TcpNetworkClientWidget::stateChanged, this,
+                  &TcpNetworkConfigTab::onClientStateUpdated);
+    // 连接服务端状态更新
+    this->connect(this, &TcpNetworkConfigTab::applyServerState, m_pServerWidget, &TcpNetworkServerWidget::onApplyState);
+    this->connect(m_pServerWidget, &TcpNetworkServerWidget::stateChanged, this,
+                  &TcpNetworkConfigTab::onServerStateUpdated);
 }

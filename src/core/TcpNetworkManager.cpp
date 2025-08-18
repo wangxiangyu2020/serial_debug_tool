@@ -91,9 +91,10 @@ void TcpNetworkManager::stop()
     m_currentMode = Mode::Idle;
 }
 
-void TcpNetworkManager::handleWriteData(const QByteArray& data)
+void TcpNetworkManager::handleWriteData(const QByteArray& data, QTcpSocket* clientSocket)
 {
-    this->sendData(m_hexSend ? data.toHex() : data);
+    if (clientSocket == nullptr) this->sendData(m_hexSend ? data.toHex() : data);
+    else this->sendDataToClient(clientSocket, m_hexSend ? data.toHex() : data);
 }
 
 void TcpNetworkManager::setDisplayTimestampStatus(bool status)
@@ -111,7 +112,7 @@ void TcpNetworkManager::setHexSendStatus(bool status)
     m_hexSend = status;
 }
 
-void TcpNetworkManager::startTimedSend(double interval, const QByteArray& data)
+void TcpNetworkManager::startTimedSend(double interval, const QByteArray& data, QTcpSocket* clientSocket)
 {
     this->stopTimedSend();
 
@@ -120,11 +121,11 @@ void TcpNetworkManager::startTimedSend(double interval, const QByteArray& data)
 
     // 创建并配置新的定时器
     m_pTimedSendTimer = new QTimer(this);
-    this->connect(m_pTimedSendTimer, &QTimer::timeout, this, [this]()
+    this->connect(m_pTimedSendTimer, &QTimer::timeout, this, [this, clientSocket]()
     {
         // 定时器触发时，只做一件事：发送已保存的数据
         // 注意：这里不再需要 sender()，也不再访问任何UI元素
-        if (!m_timedSendData.isEmpty()) this->handleWriteData(m_timedSendData);
+        if (!m_timedSendData.isEmpty()) this->handleWriteData(m_timedSendData, clientSocket);
     });
 
     int intervalMs = static_cast<int>(interval * 1000);

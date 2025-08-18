@@ -19,6 +19,20 @@ TcpNetworkClientWidget::TcpNetworkClientWidget(QWidget* parent)
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/tcp_network_client_wdiget.qss");
 }
 
+void TcpNetworkClientWidget::onApplyState(const NetworkModeState& state)
+{
+    m_currentState = state;
+
+    // 应用状态到UI控件
+    m_pDisplayTimestampCheckBox->setChecked(state.displayTimestamp);
+    m_pHexDisplayCheckBox->setChecked(state.hexDisplay);
+    m_pHexSendCheckBox->setChecked(state.hexSend);
+
+    emit displayTimestamp(state.displayTimestamp);
+    emit hexDisplay(state.hexDisplay);
+    emit hexSend(state.hexSend);
+}
+
 bool TcpNetworkClientWidget::eventFilter(QObject* watched, QEvent* event)
 {
     if (watched == m_pReceiveTextEdit)
@@ -54,6 +68,9 @@ void TcpNetworkClientWidget::onConnectButtonClicked()
     {
         m_pServerIpComboBox->setEnabled(true);
         m_pPortLineEdit->setEnabled(true);
+        m_pTimedSendCheckBox->setChecked(false); // 恢复复选框状态
+        m_pIntervalEdit->setEnabled(true);
+        emit stopTimedSendRequested();
         emit stopConnectionRequested();
         return;
     }
@@ -111,6 +128,7 @@ void TcpNetworkClientWidget::onSendButtonClicked()
 
 void TcpNetworkClientWidget::onDisplayReceiveData(const QString& sourceInfo, const QByteArray& data)
 {
+    if (!isConnected) return;
     // 暂停重绘以提高性能
     m_pReceiveTextEdit->setUpdatesEnabled(false);
     // 获取当前滚动条位置
@@ -163,6 +181,27 @@ void TcpNetworkClientWidget::onTimedSendCheckBoxClicked(bool status)
     m_pIntervalEdit->setEnabled(false);
     double interval = m_pIntervalEdit->text().toDouble();
     emit startTimedSendRequested(interval, textToSend.toLocal8Bit());
+}
+
+void TcpNetworkClientWidget::onDisplayTimestampChanged(bool status)
+{
+    m_currentState.displayTimestamp = status;
+    emit displayTimestamp(status);
+    emit stateChanged(m_currentState.displayTimestamp, m_currentState.hexDisplay, m_currentState.hexSend);
+}
+
+void TcpNetworkClientWidget::onHexDisplayChanged(bool status)
+{
+    m_currentState.hexDisplay = status;
+    emit hexDisplay(status);
+    emit stateChanged(m_currentState.displayTimestamp, m_currentState.hexDisplay, m_currentState.hexSend);
+}
+
+void TcpNetworkClientWidget::onHexSendChanged(bool status)
+{
+    m_currentState.hexSend = status;
+    emit hexSend(status);
+    emit stateChanged(m_currentState.displayTimestamp, m_currentState.hexDisplay, m_currentState.hexSend);
 }
 
 void TcpNetworkClientWidget::setUI()
@@ -293,16 +332,11 @@ void TcpNetworkClientWidget::connectSignals()
                   &TcpNetworkManager::handleWriteData);
     this->connect(TcpNetworkManager::getInstance(), &TcpNetworkManager::dataReceived, this,
                   &TcpNetworkClientWidget::onDisplayReceiveData);
-    this->connect(m_pDisplayTimestampCheckBox, &QCheckBox::clicked, [this](bool status)
-    {
-        emit displayTimestamp(status);
-    });
+    this->connect(m_pDisplayTimestampCheckBox, &QCheckBox::clicked, this,
+                  &TcpNetworkClientWidget::onDisplayTimestampChanged);
     this->connect(this, &TcpNetworkClientWidget::displayTimestamp, TcpNetworkManager::getInstance(),
                   &TcpNetworkManager::setDisplayTimestampStatus);
-    this->connect(m_pHexDisplayCheckBox, &QCheckBox::clicked, [this](bool status)
-    {
-        emit hexDisplay(status);
-    });
+    this->connect(m_pHexDisplayCheckBox, &QCheckBox::clicked, this, &TcpNetworkClientWidget::onHexDisplayChanged);
     this->connect(this, &TcpNetworkClientWidget::hexDisplay, TcpNetworkManager::getInstance(),
                   &TcpNetworkManager::setHexDisplayStatus);
     this->connect(m_pSaveDataButton, &QPushButton::clicked, this, &TcpNetworkClientWidget::onSaveDataButtonClicked);
@@ -310,10 +344,7 @@ void TcpNetworkClientWidget::connectSignals()
     {
         m_pReceiveTextEdit->clear();
     });
-    this->connect(m_pHexSendCheckBox, &QCheckBox::clicked, [this](bool status)
-    {
-        emit hexSend(status);
-    });
+    this->connect(m_pHexSendCheckBox, &QCheckBox::clicked, this, &TcpNetworkClientWidget::onHexSendChanged);
     this->connect(this, &TcpNetworkClientWidget::hexSend, TcpNetworkManager::getInstance(),
                   &TcpNetworkManager::setHexSendStatus);
     this->connect(m_pTimedSendCheckBox, &QCheckBox::clicked, this, &TcpNetworkClientWidget::onTimedSendCheckBoxClicked);

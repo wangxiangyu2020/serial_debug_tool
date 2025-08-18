@@ -18,6 +18,20 @@ TcpNetworkServerWidget::TcpNetworkServerWidget(QWidget* parent)
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/tcp_network_server_wdiget.qss");
 }
 
+void TcpNetworkServerWidget::onApplyState(const NetworkModeState& state)
+{
+    m_currentState = state;
+
+    // 应用状态到UI控件
+    m_pDisplayTimestampCheckBox->setChecked(state.displayTimestamp);
+    m_pHexDisplayCheckBox->setChecked(state.hexDisplay);
+    m_pHexSendCheckBox->setChecked(state.hexSend);
+
+    emit displayTimestamp(state.displayTimestamp);
+    emit hexDisplay(state.hexDisplay);
+    emit hexSend(state.hexSend);
+}
+
 bool TcpNetworkServerWidget::eventFilter(QObject* watched, QEvent* event)
 {
     if (watched == m_pReceiveTextEdit)
@@ -58,6 +72,10 @@ void TcpNetworkServerWidget::onListenButtonClicked()
         {
             m_pSendClientComboBox->removeItem(1); // 总是移除索引为1的项
         }
+        m_pTimedSendCheckBox->setChecked(false); // 恢复复选框状态
+        m_pIntervalEdit->setEnabled(true);
+        m_pSendClientComboBox->setEnabled(true);
+        emit stopTimedSendRequested();
         emit stopListenRequested();
         return;
     }
@@ -111,6 +129,137 @@ void TcpNetworkServerWidget::onClientConnected(const QString& clientInfo, QTcpSo
     m_pConnectedClientTextEdit->setUpdatesEnabled(true);
 }
 
+void TcpNetworkServerWidget::onClientDisconnected(const QString& clientInfo, QTcpSocket* clientSocket)
+{
+    int index = m_pSendClientComboBox->findData(QVariant::fromValue(clientSocket));
+    if (index != -1) m_pSendClientComboBox->removeItem(index);
+    // 从文本显示区移除
+    // 这比添加要复杂一些，因为需要查找并删除特定行
+    QString currentText = m_pConnectedClientTextEdit->toPlainText();
+    // 使用 QRegularExpression 确保整行匹配，避免部分匹配的错误
+    // 例如，避免 "192.168.1.1" 错误地匹配到 "192.168.1.10"
+    QRegularExpression lineRegex(QRegularExpression::escape(clientInfo) + "(\\r\\n|\\n|\\r|$)");
+    currentText.remove(lineRegex);
+    // 清理可能产生的多余空行
+    currentText = currentText.trimmed();
+    m_pConnectedClientTextEdit->setPlainText(currentText);
+}
+
+void TcpNetworkServerWidget::onDisplayTimestampChanged(bool status)
+{
+    m_currentState.displayTimestamp = status;
+    emit displayTimestamp(status);
+    emit stateChanged(m_currentState.displayTimestamp, m_currentState.hexDisplay, m_currentState.hexSend);
+}
+
+void TcpNetworkServerWidget::onHexDisplayChanged(bool status)
+{
+    m_currentState.hexDisplay = status;
+    emit hexDisplay(status);
+    emit stateChanged(m_currentState.displayTimestamp, m_currentState.hexDisplay, m_currentState.hexSend);
+}
+
+void TcpNetworkServerWidget::onHexSendChanged(bool status)
+{
+    m_currentState.hexSend = status;
+    emit hexSend(status);
+    emit stateChanged(m_currentState.displayTimestamp, m_currentState.hexDisplay, m_currentState.hexSend);
+}
+
+void TcpNetworkServerWidget::onDisplayReceiveData(const QString& sourceInfo, const QByteArray& data)
+{
+    if (!isListen) return;
+    // 暂停重绘以提高性能
+    m_pReceiveTextEdit->setUpdatesEnabled(false);
+    // 获取当前滚动条位置
+    QScrollBar* vScroll = m_pReceiveTextEdit->verticalScrollBar();
+    bool atBottom = vScroll->value() == vScroll->maximum();
+    QString receivedString = "from " + sourceInfo + ": " + QString::fromUtf8(data).trimmed();
+    m_pReceiveTextEdit->appendPlainText(receivedString);
+    // 恢复自动滚动（如果启用且之前已在底部）
+    if (atBottom) vScroll->setValue(vScroll->maximum());
+    // 恢复重绘
+    m_pReceiveTextEdit->setUpdatesEnabled(true);
+}
+
+void TcpNetworkServerWidget::onSendButtonClicked()
+{
+    if (!isListen)
+    {
+        CMessageBox::showToast(tr("请先启动监听！"));
+        return;
+    }
+    if (m_pSendTextEdit->toPlainText().isEmpty())
+    {
+        CMessageBox::showToast(tr("请输入要发送的数据！"));
+        return;
+    }
+    QString text = m_pSendClientComboBox->currentText();
+    if (text == tr("所有客户端"))
+    {
+        emit sendDataRequested(m_pSendTextEdit->toPlainText().toLocal8Bit());
+    }
+    else
+    {
+        QVariant userData = m_pSendClientComboBox->currentData();
+        QTcpSocket* clientSocket = userData.value<QTcpSocket*>();
+        emit sendDataRequested(m_pSendTextEdit->toPlainText().toLocal8Bit(), clientSocket);
+    }
+}
+
+void TcpNetworkServerWidget::onTimedSendCheckBoxClicked(bool status)
+{
+    if (!status)
+    {
+        m_pIntervalEdit->setEnabled(true);
+        m_pSendClientComboBox->setEnabled(true);
+        emit stopTimedSendRequested();
+        return;
+    }
+    if (!isListen)
+    {
+        CMessageBox::showToast(this, tr("请先启动监听"));
+        m_pTimedSendCheckBox->setChecked(false); // 恢复复选框状态
+        return;
+    }
+    QString textToSend = m_pSendTextEdit->toPlainText(); // 从UI获取要发送的文本
+    if (textToSend.trimmed().isEmpty())
+    {
+        CMessageBox::showToast(this, "请输入要发送的数据");
+        m_pTimedSendCheckBox->setChecked(false);
+        return;
+    }
+    m_pIntervalEdit->setEnabled(false);
+    m_pSendClientComboBox->setEnabled(false);
+    double interval = m_pIntervalEdit->text().toDouble();
+    QString text = m_pSendClientComboBox->currentText();
+    if (text == tr("所有客户端"))
+    {
+        emit startTimedSendRequested(interval, textToSend.toLocal8Bit());
+    }
+    else
+    {
+        QVariant userData = m_pSendClientComboBox->currentData();
+        QTcpSocket* clientSocket = userData.value<QTcpSocket*>();
+        emit startTimedSendRequested(interval, textToSend.toLocal8Bit(), clientSocket);
+    }
+}
+
+void TcpNetworkServerWidget::onSaveDataButtonClicked()
+{
+    QString fileName = QFileDialog::getSaveFileName(this,
+                                                    tr("保存数据"),
+                                                    QDir::homePath(),
+                                                    tr("文本文件 (*.txt)"));
+    if (fileName.isEmpty()) return;
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return;
+    QTextStream out(&file);
+    out << m_pReceiveTextEdit->toPlainText();
+    file.close();
+    CMessageBox::showToast(this, "数据已保存至" + fileName);
+}
+
 void TcpNetworkServerWidget::setUI()
 {
     this->setAttribute(Qt::WA_StyledBackground);
@@ -149,6 +298,8 @@ void TcpNetworkServerWidget::createComponents()
 
     m_pDisplayTimestampCheckBox = new QCheckBox("显示时间戳", this);
     m_pHexDisplayCheckBox = new QCheckBox("十六进制显示", this);
+    m_pSaveDataButton = new QPushButton(tr("保存数据"));
+    m_pSaveDataButton->setObjectName("m_pSaveDataButton");
     m_pClearDataButton = new QPushButton("清空数据", this);
     m_pClearDataButton->setObjectName("m_pClearDataButton");
 
@@ -203,6 +354,7 @@ void TcpNetworkServerWidget::createLayout()
     receiveToolLayout->addStretch();
     receiveToolLayout->addWidget(m_pDisplayTimestampCheckBox);
     receiveToolLayout->addWidget(m_pHexDisplayCheckBox);
+    receiveToolLayout->addWidget(m_pSaveDataButton);
     receiveToolLayout->addWidget(m_pClearDataButton);
 
     QHBoxLayout* sendFirstHLayout = new QHBoxLayout();
@@ -251,6 +403,33 @@ void TcpNetworkServerWidget::connectSignals()
                   &TcpNetworkServerWidget::onStatusChanged);
     this->connect(TcpNetworkManager::getInstance(), &TcpNetworkManager::clientConnected, this,
                   &TcpNetworkServerWidget::onClientConnected);
+    this->connect(TcpNetworkManager::getInstance(), &TcpNetworkManager::clientDisconnected, this,
+                  &TcpNetworkServerWidget::onClientDisconnected);
+    this->connect(m_pDisplayTimestampCheckBox, &QCheckBox::clicked, this,
+                  &TcpNetworkServerWidget::onDisplayTimestampChanged);
+    this->connect(m_pHexDisplayCheckBox, &QCheckBox::clicked, this, &TcpNetworkServerWidget::onHexDisplayChanged);
+    this->connect(m_pHexSendCheckBox, &QCheckBox::clicked, this, &TcpNetworkServerWidget::onHexSendChanged);
+    this->connect(this, &TcpNetworkServerWidget::displayTimestamp, TcpNetworkManager::getInstance(),
+                  &TcpNetworkManager::setDisplayTimestampStatus);
+    this->connect(this, &TcpNetworkServerWidget::hexDisplay, TcpNetworkManager::getInstance(),
+                  &TcpNetworkManager::setHexDisplayStatus);
+    this->connect(this, &TcpNetworkServerWidget::hexSend, TcpNetworkManager::getInstance(),
+                  &TcpNetworkManager::setHexSendStatus);
+    this->connect(TcpNetworkManager::getInstance(), &TcpNetworkManager::dataReceived, this,
+                  &TcpNetworkServerWidget::onDisplayReceiveData);
+    this->connect(m_pClearDataButton, &QPushButton::clicked, [this]()
+    {
+        m_pReceiveTextEdit->clear();
+    });
+    this->connect(m_pSendButton, &QPushButton::clicked, this, &TcpNetworkServerWidget::onSendButtonClicked);
+    this->connect(this, &TcpNetworkServerWidget::sendDataRequested, TcpNetworkManager::getInstance(),
+                  &TcpNetworkManager::handleWriteData);
+    this->connect(m_pTimedSendCheckBox, &QCheckBox::clicked, this, &TcpNetworkServerWidget::onTimedSendCheckBoxClicked);
+    this->connect(this, &TcpNetworkServerWidget::startTimedSendRequested, TcpNetworkManager::getInstance(),
+                  &TcpNetworkManager::startTimedSend);
+    this->connect(this, &TcpNetworkServerWidget::stopTimedSendRequested, TcpNetworkManager::getInstance(),
+                  &TcpNetworkManager::stopTimedSend);
+    this->connect(m_pSaveDataButton, &QPushButton::clicked, this, &TcpNetworkServerWidget::onSaveDataButtonClicked);
 }
 
 void TcpNetworkServerWidget::setTextEditProperty(QPlainTextEdit* textEdit)

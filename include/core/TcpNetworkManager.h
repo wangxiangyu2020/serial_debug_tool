@@ -49,11 +49,11 @@ public slots:
     // 停止当前所有网络活动，并重置为空闲状态
     void stop();
     // 发送数据处理器
-    void handleWriteData(const QByteArray& data);
+    void handleWriteData(const QByteArray& data, QTcpSocket* clientSocket);
     void setDisplayTimestampStatus(bool status);
     void setHexDisplayStatus(bool status);
     void setHexSendStatus(bool status);
-    void startTimedSend(double interval, const QByteArray& data);
+    void startTimedSend(double interval, const QByteArray& data, QTcpSocket* clientSocket);
     void stopTimedSend();
 
 signals:

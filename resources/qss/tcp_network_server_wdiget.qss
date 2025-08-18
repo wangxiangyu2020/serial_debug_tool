@@ -99,19 +99,19 @@ QPushButton#m_pStartListenButton[connected="true"]:pressed {
     background-color: #bd2130;
 }
 
-/* Secondary button (Clear) */
-QPushButton#m_pClearDataButton {
+/* --- Secondary button --- */
+QPushButton#m_pClearDataButton, QPushButton#m_pSaveDataButton {
     color: white;
-    background-color: #0d6efd;
+    background-color: #0d6efd; /* Primary blue */
     border: 1px solid #0d6efd;
 }
 
-QPushButton#m_pClearDataButton:hover {
+QPushButton#m_pClearDataButton:hover, QPushButton#m_pSaveDataButton:hover {
     background-color: #0b5ed7;
     border-color: #0a58ca;
 }
 
-QPushButton#m_pClearDataButton:pressed {
+QPushButton#m_pClearDataButton:pressed, QPushButton#m_pSaveDataButton:hover {
     background-color: #0a58ca;
     border-color: #0a53be;
 }
