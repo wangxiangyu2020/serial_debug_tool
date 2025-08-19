@@ -41,17 +41,6 @@ public:
 
     // 主要业务方法
     QSerialPort* getSerialPort() const;
-    void startWaveformRecording();
-
-    // 配置方法
-    void setChannelDataProcess(bool status);
-
-    // 获取方法
-    bool getChannelDataProcess();
-
-    // 数据处理方法
-    void handleReadData(const QByteArray& readByteArray);
-    void handleChannelData(const QByteArray& readByteArray);
 
 public slots:
     void handleWriteData(const QByteArray& writeByteArray);
@@ -76,17 +65,20 @@ private:
     // 构造函数和析构函数
     explicit SerialPortManager(QObject* parent = nullptr);
     ~SerialPortManager() = default;
-
     // 私有方法
     void connectSignals();
     void configureSerialPort(const QMap<QString, QVariant>& serialParams);
     void serialPortWrite(const QByteArray& data);
+    // 数据处理方法
+    void handleReadData(const QByteArray& readByteArray);
+    void handleChannelData(const QByteArray& readByteArray);
+    void startWaveformRecording();
     // 错误处理
     void handlerError(QSerialPort::SerialPortError error);
     QByteArray& generateTimestamp(const QString& data);
     void clearAllChannelData();
-    void processDataPointInternal(const QByteArray& bytes);
     void processQueueInternal();
+    void processDataPointInternal(const QByteArray& bytes);
 
     enum ConnectStatus
     {

@@ -20,96 +20,78 @@ WaveformCtrlWidget::WaveformCtrlWidget(QWidget* parent)
 // private slots
 void WaveformCtrlWidget::onAddChannelBtnClicked()
 {
-    m_pAddChannelDialog = new AddChannelDialog(this);
-    // 从单例管理器获取已有通道
-    ChannelManager* manager = ChannelManager::getInstance();
-    m_pAddChannelDialog->setExistingChannels(manager->getAllChannels());
-
-    if (m_pAddChannelDialog->exec() == QDialog::Accepted)
-    {
-        QString name = m_pAddChannelDialog->getChannelName();
-        QString id = m_pAddChannelDialog->getChannelId();
-        QString color = m_pAddChannelDialog->getChannelColor();
-        // 添加到管理器
-        if (manager->addChannel(id, name, color))
-        {
-            QString message = tr("通道%1添加成功").arg(name);
-            CMessageBox::showToast(this, message);
-        }
-        else
-        {
-            CMessageBox::showToast(this, tr("标识%1已存在").arg(id));
-            m_pAddChannelDialog->deleteLater();
-            return;
-        }
-    }
-    m_pAddChannelDialog->deleteLater();
+    this->requestChannels(ChannelOperation::AddChannel);
 }
 
 void WaveformCtrlWidget::onRemoveChannelBtnClicked()
 {
-    m_pRemoveChannelDialog = new RemoveChannelDialog(this);
-    // 从单例管理器获取已有通道
-    ChannelManager* manager = ChannelManager::getInstance();
-    m_pRemoveChannelDialog->setExistingChannels(manager->getAllChannels());
-    m_pRemoveChannelDialog->exec();
-    m_pRemoveChannelDialog->deleteLater();
+    this->requestChannels(ChannelOperation::RemoveChannel);
+}
+
+void WaveformCtrlWidget::onChannelsReceived(const QList<ChannelInfo>& channels)
+{
+    switch (m_pendingOperation)
+    {
+    case ChannelOperation::AddChannel:
+        this->processChannelsForAdd(channels);
+        break;
+    case ChannelOperation::RemoveChannel:
+        this->processChannelsForRemove(channels);
+        break;
+    }
 }
 
 void WaveformCtrlWidget::onClearBtnClicked()
 {
-    ChannelManager* manager = ChannelManager::getInstance();
-    manager->clearAllChannelData();
+    emit clearAllChannelDataRequested();
 }
 
 void WaveformCtrlWidget::onImportBtnClicked()
 {
-    ChannelManager* manager = ChannelManager::getInstance();
-    emit manager->importChannelsData();
+    emit importChannelsDataRequested();
 }
 
 void WaveformCtrlWidget::onExportBtnClicked()
 {
-    ChannelManager* manager = ChannelManager::getInstance();
-    emit manager->channelsExportData();
+    emit exportChannelsDataRequested();
 }
 
 void WaveformCtrlWidget::onSampleRateBtnClicked()
 {
+    emit requestSampleRate();
+}
+
+void WaveformCtrlWidget::onSampleRateReceived(int rate)
+{
     m_pSampleRateDialog = new SampleRateDialog(this);
-    m_pSampleRateDialog->setSampleRate(ChannelManager::getInstance()->getSampleRate());
+    m_pSampleRateDialog->setSampleRate(rate);
     if (m_pSampleRateDialog->exec() == QDialog::Accepted)
     {
-        ChannelManager::getInstance()->setSampleRate(m_pSampleRateDialog->getSampleRate());
-        QString message = tr("采样间隔已设置为%1ms").arg(m_pSampleRateDialog->getSampleRate());
-        CMessageBox::showToast(this, message);
+        emit sampleRateChanged(m_pSampleRateDialog->getSampleRate());
     }
     QTimer::singleShot(0, m_pSampleRateDialog, &SampleRateDialog::deleteLater);
 }
 
 void WaveformCtrlWidget::onActionBtnClicked()
 {
-    bool actionClicked = m_pActionButton->property("actionClicked").toBool();
-    ChannelManager* manager = ChannelManager::getInstance();
-
-    if (!actionClicked)
+    if (m_actionClicked)
     {
-        this->setBtnStatus(actionClicked);
-        // 启动数据分发
-        emit manager->channelDataProcess(!actionClicked);
-        manager->startDataDispatch();
-        m_pActionButton->setToolTip("结束数据采集");
-    }
-    else
-    {
-        this->setBtnStatus(actionClicked);
-        emit manager->channelDataProcess(actionClicked);
-        // 停止数据分发
-        manager->stopDataDispatch();
+        emit stopActionRequested();
+        this->setBtnStatus(m_actionClicked);
         m_pActionButton->setToolTip("开始数据采集");
+        return;
     }
+    emit startActionRequested();
+    this->setBtnStatus(!m_actionClicked);
+    m_pActionButton->setToolTip("结束数据采集");
+}
 
-    m_pActionButton->setProperty("actionClicked", !actionClicked);
+void WaveformCtrlWidget::onStatusChanged(const QString& status)
+{
+    CMessageBox::showToast(this, status);
+    if (!status.contains("数据分发已启动") && !status.contains("数据分发已停止")) return;
+    m_actionClicked = status.contains("数据分发已启动");
+    m_pActionButton->setProperty("actionClicked", m_actionClicked);
     m_pActionButton->style()->unpolish(m_pActionButton);
     m_pActionButton->style()->polish(m_pActionButton);
     m_pActionButton->update();
@@ -173,6 +155,31 @@ void WaveformCtrlWidget::connectSignals()
     this->connect(m_pExportButton, &QPushButton::clicked, this, &WaveformCtrlWidget::onExportBtnClicked);
     this->connect(m_pSampleRateButton, &QPushButton::clicked, this, &WaveformCtrlWidget::onSampleRateBtnClicked);
     this->connect(m_pActionButton, &QPushButton::clicked, this, &WaveformCtrlWidget::onActionBtnClicked);
+
+    this->connect(this, &WaveformCtrlWidget::requestAllChannels, ChannelManager::getInstance(),
+                  &ChannelManager::onGetAllChannels);
+    this->connect(ChannelManager::getInstance(), &ChannelManager::sendAllChannelsRequested, this,
+                  &WaveformCtrlWidget::onChannelsReceived);
+    this->connect(this, &WaveformCtrlWidget::addChannelRequested, ChannelManager::getInstance(),
+                  &ChannelManager::onAddChannel);
+    this->connect(ChannelManager::getInstance(), &ChannelManager::statusChanged, this,
+                  &WaveformCtrlWidget::onStatusChanged);
+    this->connect(this, &WaveformCtrlWidget::clearAllChannelDataRequested, ChannelManager::getInstance(),
+                  &ChannelManager::onClearAllChannelData);
+    this->connect(this, &WaveformCtrlWidget::importChannelsDataRequested, ChannelManager::getInstance(),
+                  &ChannelManager::onImportChannelsData);
+    this->connect(this, &WaveformCtrlWidget::exportChannelsDataRequested, ChannelManager::getInstance(),
+                  &ChannelManager::onExportChannelsData);
+    this->connect(this, &WaveformCtrlWidget::requestSampleRate, ChannelManager::getInstance(),
+                  &ChannelManager::onGetSampleRate);
+    this->connect(ChannelManager::getInstance(), &ChannelManager::sendSampleRateRequested, this,
+                  &WaveformCtrlWidget::onSampleRateReceived);
+    this->connect(this, &WaveformCtrlWidget::sampleRateChanged, ChannelManager::getInstance(),
+                  &ChannelManager::onSetSampleRate);
+    this->connect(this, &WaveformCtrlWidget::startActionRequested, ChannelManager::getInstance(),
+                  &ChannelManager::onStartDataDispatch);
+    this->connect(this, &WaveformCtrlWidget::stopActionRequested, ChannelManager::getInstance(),
+                  &ChannelManager::onStopDataDispatch);
 }
 
 void WaveformCtrlWidget::setBtnStatus(bool actionClicked)
@@ -183,4 +190,33 @@ void WaveformCtrlWidget::setBtnStatus(bool actionClicked)
     m_pExportButton->setEnabled(actionClicked);
     m_pImportButton->setEnabled(actionClicked);
     m_pSampleRateButton->setEnabled(actionClicked);
+}
+
+void WaveformCtrlWidget::requestChannels(ChannelOperation operation)
+{
+    m_pendingOperation = operation;
+    emit requestAllChannels();
+}
+
+void WaveformCtrlWidget::processChannelsForAdd(const QList<ChannelInfo>& channels)
+{
+    m_pAddChannelDialog = new AddChannelDialog(this);
+    m_pAddChannelDialog->setExistingChannels(channels);
+
+    if (m_pAddChannelDialog->exec() == QDialog::Accepted)
+    {
+        QString name = m_pAddChannelDialog->getChannelName();
+        QString id = m_pAddChannelDialog->getChannelId();
+        QString color = m_pAddChannelDialog->getChannelColor();
+        emit addChannelRequested(id, name, color);
+    }
+    m_pAddChannelDialog->deleteLater();
+}
+
+void WaveformCtrlWidget::processChannelsForRemove(const QList<ChannelInfo>& channels)
+{
+    m_pRemoveChannelDialog = new RemoveChannelDialog(this);
+    m_pRemoveChannelDialog->setExistingChannels(channels);
+    if (m_pRemoveChannelDialog->exec() == QDialog::Accepted);
+    m_pRemoveChannelDialog->deleteLater();
 }

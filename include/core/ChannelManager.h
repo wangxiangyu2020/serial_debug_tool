@@ -26,7 +26,10 @@ struct ChannelInfo
     QString color;
 
     ChannelInfo() = default;
-    ChannelInfo(const QString& i, const QString& n, const QString& c) : id(i), name(n), color(c) {}
+
+    ChannelInfo(const QString& i, const QString& n, const QString& c) : id(i), name(n), color(c)
+    {
+    }
 };
 
 class ChannelManager : public QObject
@@ -41,48 +44,49 @@ public:
     ChannelManager(const ChannelManager&) = delete;
     ChannelManager& operator=(const ChannelManager&) = delete;
 
-    // 通道操作方法
-    bool addChannel(const QString& id, const QString& name, const QString& color);
-    bool removeChannel(const QString& id);
-    bool updateChannel(const QString& id, const QString& name, const QString& newColor);
-    void clearChannels();
-
     // 查询操作方法
     QList<ChannelInfo> getAllChannels() const;
     ChannelInfo getChannel(const QString& id) const;
-    bool hasChannel(const QString& id) const;
-    int getChannelCount() const;
 
     // 通道数据操作方法
     void addChannelData(const QString& channelId, const QVariant& data);
-    void clearAllChannelData();
 
-    // 数据分发控制方法
-    void startDataDispatch();
-    void stopDataDispatch();
-
-    // 采样率配置方法
     int getSampleRate() const;
-    void setSampleRate(int rate);
+
+public slots:
+    void onGetAllChannels();
+    void onAddChannel(const QString& id, const QString& name, const QString& color);
+    void onRemoveChannel(const QString& id);
+    void onClearAllChannelData();
+    void onImportChannelsData();
+    void onExportChannelsData();
+    void onGetSampleRate();
+    void onSetSampleRate(int rate);
+    void onStartDataDispatch();
+    void onStopDataDispatch();
 
 signals:
-    void channelAdded(const QString& name, const QString& color);
-    void channelRemoved(const QString& name);
-    void channelUpdated(const QString& name, const QString& color);
-    void channelsCleared();
-    void channelDataAdded(const QString& channelId, const QVariant& data);
-    void channelDataProcess(bool status);
-    void channelsDataAllCleared();
-    void importChannelsData();
-    void channelsExportData();
+    void channelAddedRequested(const QString& name, const QString& color);
+    void channelRemovedRequested(const QString& name);
+    void channelDataAddedRequested(const QString& channelName, const QVariant& data);
+    void channelDataProcessRequested(bool status);
+    void channelsDataAllClearedRequested();
+    void channelsDataImportedRequested();
+    void channelsDataExportedRequested();
+
+    void sendAllChannelsRequested(QList<ChannelInfo> channels);
+    void statusChanged(const QString& status);
+    void sendSampleRateRequested(int rate);
 
 private slots:
-    void dispatchQueuedData();
+    void onDispatchQueuedData();
 
 private:
     // 构造函数和析构函数
     explicit ChannelManager(QObject* parent = nullptr);
     ~ChannelManager() = default;
+
+    void connectSignals();
 
     // 静态成员变量
     static ChannelManager* m_instance;

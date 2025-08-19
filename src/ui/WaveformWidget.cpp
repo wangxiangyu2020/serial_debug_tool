@@ -74,21 +74,24 @@ void WaveformWidget::onPageLoadFinished(bool status)
     m_pageLoaded = true;
 }
 
-void WaveformWidget::onAddSeries(const QString& name, const QString& color)
+void WaveformWidget::onChannelAdded(const QString& name, const QString& color)
 {
     if (!m_pageLoaded) return;
     QString jsCode = QString("addSeries('%1', '%2')").arg(name, StyleLoader::getColorHex(color));
     this->executeJS(jsCode);
 }
 
-void WaveformWidget::onChannelDataAdded(const QString& channelId, const QVariant& data)
+void WaveformWidget::onChannelRemoved(const QString& name)
+{
+    if (!m_pageLoaded) return;
+    QString jsCode = QString("removeSeries('%1')").arg(name);
+    this->executeJS(jsCode);
+}
+
+void WaveformWidget::onChannelDataAdded(const QString& channelName, const QVariant& data)
 {
     if (!m_pageLoaded) return;
 
-    ChannelManager* manager = ChannelManager::getInstance();
-    if (!manager) return;
-
-    ChannelInfo channel = manager->getChannel(channelId);
     if (!data.canConvert<QVariantList>()) return;
 
     QVariantList pointList = data.toList();
@@ -99,7 +102,7 @@ void WaveformWidget::onChannelDataAdded(const QString& channelId, const QVariant
         QMutexLocker locker(&m_dataMutex);
         // 将数据添加到待处理队列
         DataPoint point;
-        point.channelName = channel.name;
+        point.channelName = channelName;
         point.timestamp = pointList[0].toDouble();
         point.value = pointList[1].toDouble();
         m_pendingData.enqueue(point);
@@ -184,6 +187,49 @@ void WaveformWidget::onProcessPendingData()
     }
 }
 
+void WaveformWidget::onChannelsDataAllCleared()
+{
+    m_pendingData.clear();
+    this->executeJS("clearAllData()");
+}
+
+void WaveformWidget::onChannelsDataImported()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("导入数据"), QString(), tr("JSON文件(*.json)"));
+    if (fileName.isEmpty()) return;
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return;
+    QTextStream in(&file);
+    in.setEncoding(QStringConverter::Utf8);
+    QString jsonData = in.readAll();
+    file.close();
+    if (jsonData.isEmpty()) return;
+    // 验证JSON格式
+    QJsonParseError parseError;
+    QJsonDocument::fromJson(jsonData.toUtf8(), &parseError);
+    if (parseError.error != QJsonParseError::NoError) return;
+    // 先设置全局变量，再调用导入函数
+    QString jsCode = QString("window.importJsonData = %1; importData(window.importJsonData);").arg(jsonData);
+    this->executeJS(jsCode);
+}
+
+void WaveformWidget::onChannelsDataExported()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, tr("导出数据"), QDir::homePath(), tr("JSON文件(*.json)"));
+    if (fileName.isEmpty()) return;
+    if (!fileName.endsWith(".json", Qt::CaseInsensitive)) fileName += ".json";
+    m_pWebEngineView->page()->runJavaScript(QString("exportData()"), [this, fileName](const QVariant& result)
+    {
+        QString jsonData = result.toString();
+        QFile file(fileName);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return;
+        QTextStream out(&file);
+        out.setEncoding(QStringConverter::Utf8);
+        out << jsonData;
+        file.close();
+    });
+}
+
 // 私有方法
 void WaveformWidget::setUI()
 {
@@ -225,57 +271,27 @@ void WaveformWidget::createLayout()
 void WaveformWidget::connectSignals()
 {
     this->connect(m_updateCheckTimer, &QTimer::timeout, this, &WaveformWidget::checkAndUpdateData);
-    m_updateCheckTimer->start();
-    ChannelManager* manager = ChannelManager::getInstance();
-    if (!manager) return;
     this->connect(m_pWebEngineView.get(), &QWebEngineView::loadFinished, this, &WaveformWidget::onPageLoadFinished);
-    this->connect(manager, &ChannelManager::channelAdded, this, &WaveformWidget::onAddSeries);
     this->connect(m_updateTimer, &QTimer::timeout, this, &WaveformWidget::onProcessPendingData);
+    m_updateCheckTimer->start();
+
+    this->connect(ChannelManager::getInstance(), &ChannelManager::channelAddedRequested, this,
+                  &WaveformWidget::onChannelAdded,
+                  Qt::QueuedConnection);
+    this->connect(ChannelManager::getInstance(), &ChannelManager::channelRemovedRequested, this,
+                  &WaveformWidget::onChannelRemoved,
+                  Qt::QueuedConnection);
     // 连接数据更新信号
-    this->connect(manager, &ChannelManager::channelDataAdded, this, &WaveformWidget::onChannelDataAdded);
-    this->connect(manager, &ChannelManager::channelRemoved, [this](const QString& channelName)
-    {
-        this->executeJS(QString("removeSeries(\"%1\")").arg(channelName));
-    });
-    this->connect(manager, &ChannelManager::channelsDataAllCleared, [this]()
-    {
-        this->clearAllData();
-    });
-    this->connect(manager, &ChannelManager::importChannelsData, [this]()
-    {
-        QString fileName = QFileDialog::getOpenFileName(this, tr("导入数据"), QString(), tr("JSON文件(*.json)"));
-        if (fileName.isEmpty()) return;
-        QFile file(fileName);
-        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return;
-        QTextStream in(&file);
-        in.setEncoding(QStringConverter::Utf8);
-        QString jsonData = in.readAll();
-        file.close();
-        if (jsonData.isEmpty()) return;
-        // 验证JSON格式
-        QJsonParseError parseError;
-        QJsonDocument::fromJson(jsonData.toUtf8(), &parseError);
-        if (parseError.error != QJsonParseError::NoError) return;
-        // 先设置全局变量，再调用导入函数
-        QString jsCode = QString("window.importJsonData = %1; importData(window.importJsonData);").arg(jsonData);
-        this->executeJS(jsCode);
-    });
-    this->connect(manager, &ChannelManager::channelsExportData, [this]()
-    {
-        QString fileName = QFileDialog::getSaveFileName(this, tr("导出数据"), QDir::homePath(), tr("JSON文件(*.json)"));
-        if (fileName.isEmpty()) return;
-        if (!fileName.endsWith(".json", Qt::CaseInsensitive)) fileName += ".json";
-        m_pWebEngineView->page()->runJavaScript(QString("exportData()"), [this, fileName](const QVariant& result)
-        {
-            QString jsonData = result.toString();
-            QFile file(fileName);
-            if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return;
-            QTextStream out(&file);
-            out.setEncoding(QStringConverter::Utf8);
-            out << jsonData;
-            file.close();
-        });
-    });
+    this->connect(ChannelManager::getInstance(), &ChannelManager::channelDataAddedRequested, this,
+                  &WaveformWidget::onChannelDataAdded,
+                  Qt::QueuedConnection);
+    this->connect(ChannelManager::getInstance(), &ChannelManager::channelsDataAllClearedRequested, this,
+                  &WaveformWidget::onChannelsDataAllCleared,
+                  Qt::QueuedConnection);
+    this->connect(ChannelManager::getInstance(), &ChannelManager::channelsDataImportedRequested, this,
+                  &WaveformWidget::onChannelsDataImported, Qt::QueuedConnection);
+    this->connect(ChannelManager::getInstance(), &ChannelManager::channelsDataExportedRequested, this,
+                  &WaveformWidget::onChannelsDataExported, Qt::QueuedConnection);
 }
 
 void WaveformWidget::webEngineViewSettings()
@@ -304,7 +320,6 @@ void WaveformWidget::webEngineViewSettings()
     settings->setAttribute(QWebEngineSettings::AutoLoadImages, true);
 }
 
-
 void WaveformWidget::executeJS(const QString& jsCode)
 {
     if (!m_pageLoaded) return;
@@ -326,19 +341,6 @@ void WaveformWidget::executeJS(const QString& jsCode)
     {
         // qDebug() << "JavaScript执行结果:" << result;
     });
-}
-
-void WaveformWidget::checkAndScheduleUpdate()
-{
-    if (!m_pageLoaded) return;
-
-    QMutexLocker locker(&m_dataMutex);
-    // 如果有待处理数据且没有计划更新，则安排一次更新
-    if (!m_pendingData.isEmpty() && !m_updateScheduled)
-    {
-        m_updateScheduled = true;
-        m_updateTimer->start(16); // 约60FPS
-    }
 }
 
 void WaveformWidget::checkAndUpdateData()
@@ -369,10 +371,4 @@ void WaveformWidget::flushPendingJSCommands()
     }
 
     m_pendingJSCommands.clear();
-}
-
-void WaveformWidget::clearAllData()
-{
-    m_pendingData.clear();
-    this->executeJS("clearAllData()");
 }

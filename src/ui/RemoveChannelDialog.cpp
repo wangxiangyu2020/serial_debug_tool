@@ -103,6 +103,8 @@ void RemoveChannelDialog::createContentLayout()
 
 void RemoveChannelDialog::connectSignals()
 {
+    this->connect(this, &RemoveChannelDialog::removeChannelRequested, ChannelManager::getInstance(),
+                  &ChannelManager::onRemoveChannel);
 }
 
 void RemoveChannelDialog::onConfirmClicked()
@@ -123,8 +125,7 @@ void RemoveChannelDialog::onConfirmClicked()
     if (idLabel == nullptr) return;
     QString channelId = idLabel->text();
     if (channelId.isEmpty()) return;
-    ChannelManager* channelManager = ChannelManager::getInstance();
-    channelManager->removeChannel(channelId);
+    emit removeChannelRequested(channelId);
     CDialogBase::onConfirmClicked();
 }
 

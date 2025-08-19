@@ -34,56 +34,43 @@ ChannelManager::ChannelManager(QObject* parent)
 {
     m_dataDispatchTimer = new QTimer(this);
     m_dataDispatchTimer->setInterval(16); // 约60FPS
-    this->connect(m_dataDispatchTimer, &QTimer::timeout, this, &ChannelManager::dispatchQueuedData);
+    this->connectSignals();
 }
 
-bool ChannelManager::addChannel(const QString& id, const QString& name, const QString& color)
+void ChannelManager::connectSignals()
 {
-    QMutexLocker locker(&m_dataMutex);
+    this->connect(m_dataDispatchTimer, &QTimer::timeout, this, &ChannelManager::onDispatchQueuedData);
+}
 
+void ChannelManager::onGetAllChannels()
+{
+    emit sendAllChannelsRequested(getAllChannels());
+}
+
+void ChannelManager::onAddChannel(const QString& id, const QString& name, const QString& color)
+{
     if (name.isEmpty() || id.isEmpty() || m_channels.contains(id))
     {
-        return false;
+        emit statusChanged(QString("通道标识%1已存在").arg(id));
+        return;
     }
 
     m_channels.insert(id, ChannelInfo(id, name, color));
-    emit channelAdded(name, color);
-    return true;
+    emit channelAddedRequested(name, color);
+    emit statusChanged(QString("通道%1添加成功").arg(name));
 }
 
-bool ChannelManager::removeChannel(const QString& id)
+void ChannelManager::onRemoveChannel(const QString& id)
 {
-    QMutexLocker locker(&m_dataMutex);
-
     if (!m_channels.contains(id))
     {
-        return false;
+        emit statusChanged(QString("通道标识%1不存在").arg(id));
+        return;
     }
     const auto& channel = m_channels.value(id);
     m_channels.remove(id);
-    emit channelRemoved(channel.name);
-    return true;
-}
-
-bool ChannelManager::updateChannel(const QString& id, const QString& name, const QString& newColor)
-{
-    QMutexLocker locker(&m_dataMutex);
-
-    if (!m_channels.contains(id))
-    {
-        return false;
-    }
-
-    m_channels[id] = ChannelInfo(id, name, newColor);
-    emit channelUpdated(name, newColor);
-    return true;
-}
-
-void ChannelManager::clearChannels()
-{
-    QMutexLocker locker(&m_dataMutex);
-    m_channels.clear();
-    emit channelsCleared();
+    emit channelRemovedRequested(channel.name);
+    emit statusChanged(QString("通道%1删除成功").arg(channel.name));
 }
 
 QList<ChannelInfo> ChannelManager::getAllChannels() const
@@ -102,18 +89,6 @@ ChannelInfo ChannelManager::getChannel(const QString& id) const
     }
 
     return ChannelInfo();
-}
-
-bool ChannelManager::hasChannel(const QString& id) const
-{
-    QMutexLocker locker(&m_dataMutex);
-    return m_channels.contains(id);
-}
-
-int ChannelManager::getChannelCount() const
-{
-    QMutexLocker locker(&m_dataMutex);
-    return m_channels.size();
 }
 
 void ChannelManager::addChannelData(const QString& channelId, const QVariant& data)
@@ -135,37 +110,55 @@ void ChannelManager::addChannelData(const QString& channelId, const QVariant& da
     }
 }
 
-void ChannelManager::clearAllChannelData()
-{
-    m_dataQueue.clear();
-    emit channelsDataAllCleared();
-}
-
-void ChannelManager::startDataDispatch()
-{
-    QMutexLocker locker(&m_queueMutex);
-    m_isDispatching = true;
-    if (!m_dataQueue.isEmpty() && !m_dataDispatchTimer->isActive()) m_dataDispatchTimer->start();
-}
-
-void ChannelManager::stopDataDispatch()
-{
-    QMutexLocker locker(&m_queueMutex);
-    m_isDispatching = false;
-    if (m_dataDispatchTimer->isActive()) m_dataDispatchTimer->stop();
-}
-
 int ChannelManager::getSampleRate() const
 {
     return m_sampleRate;
 }
 
-void ChannelManager::setSampleRate(int rate)
+void ChannelManager::onClearAllChannelData()
 {
-    m_sampleRate = rate;
+    m_dataQueue.clear();
+    emit channelsDataAllClearedRequested();
 }
 
-void ChannelManager::dispatchQueuedData()
+void ChannelManager::onImportChannelsData()
+{
+    emit channelsDataImportedRequested();
+}
+
+void ChannelManager::onExportChannelsData()
+{
+    emit channelsDataExportedRequested();
+}
+
+void ChannelManager::onGetSampleRate()
+{
+    emit sendSampleRateRequested(m_sampleRate);
+}
+
+void ChannelManager::onSetSampleRate(int rate)
+{
+    m_sampleRate = rate;
+    emit statusChanged(QString("采样间隔设置为: %1 ms").arg(rate));
+}
+
+void ChannelManager::onStartDataDispatch()
+{
+    m_isDispatching = true;
+    if (!m_dataQueue.isEmpty() && !m_dataDispatchTimer->isActive()) m_dataDispatchTimer->start();
+    emit channelDataProcessRequested(true);
+    emit statusChanged(QString("数据分发已启动"));
+}
+
+void ChannelManager::onStopDataDispatch()
+{
+    m_isDispatching = false;
+    if (m_dataDispatchTimer->isActive()) m_dataDispatchTimer->stop();
+    emit channelDataProcessRequested(false);
+    emit statusChanged(QString("数据分发已停止"));
+}
+
+void ChannelManager::onDispatchQueuedData()
 {
     QMutexLocker locker(&m_queueMutex);
 
@@ -175,7 +168,7 @@ void ChannelManager::dispatchQueuedData()
     {
         auto dataPair = m_dataQueue.dequeue();
         locker.unlock();
-        emit channelDataAdded(dataPair.first, dataPair.second);
+        emit channelDataAddedRequested(this->getChannel(dataPair.first).name, dataPair.second);
         locker.relock();
     }
 

@@ -17,6 +17,7 @@ int main(int argc, char* argv[])
     // 工作线程
     AppSetup::setupManagerInThread<TcpNetworkManager>(&app, "TcpNetworkManagerThread");
     AppSetup::setupManagerInThread<SerialPortManager>(&app, "SerialPortManagerThread");
+    AppSetup::setupManagerInThread<ChannelManager>(&app, "ChannelManagerThread");
 
     SplashScreen splash;
     QScopedPointer<MainWindow> mainWindow;

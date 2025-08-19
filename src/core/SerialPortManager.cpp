@@ -33,31 +33,6 @@ QSerialPort* SerialPortManager::getSerialPort() const
     return m_pSerialPort;
 }
 
-void SerialPortManager::startWaveformRecording()
-{
-    QMutexLocker locker(&m_channelMutex);
-    m_channelManager = ChannelManager::getInstance();
-    m_sampleRate = static_cast<double>(m_channelManager->getSampleRate());
-    this->clearAllChannelData();
-    ChannelManager* manager = ChannelManager::getInstance();
-    QList<ChannelInfo> channels = manager->getAllChannels();
-    for (const auto& channel : channels)
-    {
-        m_channelIds.insert(channel.id);
-    }
-}
-
-void SerialPortManager::setChannelDataProcess(bool status)
-{
-    m_isChannelDataProcess = status;
-}
-
-// 获取方法
-bool SerialPortManager::getChannelDataProcess()
-{
-    return m_isChannelDataProcess;
-}
-
 // 数据处理方法
 void SerialPortManager::handleWriteData(const QByteArray& writeByteArray)
 {
@@ -69,31 +44,6 @@ void SerialPortManager::handleWriteData(const QByteArray& writeByteArray)
         emit sendData2ReceiveChanged(showByteArray);
     }
     this->serialPortWrite(m_isHexSend ? writeByteArray.toHex() : writeByteArray);
-}
-
-void SerialPortManager::handleReadData(const QByteArray& readByteArray)
-{
-    const bool isHex = m_isHexDisplay.load(std::memory_order_acquire);
-    QString formattedData = isHex
-                                ? QString::fromLatin1(readByteArray.toHex(' ').toUpper())
-                                : QString::fromUtf8(readByteArray);
-    QByteArray showByteArray = m_isDisplayTimestamp
-                                   ? this->generateTimestamp(formattedData)
-                                   : formattedData.toLocal8Bit();
-    emit receiveDataChanged(showByteArray);
-}
-
-void SerialPortManager::handleChannelData(const QByteArray& data)
-{
-    ThreadPoolManager::addTask([this, data]()
-    {
-        QMutexLocker locker(&m_channelMutex);
-        for (char c : data)
-        {
-            m_dataQueue.enqueue(c);
-        }
-        this->processQueueInternal();
-    });
 }
 
 // 主要业务方法
@@ -175,8 +125,7 @@ void SerialPortManager::onSerialPortRead()
     ThreadPoolManager::addTask([this, readByteArray]()
     {
         QMutexLocker locker(&m_serialMutex);
-        if (this->getChannelDataProcess())
-            this->handleChannelData(readByteArray);
+        if (m_isChannelDataProcess) this->handleChannelData(readByteArray);
         this->handleReadData(readByteArray);
     });
 }
@@ -192,13 +141,12 @@ SerialPortManager::SerialPortManager(QObject* parent)
 // 私有方法
 void SerialPortManager::connectSignals()
 {
-    ChannelManager* channelManager = ChannelManager::getInstance();
-    this->connect(channelManager, &ChannelManager::channelDataProcess, [this](bool status)
+    this->connect(ChannelManager::getInstance(), &ChannelManager::channelDataProcessRequested, [this](bool status)
     {
         if (status) this->startWaveformRecording();
-        this->setChannelDataProcess(status);
+        m_isChannelDataProcess = status;
     });
-    this->connect(channelManager, &ChannelManager::channelsDataAllCleared, [this]()
+    this->connect(ChannelManager::getInstance(), &ChannelManager::channelsDataAllClearedRequested, [this]()
     {
         this->clearAllChannelData();
     });
@@ -230,6 +178,57 @@ void SerialPortManager::serialPortWrite(const QByteArray& data)
     {
         this->handlerError(QSerialPort::WriteError);
     }
+}
+
+void SerialPortManager::handleReadData(const QByteArray& readByteArray)
+{
+    const bool isHex = m_isHexDisplay.load(std::memory_order_acquire);
+    QString formattedData = isHex
+                                ? QString::fromLatin1(readByteArray.toHex(' ').toUpper())
+                                : QString::fromUtf8(readByteArray);
+    QByteArray showByteArray = m_isDisplayTimestamp
+                                   ? this->generateTimestamp(formattedData)
+                                   : formattedData.toLocal8Bit();
+    emit receiveDataChanged(showByteArray);
+}
+
+void SerialPortManager::handleChannelData(const QByteArray& data)
+{
+    ThreadPoolManager::addTask([this, data]()
+    {
+        QMutexLocker locker(&m_channelMutex);
+        for (char c : data)
+        {
+            m_dataQueue.enqueue(c);
+        }
+        this->processQueueInternal();
+    });
+}
+
+void SerialPortManager::startWaveformRecording()
+{
+    ChannelManager* manager = ChannelManager::getInstance();
+    m_channelManager = manager;
+
+    // 使用 invokeMethod 确保在 ChannelManager 的线程中获取数据
+    QMetaObject::invokeMethod(manager, [this, manager]()
+    {
+        // 在 ChannelManager 线程中安全获取数据
+        int sampleRate = manager->getSampleRate();
+        QList<ChannelInfo> channels = manager->getAllChannels();
+
+        // 切换回 SerialPortManager 线程处理结果
+        QMetaObject::invokeMethod(this, [this, sampleRate, channels]()
+        {
+            this->clearAllChannelData();
+            // 在 SerialPortManager 线程中处理数据
+            m_sampleRate = static_cast<double>(sampleRate);
+            for (const auto& channel : channels)
+            {
+                m_channelIds.insert(channel.id);
+            }
+        }, Qt::QueuedConnection);
+    }, Qt::QueuedConnection);
 }
 
 void SerialPortManager::handlerError(QSerialPort::SerialPortError error)
@@ -289,26 +288,6 @@ void SerialPortManager::clearAllChannelData()
     m_lastTimestamp = 0;
 }
 
-void SerialPortManager::processDataPointInternal(const QByteArray& dataPoint)
-{
-    int eqPos = dataPoint.indexOf('=');
-    if (eqPos == -1) return;
-    QByteArray channel = dataPoint.left(eqPos).trimmed();
-    QByteArray data = dataPoint.mid(eqPos + 1).trimmed();
-    QString channelId = QString::fromLatin1(channel);
-    if (!m_channelTimestamps.contains(channelId)) m_channelTimestamps[channelId] = m_sampleRate;
-    double currentTime = m_channelTimestamps[channelId];
-    if (!m_channelIds.contains(channelId)) return;
-    bool ok;
-    double value = data.toDouble(&ok);
-    if (!ok) return;
-    QVariantList point;
-    point.reserve(2);
-    point << currentTime << value;
-    m_channelTimestamps[channelId] += m_sampleRate;
-    m_channelManager->addChannelData(channelId, QVariant(std::move(point)));
-}
-
 void SerialPortManager::processQueueInternal()
 {
     if (m_dataQueue.size() > MAX_QUEUE_SIZE)
@@ -331,4 +310,29 @@ void SerialPortManager::processQueueInternal()
         }
         m_currentPoint.append(ch);
     }
+}
+
+void SerialPortManager::processDataPointInternal(const QByteArray& dataPoint)
+{
+    int eqPos = dataPoint.indexOf('=');
+    if (eqPos == -1) return;
+    QByteArray channel = dataPoint.left(eqPos).trimmed();
+    QByteArray data = dataPoint.mid(eqPos + 1).trimmed();
+    QString channelId = QString::fromLatin1(channel);
+    if (!m_channelTimestamps.contains(channelId)) m_channelTimestamps[channelId] = m_sampleRate;
+    double currentTime = m_channelTimestamps[channelId];
+    if (!m_channelIds.contains(channelId)) return;
+    bool ok;
+    double value = data.toDouble(&ok);
+    if (!ok) return;
+    QVariantList point;
+    point.reserve(2);
+    point << currentTime << value;
+    m_channelTimestamps[channelId] += m_sampleRate;
+    // 使用函数指针方式，更安全且性能更好
+    QMetaObject::invokeMethod(m_channelManager,
+                              [this, channelId, point]()
+                              {
+                                  m_channelManager->addChannelData(channelId, QVariant(std::move(point)));
+                              }, Qt::QueuedConnection);
 }

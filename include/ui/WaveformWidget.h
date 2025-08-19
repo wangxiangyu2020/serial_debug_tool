@@ -42,9 +42,13 @@ protected:
 
 private slots:
     void onPageLoadFinished(bool success);
-    void onAddSeries(const QString& name, const QString& color);
+    void onChannelAdded(const QString& name, const QString& color);
+    void onChannelRemoved(const QString& name);
     void onChannelDataAdded(const QString& channelId, const QVariant& data);
     void onProcessPendingData();
+    void onChannelsDataAllCleared();
+    void onChannelsDataImported();
+    void onChannelsDataExported();
 
 private:
     // 私有方法
@@ -54,10 +58,8 @@ private:
     void connectSignals();
     void webEngineViewSettings();
     void executeJS(const QString& jsCode);
-    void checkAndScheduleUpdate();
     void checkAndUpdateData();
     void flushPendingJSCommands();
-    void clearAllData();
 
     // 静态成员变量
     static constexpr int MAX_QUEUE_SIZE = 10000;

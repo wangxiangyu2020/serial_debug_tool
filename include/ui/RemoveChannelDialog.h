@@ -26,6 +26,9 @@ public:
     // 配置方法
     void setExistingChannels(const QList<ChannelInfo>& channels);
 
+signals:
+    void removeChannelRequested(const QString& id);
+
 protected:
     // 重写基类虚函数
     void createComponents() override;
