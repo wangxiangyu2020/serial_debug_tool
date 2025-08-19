@@ -38,16 +38,17 @@ public:
     static SerialPortDataReceiveWidget* getSerialPortDataReceiveWidget();
     static QPlainTextEdit* getReceiveTextEdit();
 
-signals:
-    void sigClearReceiveData();
-    void sigSaveToFile();
+public slots:
+    void onClearReceiveData();
+    void onSaveReceiveData();
 
 protected:
     // 事件处理方法
     bool eventFilter(QObject* watched, QEvent* event) override;
 
 private slots:
-    void displayReceiveData(const QByteArray& data);
+    void onDisplayReceiveData(const QByteArray& data);
+    void onDisplaySentDataWithHighlight(const QByteArray& data);
 
 private:
     // 私有方法

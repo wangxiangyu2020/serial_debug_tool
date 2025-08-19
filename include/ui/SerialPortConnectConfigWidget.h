@@ -40,12 +40,17 @@ public:
     explicit SerialPortConnectConfigWidget(QWidget* parent = nullptr);
     ~SerialPortConnectConfigWidget() = default;
 
+signals:
+    void startConnectionRequested(QMap<QString, QVariant> serialParams);
+    void stopConnectionRequested();
+
 protected:
     // 事件处理方法
     bool eventFilter(QObject* watched, QEvent* event) override;
 
 private slots:
     void onConnectButtonClicked();
+    void onStatusChanged(const QString& status, int connectStatus);
 
 private:
     // 私有方法
@@ -77,6 +82,8 @@ private:
 
     // 布局成员
     QGridLayout* m_pMainLayout = nullptr;
+
+    bool m_isConnected = false;
 };
 
 #endif //SERIALPORTCONNECTCONFIGWIDGET_H

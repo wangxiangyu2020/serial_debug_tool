@@ -34,6 +34,9 @@ public:
     // 静态方法
     static QPlainTextEdit* getSendTextEdit();
 
+signals:
+    void sendDataRequested(const QByteArray& data);
+
 protected:
     // 事件处理方法
     void resizeEvent(QResizeEvent* event) override;

@@ -80,22 +80,26 @@ void SerialPortReceiveSettingsWidget::connectSignals()
 {
     this->connect(m_pClearDataButton, &QPushButton::clicked, [this]()
     {
-        emit SerialPortDataReceiveWidget::getSerialPortDataReceiveWidget()->sigClearReceiveData();
+        emit clearDataRequested();
     });
     this->connect(m_pSaveDataButton, &QPushButton::clicked, [this]()
     {
-        emit SerialPortDataReceiveWidget::getSerialPortDataReceiveWidget()->sigSaveToFile();
+        emit saveDataRequested();
     });
-    this->connect(m_pHexDisplayCheckBox, &QCheckBox::toggled, [this](bool checked)
+    this->connect(m_pHexDisplayCheckBox, &QCheckBox::clicked, [this](bool status)
     {
-        emit SerialPortManager::getInstance()->sigHexDisplay(checked);
+        emit hexDisplayChanged(status);
     });
-    this->connect(m_pDisplayTimestampCheckBox, &QCheckBox::toggled, [this](bool checked)
+    this->connect(this, &SerialPortReceiveSettingsWidget::hexDisplayChanged, SerialPortManager::getInstance(),
+                  &SerialPortManager::setHexDisplayStatus);
+    this->connect(m_pDisplayTimestampCheckBox, &QCheckBox::clicked, [this](bool status)
     {
-        emit SerialPortManager::getInstance()->sigDisplayTimestamp(checked);
+        emit timestampDisplayChanged(status);
     });
-    this->connect(m_pSaveToFileCheckBox, &QCheckBox::toggled, [this](bool checked)
+    this->connect(this, &SerialPortReceiveSettingsWidget::timestampDisplayChanged, SerialPortManager::getInstance(),
+                  &SerialPortManager::setTimestampStatus);
+    this->connect(m_pSaveToFileCheckBox, &QCheckBox::clicked, [this](bool status)
     {
-        emit sigSaveToFile(checked);
+        emit saveToFileChanged(status);
     });
 }

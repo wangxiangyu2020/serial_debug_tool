@@ -40,41 +40,37 @@ public:
     SerialPortManager& operator=(const SerialPortManager&) = delete;
 
     // 主要业务方法
-    bool openSerialPort(const QMap<QString, QVariant>& serialParams);
-    bool closeSerialPort();
     QSerialPort* getSerialPort() const;
     void startWaveformRecording();
 
     // 配置方法
-    void setHexSendStatus(bool status);
-    void setHexDisplayStatus(bool status);
-    void setSendStringDisplayStatus(bool status);
-    void setTimestampStatus(bool status);
     void setChannelDataProcess(bool status);
 
     // 获取方法
     bool getChannelDataProcess();
 
     // 数据处理方法
-    void handleWriteData(const QByteArray& writeByteArray);
     void handleReadData(const QByteArray& readByteArray);
     void handleChannelData(const QByteArray& readByteArray);
 
-    // 静态错误处理
-    static void handlerError(QSerialPort::SerialPortError error);
+public slots:
+    void handleWriteData(const QByteArray& writeByteArray);
+    void openSerialPort(const QMap<QString, QVariant>& serialParams);
+    void closeSerialPort();
+    void setHexSendStatus(bool status);
+    void setHexDisplayStatus(bool status);
+    void setSendStringDisplayStatus(bool status);
+    void setTimestampStatus(bool status);
+    void startTimedSend(double interval, const QByteArray& data);
+    void stopTimedSend();
 
 signals:
-    void sigReceiveData(const QByteArray& data);
-    void sigHexDisplay(bool isHex);
-    void sigSendData(const QByteArray& data);
-    void sigHexSend(bool isHex);
-    void sigSendStringDisplay(bool isDisplay);
-    void sigSendData2Receive(const QByteArray& data);
-    void sigTimedSend(bool isTimed, double interval);
-    void sigDisplayTimestamp(bool isDisplay);
+    void statusChanged(const QString& status, int connectStatus = -1);
+    void receiveDataChanged(const QByteArray& data);
+    void sendData2ReceiveChanged(const QByteArray& data);
 
 private slots:
-    void onReadyRead();
+    void onSerialPortRead();
 
 private:
     // 构造函数和析构函数
@@ -85,11 +81,18 @@ private:
     void connectSignals();
     void configureSerialPort(const QMap<QString, QVariant>& serialParams);
     void serialPortWrite(const QByteArray& data);
-    void serialPortRead();
+    // 错误处理
+    void handlerError(QSerialPort::SerialPortError error);
     QByteArray& generateTimestamp(const QString& data);
     void clearAllChannelData();
     void processDataPointInternal(const QByteArray& bytes);
     void processQueueInternal();
+
+    enum ConnectStatus
+    {
+        Disconnected = 0,
+        Connected = 1,
+    };
 
     // 静态成员变量
     static SerialPortManager* m_pInstance;
@@ -120,6 +123,9 @@ private:
     QMap<QString, double> m_channelTimestamps;
     double m_sampleRate = 0;
     double m_lastTimestamp = 0;
+
+    QTimer* m_pTimedSendTimer;
+    QByteArray m_timedSendData;
 };
 
 #endif //SERIALPORTMANAGER_H

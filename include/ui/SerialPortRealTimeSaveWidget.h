@@ -29,8 +29,8 @@ public:
     explicit SerialPortRealTimeSaveWidget(QWidget* parent = nullptr);
     ~SerialPortRealTimeSaveWidget() = default;
 
-signals:
-    void sigDisplaySavePath(const QString& path);
+public slots:
+    void onDisplaySavePath(const QString& path);
 
 protected:
     // 事件处理方法

@@ -21,6 +21,7 @@
 #include <QHBoxLayout>
 #include "utils/StyleLoader.h"
 #include "ui/SerialPortConnectConfigWidget.h"
+#include "ui/SerialPortDataSendWidget.h"
 
 class SerialPortSendSettingsWidget : public QWidget
 {
@@ -33,6 +34,15 @@ public:
 
     // 静态方法
     static QCheckBox* getTimedSendCheckBox();
+
+signals:
+    void hexSendChanged(bool status);
+    void showSendStringChanged(bool status);
+    void startTimedSendRequested(double interval, const QByteArray& data);
+    void stopTimedSendRequested();
+
+private slots:
+    void onTimedSendCheckBoxClicked(bool status);
 
 private:
     // 私有方法

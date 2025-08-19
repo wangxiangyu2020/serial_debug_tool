@@ -35,7 +35,11 @@ public:
     QCheckBox* getSaveToFileCheckBox();
 
 signals:
-    void sigSaveToFile(bool status);
+    void clearDataRequested();
+    void saveDataRequested();
+    void hexDisplayChanged(bool enabled);
+    void timestampDisplayChanged(bool enabled);
+    void saveToFileChanged(bool enabled);
 
 private:
     // 私有方法

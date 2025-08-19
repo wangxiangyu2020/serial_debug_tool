@@ -33,13 +33,18 @@ public:
     explicit SerialPortConfigTab(QWidget* parent = nullptr);
     ~SerialPortConfigTab() = default;
 
+signals:
+    void displaySavePathRequested(const QString& path = nullptr);
+
+private slots:
+    void onReadySaveFile(bool status);
+
 private:
     // 私有方法
     void setUI();
     void createComponents();
     void createLayout();
     void connectSignals();
-    void readySaveFile(bool status);
 
     // 布局成员
     QHBoxLayout* m_pMainLayout = nullptr;

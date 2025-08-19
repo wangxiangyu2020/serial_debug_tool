@@ -31,6 +31,26 @@ QPlainTextEdit* SerialPortDataReceiveWidget::getReceiveTextEdit()
     return pReceiveTextEdit;
 }
 
+void SerialPortDataReceiveWidget::onClearReceiveData()
+{
+    pReceiveTextEdit->clear();
+}
+
+void SerialPortDataReceiveWidget::onSaveReceiveData()
+{
+    QString fileName = QFileDialog::getSaveFileName(this,
+                                                    "保存数据",
+                                                    QDir::homePath(),
+                                                    "文本文件 (*.txt)");
+    if (fileName.isEmpty()) return;
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return;
+    QTextStream out(&file);
+    out << getReceiveTextEdit()->toPlainText();
+    file.close();
+    CMessageBox::showToast(this, "数据已保存至" + fileName);
+}
+
 bool SerialPortDataReceiveWidget::eventFilter(QObject* watched, QEvent* event)
 {
     if (watched == m_pReceiveTextEdit)
@@ -61,7 +81,7 @@ bool SerialPortDataReceiveWidget::eventFilter(QObject* watched, QEvent* event)
 }
 
 // private slots
-void SerialPortDataReceiveWidget::displayReceiveData(const QByteArray& data)
+void SerialPortDataReceiveWidget::onDisplayReceiveData(const QByteArray& data)
 {
     // 暂停重绘以提高性能
     m_pReceiveTextEdit->setUpdatesEnabled(false);
@@ -77,6 +97,31 @@ void SerialPortDataReceiveWidget::displayReceiveData(const QByteArray& data)
     }
     // 恢复重绘
     m_pReceiveTextEdit->setUpdatesEnabled(true);
+}
+
+void SerialPortDataReceiveWidget::onDisplaySentDataWithHighlight(const QByteArray& data)
+{
+    this->onDisplayReceiveData(data);
+    // 获取最后一行（刚刚添加的数据行）
+    QTextBlock lastBlock = m_pReceiveTextEdit->document()->lastBlock();
+    // 创建文本光标并选中该块
+    QTextCursor cursor(lastBlock);
+    cursor.select(QTextCursor::BlockUnderCursor);
+    // 设置背景颜色为浅黄色
+    QTextCharFormat yellowFormat;
+    yellowFormat.setBackground(QColor(230, 240, 255));
+    cursor.setCharFormat(yellowFormat);
+    // 重置后续所有行的背景色为白色
+    QTextBlock nextBlock = lastBlock.next();
+    while (nextBlock.isValid())
+    {
+        QTextCursor nextCursor(nextBlock);
+        nextCursor.select(QTextCursor::BlockUnderCursor);
+        QTextCharFormat whiteFormat;
+        whiteFormat.setBackground(Qt::white);
+        nextCursor.setCharFormat(whiteFormat);
+        nextBlock = nextBlock.next();
+    }
 }
 
 // 私有方法
@@ -121,49 +166,8 @@ void SerialPortDataReceiveWidget::createLayout()
 
 void SerialPortDataReceiveWidget::connectSignals()
 {
-    this->connect(SerialPortManager::getInstance(), &SerialPortManager::sigReceiveData, this,
-                  &SerialPortDataReceiveWidget::displayReceiveData);
-    this->connect(this, &SerialPortDataReceiveWidget::sigClearReceiveData, [this]()
-    {
-        m_pReceiveTextEdit->clear();
-    });
-    this->connect(SerialPortManager::getInstance(), &SerialPortManager::sigSendData2Receive,
-                  [this](const QByteArray& data)
-                  {
-                      this->displayReceiveData(data);
-                      // 获取最后一行（刚刚添加的数据行）
-                      QTextBlock lastBlock = m_pReceiveTextEdit->document()->lastBlock();
-                      // 创建文本光标并选中该块
-                      QTextCursor cursor(lastBlock);
-                      cursor.select(QTextCursor::BlockUnderCursor);
-                      // 设置背景颜色为浅黄色
-                      QTextCharFormat yellowFormat;
-                      yellowFormat.setBackground(QColor(230, 240, 255));
-                      cursor.setCharFormat(yellowFormat);
-                      // 重置后续所有行的背景色为白色
-                      QTextBlock nextBlock = lastBlock.next();
-                      while (nextBlock.isValid())
-                      {
-                          QTextCursor nextCursor(nextBlock);
-                          nextCursor.select(QTextCursor::BlockUnderCursor);
-                          QTextCharFormat whiteFormat;
-                          whiteFormat.setBackground(Qt::white);
-                          nextCursor.setCharFormat(whiteFormat);
-                          nextBlock = nextBlock.next();
-                      }
-                  });
-    this->connect(this, &SerialPortDataReceiveWidget::sigSaveToFile, [this]()
-    {
-        QString fileName = QFileDialog::getSaveFileName(this,
-                                                        "保存数据",
-                                                        QDir::homePath(),
-                                                        "文本文件 (*.txt)");
-        if (fileName.isEmpty()) return;
-        QFile file(fileName);
-        if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return;
-        QTextStream out(&file);
-        out << getReceiveTextEdit()->toPlainText();
-        file.close();
-        CMessageBox::showToast(this, "数据已保存至" + fileName);
-    });
+    this->connect(SerialPortManager::getInstance(), &SerialPortManager::receiveDataChanged, this,
+                  &SerialPortDataReceiveWidget::onDisplayReceiveData, Qt::QueuedConnection);
+    this->connect(SerialPortManager::getInstance(), &SerialPortManager::sendData2ReceiveChanged, this,
+                  &SerialPortDataReceiveWidget::onDisplaySentDataWithHighlight, Qt::QueuedConnection);
 }

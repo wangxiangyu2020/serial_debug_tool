@@ -38,33 +38,36 @@ bool SerialPortConnectConfigWidget::eventFilter(QObject* watched, QEvent* event)
 // private slots
 void SerialPortConnectConfigWidget::onConnectButtonClicked()
 {
-    bool isConnected = m_pConnectButton->property("connected").toBool();
-
-    if (!isConnected)
+    if (m_isConnected)
     {
-        if (m_pPortComboBox->count() == 0)
-        {
-            CMessageBox::showToast("请选择端口");
-            return;
-        }
-        QMap<QString, QVariant> serialParams
-        {
-            {"portInfo", QVariant::fromValue(m_pPortComboBox->currentData().value<QSerialPortInfo>())},
-            {"baudRate", m_pBaudRateComboBox->currentData().value<QSerialPort::BaudRate>()},
-            {"dataBits", m_pDataBitsComboBox->currentData().value<QSerialPort::DataBits>()},
-            {"stopBits", m_pStopBitsComboBox->currentData().value<QSerialPort::StopBits>()},
-            {"parity", m_pParityComboBox->currentData().value<QSerialPort::Parity>()},
-            {"flowControl", m_pFlowControlComboBox->currentData().value<QSerialPort::FlowControl>()}
-        };
-        isConnected = SerialPortManager::getInstance()->openSerialPort(serialParams);
+        emit stopConnectionRequested();
+        return;
     }
-    else
+    if (m_pPortComboBox->count() == 0)
     {
-        isConnected = !SerialPortManager::getInstance()->closeSerialPort();
+        CMessageBox::showToast("请选择端口");
+        return;
     }
+    QMap<QString, QVariant> serialParams
+    {
+        {"portInfo", QVariant::fromValue(m_pPortComboBox->currentData().value<QSerialPortInfo>())},
+        {"baudRate", m_pBaudRateComboBox->currentData().value<QSerialPort::BaudRate>()},
+        {"dataBits", m_pDataBitsComboBox->currentData().value<QSerialPort::DataBits>()},
+        {"stopBits", m_pStopBitsComboBox->currentData().value<QSerialPort::StopBits>()},
+        {"parity", m_pParityComboBox->currentData().value<QSerialPort::Parity>()},
+        {"flowControl", m_pFlowControlComboBox->currentData().value<QSerialPort::FlowControl>()}
+    };
 
-    m_pConnectButton->setProperty("connected", isConnected);
-    m_pConnectButton->setText(isConnected ? "断开" : "连接");
+    emit startConnectionRequested(serialParams);
+}
+
+void SerialPortConnectConfigWidget::onStatusChanged(const QString& status, int connectStatus)
+{
+    CMessageBox::showToast(status);
+    if (connectStatus != 1 && connectStatus != 0) return;
+    m_isConnected = connectStatus == 1;
+    m_pConnectButton->setProperty("connected", m_isConnected);
+    m_pConnectButton->setText(m_isConnected ? "断开" : "连接");
     m_pConnectButton->style()->unpolish(m_pConnectButton);
     m_pConnectButton->style()->polish(m_pConnectButton);
     m_pConnectButton->update();
@@ -187,6 +190,12 @@ void SerialPortConnectConfigWidget::connectSignals()
 {
     this->connect(m_pConnectButton, &QPushButton::clicked, this,
                   &SerialPortConnectConfigWidget::onConnectButtonClicked);
+    this->connect(this, &SerialPortConnectConfigWidget::startConnectionRequested, SerialPortManager::getInstance(),
+                  &SerialPortManager::openSerialPort);
+    this->connect(this, &SerialPortConnectConfigWidget::stopConnectionRequested, SerialPortManager::getInstance(),
+                  &SerialPortManager::closeSerialPort);
+    this->connect(SerialPortManager::getInstance(), &SerialPortManager::statusChanged, this,
+                  &SerialPortConnectConfigWidget::onStatusChanged);
 }
 
 void SerialPortConnectConfigWidget::detectionAvailablePorts()

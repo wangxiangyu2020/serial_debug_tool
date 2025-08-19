@@ -18,6 +18,45 @@ SerialPortConfigTab::SerialPortConfigTab(QWidget* parent)
     StyleLoader::loadStyleFromFile(this, ":resources/qss/serial_prot_config_tab.qss");
 }
 
+void SerialPortConfigTab::onReadySaveFile(bool status)
+{
+    if (!status)
+    {
+        // 自动释放内存
+        QScopedPointer<QFile> fileGuard(m_pSaveFile);
+        m_pSaveFile = nullptr;
+        m_pSerialPortRealTimeSaveWidget->hide();
+        emit displaySavePathRequested();
+        return;
+    }
+    QString fileName = QFileDialog::getSaveFileName(this,
+                                                    "保存数据",
+                                                    QDir::homePath(),
+                                                    "文件文本(*.txt)");
+    if (fileName.isEmpty())
+    {
+        m_pSerialPortReceiveSettingsWidget->getSaveToFileCheckBox()->setChecked(false);
+        return;
+    }
+    // 使用 Qt 智能指针
+    QScopedPointer<QFile> newFile(new QFile(fileName));
+    if (!newFile->open(QIODevice::WriteOnly | QIODevice::Text)) return;
+    // 替换全局文件对象
+    delete m_pSaveFile;
+    m_pSaveFile = newFile.take(); // 获取所有权
+    emit displaySavePathRequested(fileName);
+    QTextStream out(m_pSaveFile);
+    QString dataStr = SerialPortDataReceiveWidget::getReceiveTextEdit()->toPlainText();
+    // 如果数据不以换行符结尾，则添加换行符
+    if (!dataStr.endsWith('\n'))
+    {
+        dataStr.append('\n');
+    }
+    out << dataStr;
+    m_pSaveFile->flush();
+    m_pSerialPortRealTimeSaveWidget->show();
+}
+
 // 私有方法
 void SerialPortConfigTab::setUI()
 {
@@ -75,12 +114,15 @@ void SerialPortConfigTab::createLayout()
 
 void SerialPortConfigTab::connectSignals()
 {
-    this->connect(m_pSerialPortReceiveSettingsWidget, &SerialPortReceiveSettingsWidget::sigSaveToFile,
-                  [this](bool status)
-                  {
-                      this->readySaveFile(status);
-                  });
-    this->connect(SerialPortManager::getInstance(), &SerialPortManager::sigReceiveData,
+    this->connect(m_pSerialPortReceiveSettingsWidget, &SerialPortReceiveSettingsWidget::clearDataRequested,
+                  m_pSerialPortDataReceiveWidget, &SerialPortDataReceiveWidget::onClearReceiveData);
+    this->connect(m_pSerialPortReceiveSettingsWidget, &SerialPortReceiveSettingsWidget::saveDataRequested,
+                  m_pSerialPortDataReceiveWidget, &SerialPortDataReceiveWidget::onSaveReceiveData);
+    this->connect(m_pSerialPortReceiveSettingsWidget, &SerialPortReceiveSettingsWidget::saveToFileChanged, this,
+                  &SerialPortConfigTab::onReadySaveFile);
+    this->connect(this, &SerialPortConfigTab::displaySavePathRequested, m_pSerialPortRealTimeSaveWidget,
+                  &SerialPortRealTimeSaveWidget::onDisplaySavePath);
+    this->connect(SerialPortManager::getInstance(), &SerialPortManager::receiveDataChanged,
                   [this](const QByteArray& data)
                   {
                       Qt::CheckState state = m_pSerialPortReceiveSettingsWidget->getSaveToFileCheckBox()->checkState();
@@ -97,43 +139,4 @@ void SerialPortConfigTab::connectSignals()
                           m_pSaveFile->flush();
                       }
                   });
-}
-
-void SerialPortConfigTab::readySaveFile(bool status)
-{
-    if (!status)
-    {
-        // 自动释放内存
-        QScopedPointer<QFile> fileGuard(m_pSaveFile);
-        m_pSaveFile = nullptr;
-        m_pSerialPortRealTimeSaveWidget->hide();
-        emit m_pSerialPortRealTimeSaveWidget->sigDisplaySavePath(nullptr);
-        return;
-    }
-    QString fileName = QFileDialog::getSaveFileName(this,
-                                                    "保存数据",
-                                                    QDir::homePath(),
-                                                    "文件文本(*.txt)");
-    if (fileName.isEmpty())
-    {
-        m_pSerialPortReceiveSettingsWidget->getSaveToFileCheckBox()->setChecked(false);
-        return;
-    }
-    // 使用 Qt 智能指针
-    QScopedPointer<QFile> newFile(new QFile(fileName));
-    if (!newFile->open(QIODevice::WriteOnly | QIODevice::Text)) return;
-    // 替换全局文件对象
-    delete m_pSaveFile;
-    m_pSaveFile = newFile.take(); // 获取所有权
-    emit m_pSerialPortRealTimeSaveWidget->sigDisplaySavePath(fileName);
-    QTextStream out(m_pSaveFile);
-    QString dataStr = SerialPortDataReceiveWidget::getReceiveTextEdit()->toPlainText();
-    // 如果数据不以换行符结尾，则添加换行符
-    if (!dataStr.endsWith('\n'))
-    {
-        dataStr.append('\n');
-    }
-    out << dataStr;
-    m_pSaveFile->flush();
-    m_pSerialPortRealTimeSaveWidget->show();
 }

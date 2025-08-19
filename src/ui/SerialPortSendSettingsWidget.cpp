@@ -10,7 +10,6 @@
 
 #include "ui/SerialPortSendSettingsWidget.h"
 
-static QCheckBox* timedSendCheckBox = nullptr;
 
 // 构造函数和析构函数
 SerialPortSendSettingsWidget::SerialPortSendSettingsWidget(QWidget* parent)
@@ -20,9 +19,30 @@ SerialPortSendSettingsWidget::SerialPortSendSettingsWidget(QWidget* parent)
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/serial_port_send_settings_widget.qss");
 }
 
-QCheckBox* SerialPortSendSettingsWidget::getTimedSendCheckBox()
+void SerialPortSendSettingsWidget::onTimedSendCheckBoxClicked(bool status)
 {
-    return timedSendCheckBox;
+    if (!status)
+    {
+        m_pIntervalEdit->setEnabled(true);
+        emit stopTimedSendRequested();
+        return;
+    }
+    if (!SerialPortManager::getInstance()->getSerialPort()->isOpen())
+    {
+        CMessageBox::showToast(this, tr("请先连接串口"));
+        m_pTimedSendCheckBox->setChecked(false); // 恢复复选框状态
+        return;
+    }
+    QString textToSend = SerialPortDataSendWidget::getSendTextEdit()->toPlainText(); // 从UI获取要发送的文本
+    if (textToSend.trimmed().isEmpty())
+    {
+        CMessageBox::showToast(this, "请输入要发送的数据");
+        m_pTimedSendCheckBox->setChecked(false);
+        return;
+    }
+    m_pIntervalEdit->setEnabled(false);
+    double interval = m_pIntervalEdit->text().toDouble();
+    emit startTimedSendRequested(interval, textToSend.toLocal8Bit());
 }
 
 void SerialPortSendSettingsWidget::setUI()
@@ -53,7 +73,6 @@ void SerialPortSendSettingsWidget::createComponents()
     m_pTimedSendLayout->setContentsMargins(0, 0, 0, 0);
     m_pTimedSendCheckBox = new QCheckBox("定时发送", this);
     m_pTimedSendCheckBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-    timedSendCheckBox = m_pTimedSendCheckBox;
     // 减小时间输入框尺寸
     m_pIntervalLabel = new QLabel("(秒)", this);
     m_pIntervalLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
@@ -86,24 +105,22 @@ void SerialPortSendSettingsWidget::createLayout()
 
 void SerialPortSendSettingsWidget::connectSignals()
 {
-    this->connect(m_pHexSendCheckBox, &QCheckBox::toggled, [this](bool checked)
+    this->connect(m_pHexSendCheckBox, &QCheckBox::clicked, [this](bool status)
     {
-        emit SerialPortManager::getInstance()->sigHexSend(checked);
+        emit hexSendChanged(status);
     });
-    this->connect(m_pShowSendStringCheckBox, &QCheckBox::toggled, [this](bool checked)
+    this->connect(this, &SerialPortSendSettingsWidget::hexSendChanged, SerialPortManager::getInstance(),
+                  &SerialPortManager::setHexSendStatus);
+    this->connect(m_pShowSendStringCheckBox, &QCheckBox::clicked, [this](bool status)
     {
-        emit SerialPortManager::getInstance()->sigSendStringDisplay(checked);
+        emit showSendStringChanged(status);
     });
-    this->connect(m_pTimedSendCheckBox, &QCheckBox::toggled, [this](bool checked)
-    {
-        if (!SerialPortManager::getInstance()->getSerialPort()->isOpen())
-        {
-            CMessageBox::showToast(tr("请先打开串口"));
-            m_pTimedSendCheckBox->setChecked(false);
-            return;
-        }
-        this->m_pIntervalEdit->setEnabled(!checked);
-        double timers = this->m_pIntervalEdit->text().toDouble();
-        emit SerialPortManager::getInstance()->sigTimedSend(checked, timers);
-    });
+    this->connect(this, &SerialPortSendSettingsWidget::showSendStringChanged, SerialPortManager::getInstance(),
+                  &SerialPortManager::setSendStringDisplayStatus);
+    this->connect(m_pTimedSendCheckBox, &QCheckBox::clicked, this,
+                  &SerialPortSendSettingsWidget::onTimedSendCheckBoxClicked);
+    this->connect(this, &SerialPortSendSettingsWidget::startTimedSendRequested, SerialPortManager::getInstance(),
+                  &SerialPortManager::startTimedSend);
+    this->connect(this, &SerialPortSendSettingsWidget::stopTimedSendRequested, SerialPortManager::getInstance(),
+                  &SerialPortManager::stopTimedSend);
 }

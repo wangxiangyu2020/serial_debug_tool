@@ -18,6 +18,17 @@ SerialPortRealTimeSaveWidget::SerialPortRealTimeSaveWidget(QWidget* parent)
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/serial_port_real_time_save_widget.qss");
 }
 
+void SerialPortRealTimeSaveWidget::onDisplaySavePath(const QString& path)
+{
+    if (path == nullptr)
+    {
+        m_pTimer->stop();
+        return;
+    }
+    m_pTimer->start(50);
+    m_pSavePathDisplayTextEdit->setPlainText(path);
+}
+
 // 事件处理方法
 bool SerialPortRealTimeSaveWidget::eventFilter(QObject* watched, QEvent* event)
 {
@@ -154,14 +165,4 @@ void SerialPortRealTimeSaveWidget::createLayout()
 
 void SerialPortRealTimeSaveWidget::connectSignals()
 {
-    this->connect(this, &SerialPortRealTimeSaveWidget::sigDisplaySavePath, [this](const QString& path)
-    {
-        if (path == nullptr)
-        {
-            m_pTimer->stop();
-            return;
-        }
-        m_pTimer->start(50);
-        m_pSavePathDisplayTextEdit->setPlainText(path);
-    });
 }
