@@ -30,6 +30,16 @@ TcpNetworkManager::Mode TcpNetworkManager::getCurrentMode() const
     return m_currentMode;
 }
 
+bool TcpNetworkManager::isHexDisplayEnabled()
+{
+    return m_hexDisplay;
+}
+
+bool TcpNetworkManager::isTimestampEnabled()
+{
+    return m_displayTimestamp;
+}
+
 void TcpNetworkManager::startClient(const QString& address, quint16 port)
 {
     if (m_currentMode != Mode::Idle)
@@ -39,6 +49,7 @@ void TcpNetworkManager::startClient(const QString& address, quint16 port)
     }
     m_currentMode = Mode::Client;
     m_pClientSocket = new QTcpSocket(this);
+    this->setupNewSocket(m_pClientSocket);
     this->connect(m_pClientSocket, &QTcpSocket::stateChanged, this, &TcpNetworkManager::onSocketStateChanged);
     this->connect(m_pClientSocket, &QTcpSocket::readyRead, this, &TcpNetworkManager::onReadyRead);
     emit clientStatusChanged(QString("正在连接到 %1:%2...").arg(address).arg(port));
@@ -71,6 +82,13 @@ void TcpNetworkManager::stop()
 {
     if (m_currentMode == Mode::Client && m_pClientSocket)
     {
+        if (m_readTimers.contains(m_pClientSocket))
+        {
+            QTimer* timer = m_readTimers.take(m_pClientSocket);
+            timer->stop();
+            timer->deleteLater();
+        }
+        m_readBuffers.remove(m_pClientSocket);
         m_pClientSocket->disconnectFromHost();
         m_pClientSocket->deleteLater();
         m_pClientSocket = nullptr;
@@ -81,6 +99,13 @@ void TcpNetworkManager::stop()
         // 断开所有客户端连接
         for (QTcpSocket* client : qAsConst(m_connectedClients))
         {
+            if (m_readTimers.contains(client))
+            {
+                QTimer* timer = m_readTimers.take(client);
+                timer->stop();
+                timer->deleteLater();
+            }
+            m_readBuffers.remove(client);
             client->disconnectFromHost();
         }
         m_pTcpServer->close();
@@ -149,6 +174,7 @@ void TcpNetworkManager::onNewConnection()
     {
         if (QTcpSocket* clientSocket = m_pTcpServer->nextPendingConnection())
         {
+            this->setupNewSocket(clientSocket); // 为这个新客户端设置缓冲区和定时器
             m_connectedClients.append(clientSocket);
             this->connect(clientSocket, &QTcpSocket::readyRead, this, &TcpNetworkManager::onReadyRead);
             this->connect(clientSocket, &QTcpSocket::disconnected, this, &TcpNetworkManager::onClientDisconnected);
@@ -221,25 +247,30 @@ void TcpNetworkManager::onReadyRead()
 {
     // 通过 sender() 获取是哪个socket触发了信号
     QTcpSocket* socket = qobject_cast<QTcpSocket*>(sender());
-    if (socket)
+    if (!socket) return;
+    // 1. 从 Map 中找到该 socket 对应的缓冲区和定时器
+    if (m_readBuffers.contains(socket) && m_readTimers.contains(socket))
     {
-        QByteArray data = socket->readAll();
-        QString sourceInfo = QString("%1:%2").arg(socket->peerAddress().toString()).arg(socket->peerPort());
-        this->handleReadData(sourceInfo, data);
+        // 2. 将新数据追加到对应的缓冲区
+        m_readBuffers[socket].append(socket->readAll());
+        // 3. 重置对应的定时器
+        m_readTimers[socket]->start();
     }
 }
 
-void TcpNetworkManager::handleReadData(const QString& sourceInfo, const QByteArray& data)
+void TcpNetworkManager::onReadBufferTimeout(QTcpSocket* socket)
 {
-    QString formattedData = m_hexDisplay
-                                ? QString::fromLatin1(data.toHex(' ').toUpper())
-                                : QString::fromUtf8(data);
-    // 在最前面加上传输端信息
-    formattedData.prepend("from " + sourceInfo + ": ");
-    QByteArray showByteArray = m_displayTimestamp
-                                   ? this->generateTimestamp(formattedData)
-                                   : formattedData.toLocal8Bit();
-    emit dataReceived(showByteArray);
+    if (!socket || !m_readBuffers.contains(socket)) return;
+
+    QByteArray& buffer = m_readBuffers[socket];
+    if (buffer.isEmpty()) return;
+    // 暂停已经发生，我们认为缓冲区里是一个完整的数据包
+    DataPacket packet;
+    packet.sourceInfo = QString("%1:%2").arg(socket->peerAddress().toString()).arg(socket->peerPort());
+    packet.data = buffer; // 使用整个缓冲区的数据
+    // 【关键】处理完后，清空该socket的缓冲区
+    buffer.clear();
+    PacketProcessor::getInstance()->enqueueData(packet);
 }
 
 void TcpNetworkManager::onClientDisconnected()
@@ -251,25 +282,46 @@ void TcpNetworkManager::onClientDisconnected()
         m_connectedClients.removeAll(socket);
         socket->deleteLater(); // 安全地删除socket
         emit clientDisconnected(clientInfo, socket); // 传递socket指针用于UI移除
+
         // 【关键】再次发射状态更新信号，包含最新的客户端数量
         if (m_pTcpServer && m_pTcpServer->isListening())
         {
             QString status = QString("监听中... 端口: %1").arg(m_pTcpServer->serverPort());
             emit serverStatusChanged(status, m_connectedClients.count());
         }
+        // 【关键】从 Map 中移除并删除关联的定时器和缓冲区
+        if (m_readTimers.contains(socket))
+        {
+            QTimer* timer = m_readTimers.take(socket);
+            timer->stop();
+            timer->deleteLater();
+        }
+        m_readBuffers.remove(socket);
+        socket->deleteLater();
     }
+}
+
+void TcpNetworkManager::setupNewSocket(QTcpSocket* socket)
+{
+    if (!socket) return;
+
+    // 1. 为新socket创建并关联一个定时器
+    QTimer* timer = new QTimer(this);
+    timer->setSingleShot(true);
+    timer->setInterval(20); // 20毫秒超时
+    m_readTimers.insert(socket, timer);
+
+    // 2. 为新socket关联一个空的缓冲区
+    m_readBuffers.insert(socket, QByteArray());
+
+    // 3. Lambda 捕获了当前的 socket 指针，这样超时后我们就知道是谁超时了。
+    this->connect(timer, &QTimer::timeout, this, [this, socket]()
+    {
+        this->onReadBufferTimeout(socket);
+    });
 }
 
 TcpNetworkManager::TcpNetworkManager(QObject* parent)
     : QObject(parent), m_currentMode(Mode::Idle), m_pTimedSendTimer(nullptr)
 {
-}
-
-QByteArray& TcpNetworkManager::generateTimestamp(const QString& data)
-{
-    static QString timestamp;
-    static QByteArray array;
-    timestamp = QDateTime::currentDateTime().toString("[HH:mm:ss.zzz] ");
-    array = (timestamp + data).toUtf8();
-    return array;
 }

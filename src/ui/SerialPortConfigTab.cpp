@@ -122,7 +122,7 @@ void SerialPortConfigTab::connectSignals()
                   &SerialPortConfigTab::onReadySaveFile);
     this->connect(this, &SerialPortConfigTab::displaySavePathRequested, m_pSerialPortRealTimeSaveWidget,
                   &SerialPortRealTimeSaveWidget::onDisplaySavePath);
-    this->connect(SerialPortManager::getInstance(), &SerialPortManager::receiveDataChanged,
+    this->connect(PacketProcessor::getInstance(), &PacketProcessor::serialPortReceiveDataChanged,
                   [this](const QByteArray& data)
                   {
                       Qt::CheckState state = m_pSerialPortReceiveSettingsWidget->getSaveToFileCheckBox()->checkState();

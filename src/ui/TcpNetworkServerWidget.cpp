@@ -415,7 +415,7 @@ void TcpNetworkServerWidget::connectSignals()
                   &TcpNetworkManager::setHexDisplayStatus);
     this->connect(this, &TcpNetworkServerWidget::hexSend, TcpNetworkManager::getInstance(),
                   &TcpNetworkManager::setHexSendStatus);
-    this->connect(TcpNetworkManager::getInstance(), &TcpNetworkManager::dataReceived, this,
+    this->connect(PacketProcessor::getInstance(), &PacketProcessor::tcpNetworkReceiveDataChanged, this,
                   &TcpNetworkServerWidget::onDisplayReceiveData);
     this->connect(m_pClearDataButton, &QPushButton::clicked, [this]()
     {

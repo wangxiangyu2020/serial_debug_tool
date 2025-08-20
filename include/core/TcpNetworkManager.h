@@ -20,6 +20,8 @@
 #include <QDateTime>
 #include <QPlainTextEdit>
 #include <QTimer>
+#include <utils/DataPacket.h>
+#include <utils/PacketProcessor.h>
 
 class TcpNetworkManager : public QObject
 {
@@ -40,6 +42,8 @@ public:
 
     // 获取当前模式
     Mode getCurrentMode() const;
+    bool isHexDisplayEnabled();
+    bool isTimestampEnabled();
 
 public slots:
     // 以客户端模式启动
@@ -61,8 +65,6 @@ signals:
     void clientStatusChanged(const QString& status);
     // 专用于服务端的状态信息变化信号
     void serverStatusChanged(const QString& status, int connectionCount = 0);
-    // 收到数据信号
-    void dataReceived(const QByteArray& data);
     // 新客户端连接信号（仅服务端）
     void clientConnected(const QString& clientInfo, QTcpSocket* clientSocket);
     // 客户端断开连接信号（仅服务端）
@@ -79,16 +81,15 @@ private slots:
     void sendDataToClient(QTcpSocket* client, const QByteArray& data);
     // 客户端/服务端：处理数据接收
     void onReadyRead();
-    // 接收数据处理器
-    void handleReadData(const QString& sourceInfo, const QByteArray& data);
+    // 超时槽函数
+    void onReadBufferTimeout(QTcpSocket* socket);
     // 服务端：处理客户端断开连接
     void onClientDisconnected();
+    void setupNewSocket(QTcpSocket* socket);
 
 private:
     explicit TcpNetworkManager(QObject* parent = nullptr);
     ~TcpNetworkManager() = default;
-
-    QByteArray& generateTimestamp(const QString& data);
 
     static TcpNetworkManager* m_pInstance;
     static QMutex m_mutex;
@@ -104,6 +105,9 @@ private:
 
     QTimer* m_pTimedSendTimer;
     QByteArray m_timedSendData;
+
+    QMap<QTcpSocket*, QByteArray> m_readBuffers;
+    QMap<QTcpSocket*, QTimer*> m_readTimers;
 };
 
 #endif //TCPNETWORKMANAGER_H

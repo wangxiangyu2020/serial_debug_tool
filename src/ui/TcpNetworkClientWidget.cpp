@@ -330,7 +330,7 @@ void TcpNetworkClientWidget::connectSignals()
     this->connect(m_pSendButton, &QPushButton::clicked, this, &TcpNetworkClientWidget::onSendButtonClicked);
     this->connect(this, &TcpNetworkClientWidget::sendDataRequested, TcpNetworkManager::getInstance(),
                   &TcpNetworkManager::handleWriteData);
-    this->connect(TcpNetworkManager::getInstance(), &TcpNetworkManager::dataReceived, this,
+    this->connect(PacketProcessor::getInstance(), &PacketProcessor::tcpNetworkReceiveDataChanged, this,
                   &TcpNetworkClientWidget::onDisplayReceiveData);
     this->connect(m_pDisplayTimestampCheckBox, &QCheckBox::clicked, this,
                   &TcpNetworkClientWidget::onDisplayTimestampChanged);

@@ -33,6 +33,16 @@ QSerialPort* SerialPortManager::getSerialPort() const
     return m_pSerialPort;
 }
 
+bool SerialPortManager::isHexDisplayEnabled()
+{
+    return m_isHexDisplay;
+}
+
+bool SerialPortManager::isTimestampEnabled()
+{
+    return m_isDisplayTimestamp;
+}
+
 // 数据处理方法
 void SerialPortManager::handleWriteData(const QByteArray& writeByteArray)
 {
@@ -73,7 +83,7 @@ void SerialPortManager::setHexSendStatus(bool status)
 
 void SerialPortManager::setHexDisplayStatus(bool status)
 {
-    m_isHexDisplay.store(status, std::memory_order_release);
+    m_isHexDisplay = status;
 }
 
 void SerialPortManager::setSendStringDisplayStatus(bool status)
@@ -120,14 +130,21 @@ void SerialPortManager::stopTimedSend()
 void SerialPortManager::onSerialPortRead()
 {
     if (!m_pSerialPort || !m_pSerialPort->isOpen()) return;
-    auto readByteArray = m_pSerialPort->readAll();
-    if (readByteArray.isEmpty()) return;
-    ThreadPoolManager::addTask([this, readByteArray]()
-    {
-        QMutexLocker locker(&m_serialMutex);
-        if (m_isChannelDataProcess) this->handleChannelData(readByteArray);
-        this->handleReadData(readByteArray);
-    });
+    m_readBuffer.append(m_pSerialPort->readAll());
+    // 如果数据持续快速地到来，这个定时器会不断被重置，停止永远不会触发。
+    m_pReadTimer->start();
+}
+
+void SerialPortManager::onReadBufferTimeout()
+{
+    if (m_readBuffer.isEmpty()) return;
+    // 暂停已经发生，我们认为缓冲区里是一个完整的数据包
+    DataPacket packet;
+    packet.sourceInfo = m_pSerialPort->portName();
+    packet.data = m_readBuffer; // 使用整个缓冲区的数据
+    // 【关键】处理完后，清空缓冲区，为下一条消息做准备
+    m_readBuffer.clear();
+    PacketProcessor::getInstance()->enqueueData(packet);
 }
 
 // 构造函数
@@ -135,12 +152,17 @@ SerialPortManager::SerialPortManager(QObject* parent)
     : QObject(parent), m_pSerialPort(new QSerialPort(this)),
       m_pTimedSendTimer(nullptr)
 {
+    // 初始化定时器
+    m_pReadTimer = new QTimer(this);
+    m_pReadTimer->setSingleShot(true); // 设置为单次触发
+    m_pReadTimer->setInterval(20); // 设置20毫秒的超时，可根据实际情况调整
     this->connectSignals();
 }
 
 // 私有方法
 void SerialPortManager::connectSignals()
 {
+    this->connect(m_pReadTimer, &QTimer::timeout, this, &SerialPortManager::onReadBufferTimeout);
     this->connect(ChannelManager::getInstance(), &ChannelManager::channelDataProcessRequested, [this](bool status)
     {
         if (status) this->startWaveformRecording();
@@ -178,18 +200,6 @@ void SerialPortManager::serialPortWrite(const QByteArray& data)
     {
         this->handlerError(QSerialPort::WriteError);
     }
-}
-
-void SerialPortManager::handleReadData(const QByteArray& readByteArray)
-{
-    const bool isHex = m_isHexDisplay.load(std::memory_order_acquire);
-    QString formattedData = isHex
-                                ? QString::fromLatin1(readByteArray.toHex(' ').toUpper())
-                                : QString::fromUtf8(readByteArray);
-    QByteArray showByteArray = m_isDisplayTimestamp
-                                   ? this->generateTimestamp(formattedData)
-                                   : formattedData.toLocal8Bit();
-    emit receiveDataChanged(showByteArray);
 }
 
 void SerialPortManager::handleChannelData(const QByteArray& data)

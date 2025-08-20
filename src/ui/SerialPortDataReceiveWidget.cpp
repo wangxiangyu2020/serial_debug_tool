@@ -166,7 +166,7 @@ void SerialPortDataReceiveWidget::createLayout()
 
 void SerialPortDataReceiveWidget::connectSignals()
 {
-    this->connect(SerialPortManager::getInstance(), &SerialPortManager::receiveDataChanged, this,
+    this->connect(PacketProcessor::getInstance(), &PacketProcessor::serialPortReceiveDataChanged, this,
                   &SerialPortDataReceiveWidget::onDisplayReceiveData, Qt::QueuedConnection);
     this->connect(SerialPortManager::getInstance(), &SerialPortManager::sendData2ReceiveChanged, this,
                   &SerialPortDataReceiveWidget::onDisplaySentDataWithHighlight, Qt::QueuedConnection);

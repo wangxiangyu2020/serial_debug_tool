@@ -26,6 +26,8 @@
 #include "ui/CMessageBox.h"
 #include "utils/ThreadPoolManager.h"
 #include "core/ChannelManager.h"
+#include "utils/DataPacket.h"
+#include "utils/PacketProcessor.h"
 
 class SerialPortManager : public QObject
 {
@@ -41,6 +43,8 @@ public:
 
     // 主要业务方法
     QSerialPort* getSerialPort() const;
+    bool isHexDisplayEnabled();
+    bool isTimestampEnabled();
 
 public slots:
     void handleWriteData(const QByteArray& writeByteArray);
@@ -55,11 +59,11 @@ public slots:
 
 signals:
     void statusChanged(const QString& status, int connectStatus = -1);
-    void receiveDataChanged(const QByteArray& data);
     void sendData2ReceiveChanged(const QByteArray& data);
 
 private slots:
     void onSerialPortRead();
+    void onReadBufferTimeout(); // 【新增】处理缓冲区超时的槽函数
 
 private:
     // 构造函数和析构函数
@@ -69,8 +73,6 @@ private:
     void connectSignals();
     void configureSerialPort(const QMap<QString, QVariant>& serialParams);
     void serialPortWrite(const QByteArray& data);
-    // 数据处理方法
-    void handleReadData(const QByteArray& readByteArray);
     void handleChannelData(const QByteArray& readByteArray);
     void startWaveformRecording();
     // 错误处理
@@ -99,10 +101,8 @@ private:
     QMutex m_serialMutex;
     mutable QMutex m_channelMutex;
 
-    // 原子变量
-    std::atomic_bool m_isHexDisplay{false};
-
     // 配置变量
+    bool m_isHexDisplay = false;
     bool m_isHexSend = false;
     bool m_isSendStringDisplay = false;
     bool m_isDisplayTimestamp = false;
@@ -118,6 +118,9 @@ private:
 
     QTimer* m_pTimedSendTimer;
     QByteArray m_timedSendData;
+
+    QByteArray m_readBuffer; // 【新增】用于缓冲零散数据的成员
+    QTimer* m_pReadTimer; // 【新增】用于检测数据流暂停的定时器
 };
 
 #endif //SERIALPORTMANAGER_H
