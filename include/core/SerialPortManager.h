@@ -73,14 +73,9 @@ private:
     void connectSignals();
     void configureSerialPort(const QMap<QString, QVariant>& serialParams);
     void serialPortWrite(const QByteArray& data);
-    void handleChannelData(const QByteArray& readByteArray);
-    void startWaveformRecording();
     // 错误处理
     void handlerError(QSerialPort::SerialPortError error);
     QByteArray& generateTimestamp(const QString& data);
-    void clearAllChannelData();
-    void processQueueInternal();
-    void processDataPointInternal(const QByteArray& bytes);
 
     enum ConnectStatus
     {
@@ -95,7 +90,6 @@ private:
 
     // 核心对象成员
     QSerialPort* m_pSerialPort = nullptr;
-    ChannelManager* m_channelManager = nullptr;
 
     // 同步对象
     QMutex m_serialMutex;
@@ -106,21 +100,14 @@ private:
     bool m_isHexSend = false;
     bool m_isSendStringDisplay = false;
     bool m_isDisplayTimestamp = false;
-    bool m_isChannelDataProcess = false;
 
-    // 通道数据相关
-    QQueue<char> m_dataQueue;
-    QSet<QString> m_channelIds;
-    QByteArray m_currentPoint;
-    QMap<QString, double> m_channelTimestamps;
-    double m_sampleRate = 0;
-    double m_lastTimestamp = 0;
 
     QTimer* m_pTimedSendTimer;
     QByteArray m_timedSendData;
 
     QByteArray m_readBuffer; // 【新增】用于缓冲零散数据的成员
     QTimer* m_pReadTimer; // 【新增】用于检测数据流暂停的定时器
+    QMutex m_bufferMutex; // 【新增】用于保护缓冲区的互斥锁
 };
 
 #endif //SERIALPORTMANAGER_H

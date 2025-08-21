@@ -56,11 +56,11 @@ void PacketProcessor::run()
             DataPacket packet = localQueue.dequeue();
             if (packet.sourceInfo.startsWith("COM") || packet.sourceInfo.startsWith("tty"))
             {
-                processSerialData(packet);
+                this->processSerialData(packet);
             }
             else if (packet.sourceInfo.contains(":"))
             {
-                processTcpData(packet);
+                this->processTcpData(packet);
             }
             else
             {
@@ -73,6 +73,11 @@ void PacketProcessor::run()
 
 PacketProcessor::PacketProcessor(QObject* parent) : QThread(parent)
 {
+    this->connect(ChannelManager::getInstance(), &ChannelManager::channelsDataAllClearedRequested, [this]
+    {
+        m_channelTimestamps.clear();
+        m_serialWaveformBuffer.clear();
+    });
 }
 
 PacketProcessor::~PacketProcessor()
@@ -96,7 +101,7 @@ void PacketProcessor::processSerialData(const DataPacket& packet)
     QString displayText;
     if (addTimestamp)
     {
-        QString timestamp = QDateTime::currentDateTime().toString("HH:mm:ss.zzz");
+        QString timestamp = QDateTime::currentDateTime().toString("[HH:mm:ss.zzz]");
         displayText = QString("%1 %2").arg(timestamp).arg(formattedData);
     }
     else
@@ -104,6 +109,45 @@ void PacketProcessor::processSerialData(const DataPacket& packet)
         displayText = formattedData;
     }
     emit serialPortReceiveDataChanged(displayText.toLocal8Bit());
+    // 判断是否需要录波
+    if (!ChannelManager::getInstance()->isDataRecordingEnabled()) return;
+    // a. 将新数据追加到上一次剩下的不完整帧后面
+    m_serialWaveformBuffer.append(packet.data);
+    // b. 寻找最后一个完整帧的分隔符
+    int lastSeparator = m_serialWaveformBuffer.lastIndexOf(',');
+    if (lastSeparator == -1) return; //如果连一个分隔符都没有，说明数据还不够一个完整帧，直接返回等待更多数据
+    // c. 提取出所有完整的帧进行处理
+    QByteArray completeFrames = m_serialWaveformBuffer.left(lastSeparator);
+    // d. 将最后一个分隔符之后的不完整部分，作为新的“半成品”存起来
+    m_serialWaveformBuffer = m_serialWaveformBuffer.mid(lastSeparator + 1);
+    ChannelManager* chManager = ChannelManager::getInstance();
+    const QList<ChannelInfo> activeChannels = chManager->getAllChannels();
+    const double sampleRate = chManager->getSampleRate();
+    QHash<QString, QString> idToNameMap;
+    QSet<QString> activeChannelIds;
+    for (const auto& ch : activeChannels)
+    {
+        idToNameMap[ch.id] = ch.name;
+        activeChannelIds.insert(ch.id);
+    }
+    QList<QByteArray> points = completeFrames.split(',');
+    for (const QByteArray& dataPoint : points)
+    {
+        int eqPos = dataPoint.indexOf('=');
+        if (eqPos == -1) continue;
+        QString channelId = QString::fromLatin1(dataPoint.left(eqPos).trimmed());
+        if (!activeChannelIds.contains(channelId)) continue;
+        QString channelName = idToNameMap.value(channelId);
+        bool ok;
+        double value = dataPoint.mid(eqPos + 1).trimmed().toDouble(&ok);
+        if (!ok) continue;
+        if (!m_channelTimestamps.contains(channelId)) m_channelTimestamps[channelId] = 0;
+        double currentTime = m_channelTimestamps[channelId];
+        m_channelTimestamps[channelId] += sampleRate;
+        QVariantList point;
+        point << currentTime << value;
+        emit waveformDataReady(channelName, point);
+    }
 }
 
 void PacketProcessor::processTcpData(const DataPacket& packet)
@@ -129,5 +173,4 @@ void PacketProcessor::processTcpData(const DataPacket& packet)
         displayText = formattedData;
     }
     emit tcpNetworkReceiveDataChanged(displayText.toLocal8Bit());
-
 }

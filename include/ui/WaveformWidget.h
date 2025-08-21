@@ -26,6 +26,7 @@
 #include "core/ChannelManager.h"
 #include <memory>
 #include <QFileDialog>
+#include <utils/PacketProcessor.h>
 
 class WaveformWidget : public QWidget
 {
@@ -44,7 +45,7 @@ private slots:
     void onPageLoadFinished(bool success);
     void onChannelAdded(const QString& name, const QString& color);
     void onChannelRemoved(const QString& name);
-    void onChannelDataAdded(const QString& channelId, const QVariant& data);
+    void onWaveformDataAdded(const QString& channelId, const QVariant& data);
     void onProcessPendingData();
     void onChannelsDataAllCleared();
     void onChannelsDataImported();

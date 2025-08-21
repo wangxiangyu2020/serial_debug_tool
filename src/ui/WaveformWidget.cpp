@@ -88,15 +88,12 @@ void WaveformWidget::onChannelRemoved(const QString& name)
     this->executeJS(jsCode);
 }
 
-void WaveformWidget::onChannelDataAdded(const QString& channelName, const QVariant& data)
+void WaveformWidget::onWaveformDataAdded(const QString& channelName, const QVariant& data)
 {
     if (!m_pageLoaded) return;
-
     if (!data.canConvert<QVariantList>()) return;
-
     QVariantList pointList = data.toList();
     if (pointList.size() < 2) return;
-
     // 使用互斥锁保护数据访问
     {
         QMutexLocker locker(&m_dataMutex);
@@ -106,12 +103,9 @@ void WaveformWidget::onChannelDataAdded(const QString& channelName, const QVaria
         point.timestamp = pointList[0].toDouble();
         point.value = pointList[1].toDouble();
         m_pendingData.enqueue(point);
-
         if (m_pendingData.size() >= MAX_QUEUE_SIZE) m_pendingData.dequeue();
-
         // 如果没有计划更新，则安排一次更新
         if (m_updateScheduled) return;
-
         m_updateScheduled = true;
         // 只有不在 resize 过程中才启动定时器
         if (!m_isResizing) m_updateTimer->start(16); // 约60FPS
@@ -282,9 +276,8 @@ void WaveformWidget::connectSignals()
                   &WaveformWidget::onChannelRemoved,
                   Qt::QueuedConnection);
     // 连接数据更新信号
-    this->connect(ChannelManager::getInstance(), &ChannelManager::channelDataAddedRequested, this,
-                  &WaveformWidget::onChannelDataAdded,
-                  Qt::QueuedConnection);
+    this->connect(PacketProcessor::getInstance(), &PacketProcessor::waveformDataReady, this,
+                  &WaveformWidget::onWaveformDataAdded, Qt::QueuedConnection);
     this->connect(ChannelManager::getInstance(), &ChannelManager::channelsDataAllClearedRequested, this,
                   &WaveformWidget::onChannelsDataAllCleared,
                   Qt::QueuedConnection);

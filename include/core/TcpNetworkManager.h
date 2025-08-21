@@ -82,7 +82,7 @@ private slots:
     // 客户端/服务端：处理数据接收
     void onReadyRead();
     // 超时槽函数
-    void onReadBufferTimeout(QTcpSocket* socket);
+    void onReadBufferTimeout();
     // 服务端：处理客户端断开连接
     void onClientDisconnected();
     void setupNewSocket(QTcpSocket* socket);
@@ -106,8 +106,9 @@ private:
     QTimer* m_pTimedSendTimer;
     QByteArray m_timedSendData;
 
+    QTimer* m_pFlushTimer;
+    QMutex m_bufferMutex;
     QMap<QTcpSocket*, QByteArray> m_readBuffers;
-    QMap<QTcpSocket*, QTimer*> m_readTimers;
 };
 
 #endif //TCPNETWORKMANAGER_H

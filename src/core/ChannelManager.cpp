@@ -32,14 +32,11 @@ ChannelManager* ChannelManager::getInstance()
 ChannelManager::ChannelManager(QObject* parent)
     : QObject(parent)
 {
-    m_dataDispatchTimer = new QTimer(this);
-    m_dataDispatchTimer->setInterval(16); // 约60FPS
     this->connectSignals();
 }
 
 void ChannelManager::connectSignals()
 {
-    this->connect(m_dataDispatchTimer, &QTimer::timeout, this, &ChannelManager::onDispatchQueuedData);
 }
 
 void ChannelManager::onGetAllChannels()
@@ -91,33 +88,18 @@ ChannelInfo ChannelManager::getChannel(const QString& id) const
     return ChannelInfo();
 }
 
-void ChannelManager::addChannelData(const QString& channelId, const QVariant& data)
-{
-    QMutexLocker locker(&m_channelDataMutex);
-
-    // 将数据添加到队列
-    m_dataQueue.enqueue(qMakePair(channelId, data));
-
-    // 如果定时器未启动且允许分发，则启动定时器（通过信号槽机制）
-    if (m_isDispatching && !m_dataDispatchTimer->isActive())
-    {
-        // 使用信号槽确保在正确线程启动定时器
-        QMetaObject::invokeMethod(this, [this]()
-        {
-            if (m_isDispatching && !m_dataDispatchTimer->isActive())
-                m_dataDispatchTimer->start();
-        }, Qt::QueuedConnection);
-    }
-}
-
 int ChannelManager::getSampleRate() const
 {
     return m_sampleRate;
 }
 
+bool ChannelManager::isDataRecordingEnabled()
+{
+    return m_isChannelDataProcess;
+}
+
 void ChannelManager::onClearAllChannelData()
 {
-    m_dataQueue.clear();
     emit channelsDataAllClearedRequested();
 }
 
@@ -144,34 +126,12 @@ void ChannelManager::onSetSampleRate(int rate)
 
 void ChannelManager::onStartDataDispatch()
 {
-    m_isDispatching = true;
-    if (!m_dataQueue.isEmpty() && !m_dataDispatchTimer->isActive()) m_dataDispatchTimer->start();
-    emit channelDataProcessRequested(true);
+    m_isChannelDataProcess = true;
     emit statusChanged(QString("数据分发已启动"));
 }
 
 void ChannelManager::onStopDataDispatch()
 {
-    m_isDispatching = false;
-    if (m_dataDispatchTimer->isActive()) m_dataDispatchTimer->stop();
-    emit channelDataProcessRequested(false);
+    m_isChannelDataProcess = false;
     emit statusChanged(QString("数据分发已停止"));
-}
-
-void ChannelManager::onDispatchQueuedData()
-{
-    QMutexLocker locker(&m_queueMutex);
-
-    // 可以一次处理多个数据点，而不是一个一个处理
-    int batchSize = 10; // 每次处理10个数据点
-    for (int i = 0; i < batchSize && !m_dataQueue.isEmpty() && m_isDispatching; ++i)
-    {
-        auto dataPair = m_dataQueue.dequeue();
-        locker.unlock();
-        emit channelDataAddedRequested(this->getChannel(dataPair.first).name, dataPair.second);
-        locker.relock();
-    }
-
-    // 如果队列为空或停止分发，则停止定时器
-    if (m_dataQueue.isEmpty() || !m_isDispatching) m_dataDispatchTimer->stop();
 }

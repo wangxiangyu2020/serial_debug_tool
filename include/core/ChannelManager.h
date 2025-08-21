@@ -48,10 +48,8 @@ public:
     QList<ChannelInfo> getAllChannels() const;
     ChannelInfo getChannel(const QString& id) const;
 
-    // 通道数据操作方法
-    void addChannelData(const QString& channelId, const QVariant& data);
-
     int getSampleRate() const;
+    bool isDataRecordingEnabled();
 
 public slots:
     void onGetAllChannels();
@@ -68,8 +66,6 @@ public slots:
 signals:
     void channelAddedRequested(const QString& name, const QString& color);
     void channelRemovedRequested(const QString& name);
-    void channelDataAddedRequested(const QString& channelName, const QVariant& data);
-    void channelDataProcessRequested(bool status);
     void channelsDataAllClearedRequested();
     void channelsDataImportedRequested();
     void channelsDataExportedRequested();
@@ -78,35 +74,22 @@ signals:
     void statusChanged(const QString& status);
     void sendSampleRateRequested(int rate);
 
-private slots:
-    void onDispatchQueuedData();
-
 private:
     // 构造函数和析构函数
     explicit ChannelManager(QObject* parent = nullptr);
     ~ChannelManager() = default;
 
     void connectSignals();
-
     // 静态成员变量
     static ChannelManager* m_instance;
     static QMutex m_mutex;
-
     // 核心数据成员
     QMap<QString, ChannelInfo> m_channels;
-    QQueue<QPair<QString, QVariant>> m_dataQueue;
-
-    // 定时器对象
-    QTimer* m_dataDispatchTimer = nullptr;
-
     // 同步对象
     mutable QMutex m_dataMutex;
-    mutable QMutex m_channelDataMutex;
-    mutable QMutex m_queueMutex;
-
     // 配置变量
-    bool m_isDispatching = false;
     int m_sampleRate = 100;
+    bool m_isChannelDataProcess = false;
 };
 
 #endif // CHANNELMANAGER_H

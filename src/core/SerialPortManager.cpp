@@ -65,12 +65,14 @@ void SerialPortManager::openSerialPort(const QMap<QString, QVariant>& serialPara
         this->handlerError(m_pSerialPort->error());
         return;
     }
+    m_pReadTimer->start();
     emit statusChanged(tr("串口已打开"), ConnectStatus::Connected);
 }
 
 void SerialPortManager::closeSerialPort()
 {
     if (!m_pSerialPort->isOpen()) return;
+    m_pReadTimer->stop();
     m_pSerialPort->close();
     emit statusChanged(tr("串口已关闭"), ConnectStatus::Disconnected);
 }
@@ -130,20 +132,25 @@ void SerialPortManager::stopTimedSend()
 void SerialPortManager::onSerialPortRead()
 {
     if (!m_pSerialPort || !m_pSerialPort->isOpen()) return;
+    QMutexLocker locker(&m_bufferMutex);
     m_readBuffer.append(m_pSerialPort->readAll());
-    // 如果数据持续快速地到来，这个定时器会不断被重置，停止永远不会触发。
-    m_pReadTimer->start();
 }
 
 void SerialPortManager::onReadBufferTimeout()
 {
-    if (m_readBuffer.isEmpty()) return;
-    // 暂停已经发生，我们认为缓冲区里是一个完整的数据包
+    QByteArray dataToProcess;
+    {
+        // 使用互斥锁保护对缓冲区的读和清空操作
+        QMutexLocker locker(&m_bufferMutex);
+        if (m_readBuffer.isEmpty()) return;
+        // 使用 swap 高效地取出数据，并清空原缓冲区，这比直接赋值更快
+        dataToProcess.swap(m_readBuffer);
+    } // 互斥锁在这里自动释放
+    // 现在可以在无锁状态下，将取出的数据块发送给处理器
     DataPacket packet;
     packet.sourceInfo = m_pSerialPort->portName();
-    packet.data = m_readBuffer; // 使用整个缓冲区的数据
-    // 【关键】处理完后，清空缓冲区，为下一条消息做准备
-    m_readBuffer.clear();
+    packet.data = dataToProcess;
+
     PacketProcessor::getInstance()->enqueueData(packet);
 }
 
@@ -154,8 +161,7 @@ SerialPortManager::SerialPortManager(QObject* parent)
 {
     // 初始化定时器
     m_pReadTimer = new QTimer(this);
-    m_pReadTimer->setSingleShot(true); // 设置为单次触发
-    m_pReadTimer->setInterval(20); // 设置20毫秒的超时，可根据实际情况调整
+    m_pReadTimer->setInterval(20); // 保持20毫秒的“清空”周期
     this->connectSignals();
 }
 
@@ -163,15 +169,6 @@ SerialPortManager::SerialPortManager(QObject* parent)
 void SerialPortManager::connectSignals()
 {
     this->connect(m_pReadTimer, &QTimer::timeout, this, &SerialPortManager::onReadBufferTimeout);
-    this->connect(ChannelManager::getInstance(), &ChannelManager::channelDataProcessRequested, [this](bool status)
-    {
-        if (status) this->startWaveformRecording();
-        m_isChannelDataProcess = status;
-    });
-    this->connect(ChannelManager::getInstance(), &ChannelManager::channelsDataAllClearedRequested, [this]()
-    {
-        this->clearAllChannelData();
-    });
     this->connect(this->getSerialPort(), &QSerialPort::readyRead, this, &SerialPortManager::onSerialPortRead);
 }
 
@@ -200,45 +197,6 @@ void SerialPortManager::serialPortWrite(const QByteArray& data)
     {
         this->handlerError(QSerialPort::WriteError);
     }
-}
-
-void SerialPortManager::handleChannelData(const QByteArray& data)
-{
-    ThreadPoolManager::addTask([this, data]()
-    {
-        QMutexLocker locker(&m_channelMutex);
-        for (char c : data)
-        {
-            m_dataQueue.enqueue(c);
-        }
-        this->processQueueInternal();
-    });
-}
-
-void SerialPortManager::startWaveformRecording()
-{
-    ChannelManager* manager = ChannelManager::getInstance();
-    m_channelManager = manager;
-
-    // 使用 invokeMethod 确保在 ChannelManager 的线程中获取数据
-    QMetaObject::invokeMethod(manager, [this, manager]()
-    {
-        // 在 ChannelManager 线程中安全获取数据
-        int sampleRate = manager->getSampleRate();
-        QList<ChannelInfo> channels = manager->getAllChannels();
-
-        // 切换回 SerialPortManager 线程处理结果
-        QMetaObject::invokeMethod(this, [this, sampleRate, channels]()
-        {
-            this->clearAllChannelData();
-            // 在 SerialPortManager 线程中处理数据
-            m_sampleRate = static_cast<double>(sampleRate);
-            for (const auto& channel : channels)
-            {
-                m_channelIds.insert(channel.id);
-            }
-        }, Qt::QueuedConnection);
-    }, Qt::QueuedConnection);
 }
 
 void SerialPortManager::handlerError(QSerialPort::SerialPortError error)
@@ -287,62 +245,4 @@ QByteArray& SerialPortManager::generateTimestamp(const QString& data)
     timestamp = QDateTime::currentDateTime().toString("[HH:mm:ss.zzz] ");
     array = (timestamp + data).toUtf8();
     return array;
-}
-
-void SerialPortManager::clearAllChannelData()
-{
-    m_channelIds.clear();
-    m_channelTimestamps.clear();
-    m_dataQueue.clear();
-    m_currentPoint.clear();
-    m_lastTimestamp = 0;
-}
-
-void SerialPortManager::processQueueInternal()
-{
-    if (m_dataQueue.size() > MAX_QUEUE_SIZE)
-    {
-        m_dataQueue.clear();
-        m_currentPoint.clear();
-        return;
-    }
-    while (!m_dataQueue.isEmpty())
-    {
-        char ch = m_dataQueue.dequeue();
-        if (ch == ',')
-        {
-            if (!m_currentPoint.isEmpty())
-            {
-                this->processDataPointInternal(m_currentPoint);
-                m_currentPoint.clear();
-            }
-            continue;
-        }
-        m_currentPoint.append(ch);
-    }
-}
-
-void SerialPortManager::processDataPointInternal(const QByteArray& dataPoint)
-{
-    int eqPos = dataPoint.indexOf('=');
-    if (eqPos == -1) return;
-    QByteArray channel = dataPoint.left(eqPos).trimmed();
-    QByteArray data = dataPoint.mid(eqPos + 1).trimmed();
-    QString channelId = QString::fromLatin1(channel);
-    if (!m_channelTimestamps.contains(channelId)) m_channelTimestamps[channelId] = m_sampleRate;
-    double currentTime = m_channelTimestamps[channelId];
-    if (!m_channelIds.contains(channelId)) return;
-    bool ok;
-    double value = data.toDouble(&ok);
-    if (!ok) return;
-    QVariantList point;
-    point.reserve(2);
-    point << currentTime << value;
-    m_channelTimestamps[channelId] += m_sampleRate;
-    // 使用函数指针方式，更安全且性能更好
-    QMetaObject::invokeMethod(m_channelManager,
-                              [this, channelId, point]()
-                              {
-                                  m_channelManager->addChannelData(channelId, QVariant(std::move(point)));
-                              }, Qt::QueuedConnection);
 }

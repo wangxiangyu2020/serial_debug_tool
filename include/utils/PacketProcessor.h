@@ -34,6 +34,7 @@ signals:
     void serialPortReceiveDataChanged(const QByteArray& data);
     // TCP显示数据信号
     void tcpNetworkReceiveDataChanged(const QByteArray& data);
+    void waveformDataReady(const QString& channelName, const QVariantList& point);
 
 protected:
     void run() override;
@@ -50,10 +51,15 @@ private:
 
     static PacketProcessor* m_instance;
     static QMutex m_instanceMutex;
+
+    QHash<QString, double> m_channelTimestamps;
+
     QQueue<DataPacket> m_dataQueue;
     QMutex m_mutex;
     QWaitCondition m_condition;
     bool m_quit = false;
+
+    QByteArray m_serialWaveformBuffer;
 };
 
 #endif // PACKETPROCESSOR_H
