@@ -160,9 +160,9 @@ void PacketProcessor::processSerialDataWithScript(const DataPacket& packet)
                 // 假设脚本返回了所有信息
                 if (chartObj.contains("channelId") && chartObj.contains("point"))
                 {
-                    QString channelId = chartObj.value("channelName").toString();
+                    QString channelId = chartObj.value("channelId").toString();
                     double value = chartObj.value("point").toDouble();
-                    if (channelId.isEmpty() && qIsNaN(value)) continue;
+                    if (channelId.isEmpty() || qIsNaN(value)) continue;
                     if (!activeChannelIds.contains(channelId)) continue;
                     QString channelName = idToNameMap.value(channelId);
                     if (!m_channelTimestamps.contains(channelId)) m_channelTimestamps[channelId] = 0;
