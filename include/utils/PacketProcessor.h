@@ -12,6 +12,13 @@
 #define PACKETPROCESSOR_H
 
 #include "DataPacket.h"
+#include "utils/ThreadPoolManager.h" // 引入您的线程池
+#include "core/SerialPortManager.h"
+#include "core/TcpNetworkManager.h"
+#include "core/ScriptManager.h"
+#include <QDebug>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QThread>
 #include <QQueue>
 #include <QMutex>
@@ -47,6 +54,9 @@ private:
 
     // 【新增】为不同来源的数据创建独立的处理函数，使逻辑更清晰
     void processSerialData(const DataPacket& packet);
+    void processSerialDataWithScript(const DataPacket& packet);
+    void processSerialDataWithoutScript(const DataPacket& packet);
+    void emitFormattedSerialData(const QString& data);
     void processTcpData(const DataPacket& packet);
 
     static PacketProcessor* m_instance;
@@ -60,6 +70,8 @@ private:
     bool m_quit = false;
 
     QByteArray m_serialWaveformBuffer;
+
+    bool m_useUserScript = false;
 };
 
 #endif // PACKETPROCESSOR_H
