@@ -181,7 +181,6 @@ void PacketProcessor::processSerialDataWithoutScript(const DataPacket& packet)
 {
     SerialPortManager* spManager = SerialPortManager::getInstance();
     const bool isHex = spManager->isHexDisplayEnabled();
-    const bool addTimestamp = spManager->isTimestampEnabled();
 
     QString formattedData = isHex
                                 ? QString::fromLatin1(packet.data.toHex(' ').toUpper())
