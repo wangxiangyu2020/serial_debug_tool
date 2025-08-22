@@ -22,6 +22,7 @@
 #include "ui/SerialPortDataReceiveWidget.h"
 #include "ui/SerialPortConnectConfigWidget.h"
 #include <ui/ScriptEditorDialog.h>
+#include "core/ScriptManager.h"
 
 class SerialPortReceiveSettingsWidget : public QWidget
 {
@@ -41,6 +42,8 @@ signals:
     void hexDisplayChanged(bool enabled);
     void timestampDisplayChanged(bool enabled);
     void saveToFileChanged(bool enabled);
+    void serialPortScriptSaved(const QString& key, const QString& script);
+    void serialPortScriptEnabled(bool enabled);
 
 private slots:
     void onShowScriptEditor();
@@ -51,19 +54,19 @@ private:
     void createComponents();
     void createLayout();
     void connectSignals();
-    void createScriptEditorDialog();
 
     // UI组件成员
     QLabel* m_pTitleLabel = nullptr;
     QCheckBox* m_pSaveToFileCheckBox = nullptr;
     QCheckBox* m_pDisplayTimestampCheckBox = nullptr;
     QCheckBox* m_pHexDisplayCheckBox = nullptr;
+    QCheckBox* m_pScriptReceiveCheckBox = nullptr;
     QPushButton* m_pScriptReceiveButton = nullptr;
     QPushButton* m_pScriptHelpButton = nullptr;
     QPushButton* m_pSaveDataButton = nullptr;
     QPushButton* m_pClearDataButton = nullptr;
 
-    QDialog* m_pScriptEditorDialog = nullptr;
+    ScriptEditorDialog* m_pScriptEditorDialog = nullptr;
     QTextEdit* m_pScriptEditor = nullptr;
 
     // 布局成员

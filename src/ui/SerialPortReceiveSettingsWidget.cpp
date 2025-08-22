@@ -25,17 +25,13 @@ QCheckBox* SerialPortReceiveSettingsWidget::getSaveToFileCheckBox()
 
 void SerialPortReceiveSettingsWidget::onShowScriptEditor()
 {
-    // 创建实例
-    ScriptEditorDialog* dialog = new ScriptEditorDialog(this);
-    // 显示对话框
-    if (dialog->exec() == QDialog::Accepted) {
+    if (m_pScriptEditorDialog->exec() == QDialog::Accepted)
+    {
         // 获取编辑后的脚本内容
-        QString scriptContent = dialog->getScriptContent();
-        // 处理保存逻辑
-        qDebug() << "保存的脚本内容：" << scriptContent;
+        QString scriptContent = m_pScriptEditorDialog->getScriptContent();
+        // 处理保存逻辑,在这里只获取脚本内容，然后通过信号发送给其他地方进行处理
+        emit serialPortScriptSaved("serialPort", scriptContent);
     }
-    // 清理资源
-    dialog->deleteLater();
 }
 
 void SerialPortReceiveSettingsWidget::setUI()
@@ -60,6 +56,8 @@ void SerialPortReceiveSettingsWidget::createComponents()
     m_pDisplayTimestampCheckBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     m_pHexDisplayCheckBox = new QCheckBox("十六进制显示", this);
     m_pHexDisplayCheckBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    m_pScriptReceiveCheckBox = new QCheckBox(this);
+    m_pScriptReceiveCheckBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     m_pScriptReceiveButton = new QPushButton(this);
     m_pScriptReceiveButton->setObjectName("m_pScriptReceiveButton");
     m_pScriptReceiveButton->setFixedSize(45, 25);
@@ -75,6 +73,9 @@ void SerialPortReceiveSettingsWidget::createComponents()
     m_pSaveDataButton->setObjectName("m_pSaveDataButton");
     m_pClearDataButton = new QPushButton("清空数据", this);
     m_pClearDataButton->setObjectName("m_pClearDataButton");
+    // 创建弹框实例
+    m_pScriptEditorDialog = new ScriptEditorDialog(this);
+    m_pScriptEditorDialog->hide();
 }
 
 void SerialPortReceiveSettingsWidget::createLayout()
@@ -91,6 +92,8 @@ void SerialPortReceiveSettingsWidget::createLayout()
     // 创建水平布局用于十六进制显示和接收脚本按钮
     QHBoxLayout* pHexAndScriptLayout = new QHBoxLayout();
     pHexAndScriptLayout->addWidget(m_pHexDisplayCheckBox);
+    pHexAndScriptLayout->addWidget(m_pScriptReceiveCheckBox);
+    pHexAndScriptLayout->setSpacing(0);
     pHexAndScriptLayout->addWidget(m_pScriptReceiveButton);
     pHexAndScriptLayout->addWidget(m_pScriptHelpButton);
     pHexAndScriptLayout->addStretch();
@@ -138,4 +141,25 @@ void SerialPortReceiveSettingsWidget::connectSignals()
     });
     this->connect(m_pScriptReceiveButton, &QPushButton::clicked, this,
                   &SerialPortReceiveSettingsWidget::onShowScriptEditor);
+    this->connect(m_pScriptReceiveCheckBox, &QCheckBox::clicked, [this](bool checked)
+    {
+        // 只有启用脚本时才会获取脚本内容
+        if (checked)
+        {
+            QString scriptContent = m_pScriptEditorDialog->getScriptContent();
+            // 处理脚本启用逻辑，在这里是获取脚本内容后发送到其他地方并且将checked发送到管理器中
+            emit serialPortScriptSaved("serialPort", scriptContent);
+        }
+        emit serialPortScriptEnabled(checked);
+    });
+    this->connect(this, &SerialPortReceiveSettingsWidget::serialPortScriptSaved, ScriptManager::getInstance(),
+                  &ScriptManager::onScriptSaved);
+    this->connect(this, &SerialPortReceiveSettingsWidget::serialPortScriptEnabled, ScriptManager::getInstance(),
+                  &ScriptManager::onSerialPortScriptEnabled);
+    this->connect(ScriptManager::getInstance(), &ScriptManager::saveStatusChanged,
+                  [this](const QString& key, const QString& status)
+                  {
+                      if (key != "serialPort") return;
+                      CMessageBox::showToast(this, status);
+                  });
 }

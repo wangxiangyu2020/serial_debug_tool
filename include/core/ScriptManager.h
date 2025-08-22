@@ -22,11 +22,16 @@ class ScriptManager : public QObject
 
 public:
     static ScriptManager* getInstance();
-    bool loadScript(const QString& scriptText);
-    bool isScriptLoaded();
-    QString getLastError() const;
-    int findFrame(const QByteArray& buffer);
-    QJSValue parseFrame(const QByteArray& frame);
+    int findFrame(const QString& scriptName, const QByteArray& buffer);
+    QJSValue parseFrame(const QString& scriptName, const QByteArray& frame);
+    bool isEnableSerialPortScript();
+
+public slots:
+    void onScriptSaved(const QString& key, const QString& scriptText);
+    void onSerialPortScriptEnabled(bool enabled);
+
+signals:
+    void saveStatusChanged(const QString& key, const QString& status);
 
 private:
     explicit ScriptManager(QObject* parent = nullptr);
@@ -37,11 +42,10 @@ private:
     static ScriptManager* m_instance;
     static QMutex m_mutex;
 
-    bool m_isScriptLoaded = false;
-    QString m_lastError;
+    bool m_isSerialPortScriptEnabled = false;
     QJSEngine m_jsEngine;
-    QJSValue m_findFrameFunction;
-    QJSValue m_parseFrameFunction;
+    // 存储脚本
+    QHash<QString, QList<QJSValue>> m_scriptFunctionsMap;
 };
 
 #endif //SCRIPTMANAGER_H

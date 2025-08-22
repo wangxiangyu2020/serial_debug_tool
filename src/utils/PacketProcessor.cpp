@@ -86,7 +86,7 @@ PacketProcessor::~PacketProcessor()
 void PacketProcessor::processSerialData(const DataPacket& packet)
 {
     // 判断是否使用用户脚本处理数据
-    if (m_useUserScript && ScriptManager::getInstance()->isScriptLoaded()) this->processSerialDataWithScript(packet);
+    if (ScriptManager::getInstance()->isEnableSerialPortScript()) this->processSerialDataWithScript(packet);
     else this->processSerialDataWithoutScript(packet);
 }
 
@@ -95,6 +95,7 @@ void PacketProcessor::processSerialDataWithScript(const DataPacket& packet)
     ScriptManager* scriptManager = ScriptManager::getInstance();
     // 将新数据追加到缓冲区，进行帧同步
     m_serialWaveformBuffer.append(packet.data);
+
     // 先获取通道信息
     ChannelManager* chManager = ChannelManager::getInstance();
     const QList<ChannelInfo> activeChannels = chManager->getAllChannels();
@@ -106,22 +107,40 @@ void PacketProcessor::processSerialDataWithScript(const DataPacket& packet)
         idToNameMap[ch.id] = ch.name;
         activeChannelIds.insert(ch.id);
     }
-    while (true)
+
+    // 添加循环计数器防止无限循环
+    int maxIterations = 1000; // 设置最大迭代次数
+    int iterationCount = 0;
+
+    while (iterationCount < maxIterations && !m_serialWaveformBuffer.isEmpty())
     {
+        iterationCount++;
         // 请求脚本查找一个完整帧
-        int frameEndPos = scriptManager->findFrame(m_serialWaveformBuffer);
+        int frameEndPos = scriptManager->findFrame("serialPort", m_serialWaveformBuffer);
         // 脚本告诉我们没有找到一个完整的帧，或者帧结束位置超出缓冲区范围，跳出循环
-        if (frameEndPos == -1 || frameEndPos >= m_serialWaveformBuffer.size()) break;
+        if (frameEndPos == -1 || frameEndPos >= m_serialWaveformBuffer.size() || frameEndPos < 0) break;
+        // 添加额外的安全检查
+        if (frameEndPos == 0)
+        {
+            // 如果返回位置0，可能是错误的，跳过并移除第一个字节避免死循环
+            m_serialWaveformBuffer = m_serialWaveformBuffer.mid(1);
+            continue;
+        }
         // 根据脚本返回的位置截取一个完整的帧
         QByteArray completeFrame = m_serialWaveformBuffer.left(frameEndPos + 1);
+        // 确保帧不为空
+        if (completeFrame.isEmpty())
+        {
+            m_serialWaveformBuffer = m_serialWaveformBuffer.mid(frameEndPos + 1);
+            continue;
+        }
         m_serialWaveformBuffer = m_serialWaveformBuffer.mid(frameEndPos + 1);
         // 请求脚本解析这个帧
-        QJSValue parsedResult = scriptManager->parseFrame(completeFrame);
+        QJSValue parsedResult = scriptManager->parseFrame("serialPort", completeFrame);
         // 根据脚本返回的结果决定如何处理
         if (parsedResult.isUndefined() || parsedResult.isNull()) continue;
         SerialPortManager* spManager = SerialPortManager::getInstance();
         const bool isHex = spManager->isHexDisplayEnabled();
-        const bool addTimestamp = spManager->isTimestampEnabled();
         // 返回字符串或者对象类型需要进行解析
         if (parsedResult.isString())
         {
@@ -174,6 +193,14 @@ void PacketProcessor::processSerialDataWithScript(const DataPacket& packet)
                 }
             }
         }
+    }
+
+    // 如果达到最大迭代次数，记录警告
+    if (iterationCount >= maxIterations)
+    {
+        qWarning() << "PacketProcessor: 脚本处理达到最大迭代次数，可能存在死循环风险";
+        // 清空缓冲区避免持续问题
+        m_serialWaveformBuffer.clear();
     }
 }
 
