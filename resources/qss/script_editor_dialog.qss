@@ -1,0 +1,171 @@
+/* === 脚本编辑器对话框样式 === */
+QDialog#ScriptEditorDialog {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+QLabel#m_pDescriptionLabel {
+    color: #333333;        /* 深灰色，比纯黑柔和 */
+    font-size: 13px;
+    font-weight: 500;
+    padding: 5px 0;
+    font-family: 'SimHei', 'Microsoft YaHei UI', sans-serif;
+}
+
+/* 深色主题编辑器 */
+QTextEdit#m_pScriptEditor[class="dark-theme"] {
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    border: 1px solid #3c3f41;
+    border-radius: 4px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 12px;
+    padding: 8px;
+}
+
+/* 浅色主题编辑器 */
+QTextEdit#m_pScriptEditor[class="light-theme"] {
+    background-color: #ffffff;
+    color: #000000;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 12px;
+    padding: 8px;
+}
+
+/* 滚动条样式 - 深色主题 */
+QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar:vertical {
+    background-color: transparent;
+    width: 12px;
+    border-radius: 6px;
+    margin: 2px;
+}
+
+QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar::handle:vertical {
+    background-color: rgba(120, 120, 120, 0.4);
+    border-radius: 6px;
+    min-height: 20px;
+}
+
+QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar::handle:vertical:hover {
+    background-color: rgba(150, 150, 150, 0.6);
+}
+
+QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar::handle:vertical:pressed {
+    background-color: rgba(180, 180, 180, 0.8);
+}
+
+QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar::add-line:vertical,
+QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar::sub-line:vertical {
+    height: 0px;
+    background: none;
+}
+
+QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar::add-page:vertical,
+QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+/* 滚动条样式 - 浅色主题 */
+QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar:vertical {
+    background-color: transparent;
+    width: 12px;
+    border-radius: 6px;
+    margin: 2px;
+}
+
+QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar::handle:vertical {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    min-height: 20px;
+}
+
+QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar::handle:vertical:hover {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar::handle:vertical:pressed {
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar::add-line:vertical,
+QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar::sub-line:vertical {
+    height: 0px;
+    background: none;
+}
+
+QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar::add-page:vertical,
+QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+QPushButton#m_pThemeToggleButton {
+    background-color: #20c997;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    min-width: 80px;
+}
+
+QPushButton#m_pThemeToggleButton:hover {
+    background-color: #1aa179;
+}
+
+QPushButton#m_pThemeToggleButton:pressed {
+    background-color: #14795c;
+}
+
+QPushButton#m_pResetButton {
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    min-width: 80px;
+}
+
+QPushButton#m_pResetButton:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+}
+
+QPushButton#m_pResetButton:pressed {
+    background-color: #dee2e6;
+    border-color: #868e96;
+}
+
+QPushButton#m_pCancelButton {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    min-width: 80px;
+}
+
+QPushButton#m_pCancelButton:hover {
+    background-color: #5a6268;
+}
+
+QPushButton#m_pSaveButton {
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    min-width: 80px;
+}
+
+QPushButton#m_pSaveButton:hover {
+    background-color: #0b5ed7;
+}

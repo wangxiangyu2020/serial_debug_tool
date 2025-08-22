@@ -9,7 +9,7 @@ SerialPortReceiveSettingsWidget {
 }
 
 /* === 标题标签样式 - 最小化间距 === */
-SerialPortReceiveSettingsWidget > QLabel#m_pTitleLabel {
+QLabel#m_pTitleLabel {
     color: #495057;
     font-size: 12px;
     font-weight: bold;
@@ -18,7 +18,7 @@ SerialPortReceiveSettingsWidget > QLabel#m_pTitleLabel {
 }
 
 /* === 复选框样式 - 紧凑布局 === */
-SerialPortReceiveSettingsWidget > QCheckBox {
+QCheckBox {
     color: #495057;
     font-size: 12px;
     font-weight: 500;
@@ -27,7 +27,7 @@ SerialPortReceiveSettingsWidget > QCheckBox {
     background-color: transparent;
 }
 
-SerialPortReceiveSettingsWidget > QCheckBox::indicator {
+QCheckBox::indicator {
     width: 16px;
     height: 16px;
     border: 1px solid #ced4da;
@@ -35,18 +35,18 @@ SerialPortReceiveSettingsWidget > QCheckBox::indicator {
     background-color: #ffffff;
 }
 
-SerialPortReceiveSettingsWidget > QCheckBox::indicator:hover {
+QCheckBox::indicator:hover {
     border-color: #80bdff;
 }
 
-SerialPortReceiveSettingsWidget > QCheckBox::indicator:checked {
+QCheckBox::indicator:checked {
     image: url(:/resources/icons/checkmark_blue.svg);
     background-color: #ffffff;
     border: 1px solid #ced4da;
 }
 
 /* === 按钮样式 === */
-QPushButton {
+QPushButton#m_pSaveDataButton, QPushButton#m_pClearDataButton{
     background-color: #0d6efd;
     color: white;
     border: none;
@@ -59,22 +59,56 @@ QPushButton {
     max-width: 100px;
 }
 
-QPushButton:hover {
+QPushButton#m_pSaveDataButton:hover, QPushButton#m_pClearDataButton:hover {
     background-color: #0b5ed7;
 }
 
-QPushButton:pressed {
+QPushButton#m_pSaveDataButton:pressed, QPushButton#m_pClearDataButton:pressed {
     background-color: #0a58ca;
 }
 
+QPushButton#m_pScriptReceiveButton {
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    qproperty-icon: url(:/resources/icons/code.svg);
+    qproperty-iconSize: 20px;
+}
+
+QPushButton#m_pScriptReceiveButton:hover {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+
+QPushButton#m_pScriptHelpButton {
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    qproperty-icon: url(:/resources/icons/help.svg);
+    qproperty-iconSize: 10px;
+}
+
+QPushButton#m_pScriptHelpButton:hover {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+
 /* === 按钮布局优化 === */
-SerialPortReceiveSettingsWidget > QHBoxLayout {
+QHBoxLayout {
     spacing: 8px;
     margin-top: 4px;  /* 减少顶部外边距 */
 }
 
 /* 确保所有文本元素背景透明 */
-SerialPortReceiveSettingsWidget > QLabel,
-SerialPortReceiveSettingsWidget > QCheckBox {
+QLabel,
+QCheckBox {
     background-color: transparent;
 }

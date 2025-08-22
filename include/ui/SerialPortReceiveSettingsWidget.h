@@ -21,6 +21,7 @@
 #include "utils/StyleLoader.h"
 #include "ui/SerialPortDataReceiveWidget.h"
 #include "ui/SerialPortConnectConfigWidget.h"
+#include <ui/ScriptEditorDialog.h>
 
 class SerialPortReceiveSettingsWidget : public QWidget
 {
@@ -41,20 +42,29 @@ signals:
     void timestampDisplayChanged(bool enabled);
     void saveToFileChanged(bool enabled);
 
+private slots:
+    void onShowScriptEditor();
+
 private:
     // 私有方法
     void setUI();
     void createComponents();
     void createLayout();
     void connectSignals();
+    void createScriptEditorDialog();
 
     // UI组件成员
     QLabel* m_pTitleLabel = nullptr;
     QCheckBox* m_pSaveToFileCheckBox = nullptr;
     QCheckBox* m_pDisplayTimestampCheckBox = nullptr;
     QCheckBox* m_pHexDisplayCheckBox = nullptr;
+    QPushButton* m_pScriptReceiveButton = nullptr;
+    QPushButton* m_pScriptHelpButton = nullptr;
     QPushButton* m_pSaveDataButton = nullptr;
     QPushButton* m_pClearDataButton = nullptr;
+
+    QDialog* m_pScriptEditorDialog = nullptr;
+    QTextEdit* m_pScriptEditor = nullptr;
 
     // 布局成员
     QVBoxLayout* m_pMainLayout = nullptr;

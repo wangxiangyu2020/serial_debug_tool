@@ -73,6 +73,8 @@ qt_add_resources(${PROJECT_NAME} "resources"
         resources/icons/sample_rate.svg
         resources/icons/tcp_network.svg
         resources/icons/silder_ikun.svg
+        resources/icons/code.svg
+        resources/icons/help.svg
         resources/image/ikun.gif
         resources/qss/main_window.qss
         resources/qss/tab_bar.qss
@@ -94,6 +96,7 @@ qt_add_resources(${PROJECT_NAME} "resources"
         resources/qss/tcp_network_config_tab.qss
         resources/qss/tcp_network_client_wdiget.qss
         resources/qss/tcp_network_server_wdiget.qss
+        resources/qss/script_editor_dialog.qss
         resources/web/echarts.min.js
         resources/web/wave.html
         README.md
