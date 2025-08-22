@@ -14,7 +14,7 @@ QLabel#m_pDescriptionLabel {
 
 /* 深色主题编辑器 */
 QTextEdit#m_pScriptEditor[class="dark-theme"] {
-    background-color: #1e1e1e;
+    background-color: #333333;
     color: #d4d4d4;
     border: 1px solid #3c3f41;
     border-radius: 4px;

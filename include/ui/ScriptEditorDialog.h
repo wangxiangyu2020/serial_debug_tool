@@ -19,6 +19,7 @@
 #include <QLabel>
 #include <QStyle>
 #include <utils/StyleLoader.h>
+#include <utils/JavaScriptHighlighter.h>
 
 class ScriptEditorDialog : public QDialog
 {
@@ -53,6 +54,8 @@ private:
 
     QVBoxLayout* m_pMainLayout = nullptr;
     QHBoxLayout* m_pButtonLayout = nullptr;
+
+    JavaScriptHighlighter* m_pHighlighter = nullptr;
 };
 
 #endif //SCRIPTEDITORDIALOG_H

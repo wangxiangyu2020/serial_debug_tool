@@ -76,20 +76,23 @@ void ScriptEditorDialog::onToggleTheme()
 {
     m_isDarkTheme = !m_isDarkTheme;
 
-    if (m_pScriptEditor) {
-        if (m_isDarkTheme) {
-            m_pScriptEditor->setProperty("class", "dark-theme");
-            m_pThemeToggleButton->setText("浅色主题");
-        } else {
-            m_pScriptEditor->setProperty("class", "light-theme");
-            m_pThemeToggleButton->setText("深色主题");
-        }
-
-        // 重新应用样式
-        m_pScriptEditor->style()->unpolish(m_pScriptEditor);
-        m_pScriptEditor->style()->polish(m_pScriptEditor);
-        m_pScriptEditor->update();
+    if (m_isDarkTheme)
+    {
+        m_pScriptEditor->setProperty("class", "dark-theme");
+        m_pThemeToggleButton->setText("浅色主题");
+        m_pHighlighter->setTheme(true);
     }
+    else
+    {
+        m_pScriptEditor->setProperty("class", "light-theme");
+        m_pThemeToggleButton->setText("深色主题");
+        m_pHighlighter->setTheme(false);
+    }
+
+    // 重新应用样式
+    m_pScriptEditor->style()->unpolish(m_pScriptEditor);
+    m_pScriptEditor->style()->polish(m_pScriptEditor);
+    m_pScriptEditor->update();
 }
 
 void ScriptEditorDialog::setUI()
@@ -104,7 +107,6 @@ void ScriptEditorDialog::createComponents()
     // 设置窗口属性
     this->setWindowTitle("脚本编辑器");
     this->setMinimumSize(600, 400);
-    this->setObjectName("ScriptEditorDialog"); // 添加这行
     // 添加窗口控制按钮
     this->setWindowFlags(Qt::Window |
         Qt::WindowCloseButtonHint |
@@ -123,6 +125,7 @@ void ScriptEditorDialog::createComponents()
     this->setDefaultScript();
     m_pScriptEditor->setObjectName("m_pScriptEditor");
     m_pScriptEditor->setProperty("class", "dark-theme");
+    m_pHighlighter = new JavaScriptHighlighter(m_pScriptEditor->document());
     // 主题切换按钮
     m_pThemeToggleButton = new QPushButton("浅色主题", this);
     m_pThemeToggleButton->setObjectName("m_pThemeToggleButton");
