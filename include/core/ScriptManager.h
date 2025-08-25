@@ -22,8 +22,7 @@ class ScriptManager : public QObject
 
 public:
     static ScriptManager* getInstance();
-    int findFrame(const QString& scriptName, const QByteArray& buffer);
-    QJSValue parseFrame(const QString& scriptName, const QByteArray& frame);
+    QJSValue processBuffer(const QString& scriptName, const QByteArray& buffer);
     bool isEnableSerialPortScript();
 
 public slots:
@@ -45,7 +44,7 @@ private:
     bool m_isSerialPortScriptEnabled = false;
     QJSEngine m_jsEngine;
     // 存储脚本
-    QHash<QString, QList<QJSValue>> m_scriptFunctionsMap;
+    QHash<QString, QJSValue> m_scriptFunctionsMap;
 };
 
 #endif //SCRIPTMANAGER_H

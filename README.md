@@ -1,6 +1,6 @@
 # IKUN 串口调试工具
 
-一个基于 Qt6 和 C++20 构建的现代化、功能丰富的串口调试工具。该应用程序为串口通信提供了直观的界面，支持多种数据格式、实时监控、专业级数据可视化和完全可定制的样式系统。集成了基于 ECharts 的波形显示功能，支持多通道数据管理和实时图表更新。
+一个基于 Qt6 和 C++20 构建的现代化、功能丰富的串口调试工具。该应用程序为串口通信和TCP网络通信提供了直观的界面，支持多种数据格式、实时监控、专业级数据可视化和完全可定制的样式系统。集成了基于 ECharts 的波形显示功能，支持多通道数据管理和实时图表更新。新增JavaScript脚本引擎支持自定义数据处理和协议解析。
 
 ---
 
@@ -15,21 +15,444 @@
 https://gitee.com/wangxiangyu123444/serial_debug_tool.git
 ```
 
-- 基本操作指南
+### 📋 自定义脚本示例
 
-  ![image-20250811165322693](resources/image/use_image/image-20250811165322693.png)
+以下是四种典型的数据传输和解析场景，帮助您快速上手本工具的数据处理功能：
 
-  ![image-20250811165319579](resources/image/use_image/image-20250811165319579.png)
+**说明**
 
-- 波形显示使用
+在串口模块和TCP/IP模块自定义脚本使用是保持一致的。目前自定义脚本并不能支持很高的发送频率，最高只能支持1HZ（每秒），如果你需要很高的发送频率支持，只能使用默认的录波协议。
 
-  ![image-20250811165634781](resources/image/use_image/image-20250811165634781.png)
+**默认录波协议说明**
 
-  ![image-20250811165745771](resources/image/use_image/image-20250811165745771.png)
+当您不勾选"使用自定义脚本"选项时，软件将采用一套内置的默认协议来解析串口数据并进行录波。该协议格式简洁，易于在各种单片机（如STM32）上实现。
 
-  ![image-20250811170205337](resources/image/use_image/image-20250811170205337.png)
+*协议格式*
 
-  ![image-20250811170331220](resources/image/use_image/image-20250811170331220.png)
+默认协议是一种基于文本的键值对格式，其核心结构为：
+
+```
+ChannelID=Value
+```
+
+当您需要一次性发送多个通道的数据时，只需用**逗号（,）**将它们隔开即可。
+
+```
+ChannelID1=Value1,ChannelID2=Value2,ChannelID3=Value3,
+```
+
+*格式详解*
+
+*ChannelID (通道标识符)*
+
+- 等号 (=) 前面的部分。
+- 它必须与您在软件通道管理器中设置的"通道标识符"完全一致。例如，如果您在软件中设置了一个通道，其标识符为 `ch1`，那么您单片机发送的ChannelID就必须是`ch1`。
+- 前后的空格会被自动忽略。例如 `ch1 = 123,` 是有效的。
+
+*Value (数值)*
+
+- 等号 (=) 后面的部分。
+- 它可以是整数或小数（例如 `100` 或 `-50.25`）。
+- 程序会将其解析为双精度浮点数（double）。
+- 前后的空格同样会被自动忽略。
+
+*分隔符 (Separator)*
+
+- 每个ChannelID=Value数据对之后，必须跟一个英文逗号 (,) 作为分隔符。
+- 这个逗号非常重要，程序以此为依据来切分和确认一个完整的数据点。
+
+*示例*
+
+*发送单个数据点*
+```
+单片机发送：ch1=99.5,
+```
+
+*一次性发送多个数据点*
+```
+单片机发送：ch1=99.5,ch2=-50,ch1=99.8,
+```
+
+*包含空格的示例（同样有效）*
+```
+单片机发送：ch1 = 99.5 , ch2 = -50 ,
+```
+
+*STM32/C代码发送示例*
+
+您可以在您的单片机项目中使用sprintf函数轻松地构建此格式的字符串。
+
+```c
+#include <stdio.h>
+#include <string.h>
+
+// 假设 data_buffer 是一个足够大的全局或静态 char 数组
+// 假设 USART6_SendData 是您的串口发送函数
+
+/**
+  * @brief 发送符合默认录波协议的数据
+  * @param channel_id_str: 通道标识符字符串 (e.g., "ch1")
+  * @param value: 要发送的浮点数值
+  * @retval None
+  */
+void Send_Default_Protocol_Data(const char* channel_id_str, float value)
+{
+    char data_buffer[50];
+    
+    // 使用 sprintf 格式化字符串，例如 "ch1=99.50,"
+    int len = sprintf(data_buffer, "%s=%.2f,", channel_id_str, value);
+    
+    // 通过UART发送
+    if (len > 0) {
+        USART6_SendData((uint8_t*)data_buffer, len);
+    }
+}
+
+// 调用示例：
+// Send_Default_Protocol_Data("ch1", 99.5);
+// Send_Default_Protocol_Data("ch2", -50.0);
+```
+
+*注意事项*
+
+- **末尾的逗号**：请确保每条有效数据的末尾都有一个逗号，这有助于程序正确识别数据帧的结束。
+- **数据流处理**：程序将串口数据视为连续的数据流。如果数据在逗号后还有剩余（例如 `ch1=100,ch2=5`），不完整的部分（`ch2=5`）会被缓存起来，等待下一个数据包的到来再进行拼接处理。
+
+---
+
+**场景一：自定义二进制协议（推荐）**
+
+这是最灵活、最高效的方式，特别适合嵌入式系统。
+
+- **适用场景**：需要高效、紧凑地传输二进制数据，且数据结构清晰。
+
+*协议约定*
+
+我们约定一个5字节长的数据帧格式：
+
+| 字节位置   | 0      | 1      | 2         | 3         | 4      |
+| ---------- | ------ | ------ | --------- | --------- | ------ |
+| **含义**   | 帧头   | 通道ID | 数据高8位 | 数据低8位 | 帧尾   |
+| **示例值** | `0xEB` | `0x01` | `0x00`    | `0xC8`    | `0xED` |
+
+*STM32 发送端代码*
+
+```c
+void Send_Data(uint8_t channel_id, int16_t value)
+{
+    // 定义一个5字节的数组
+    uint8_t data_frame[5];
+
+    // 按照协议格式构建数据帧
+    data_frame[0] = 0xEB; // 帧头
+    data_frame[1] = channel_id; // 通道ID
+    data_frame[2] = (uint8_t)(value >> 8);   // 数据高8位
+    data_frame[3] = (uint8_t)(value & 0xFF); // 数据低8位
+    data_frame[4] = 0xED; // 帧尾
+
+    // 通过UART发送数据帧
+	USART6_SendData(data_frame, 5);
+}
+```
+
+*JavaScript 解析脚本*
+
+```JavaScript
+/**
+ * 查找一个5字节的完整数据帧。
+ */
+function findFrame(buffer) {
+    // 查找 0xEB ... 0xED 格式的5字节固定长度帧
+    for (var i = 4; i < buffer.length; ++i) {
+        if (buffer[i] === 0xED && buffer[i - 4] === 0xEB) {
+            return i;
+        }
+    }
+    return -1; // 没有找到完整帧
+}
+
+/**
+ * 解析一个数据帧，支持多种通道。
+ */
+function parseFrame(frame) {
+    if (frame.length !== 5 || frame[0] !== 0xEB || frame[4] !== 0xED) {
+        return null; // 格式不对，丢弃
+    }
+
+    // 第1步：识别通道ID
+    var channelId = frame[1];
+
+    // 第2步：提取数据
+    var value = (frame[2] << 8) | frame[3];
+    if (value & 0x8000) { value -= 0x10000; } // 符号转换
+
+    // 第3步：根据通道ID返回不同的对象
+    // channelId 需要与您在软件中添加通道时的“通道标识符”一致
+    switch (channelId) {
+        case 1:
+            return {
+                displayText: "channel1: " + value, // 用于显示文本
+                chartData: { channelId: "ch1", point: value } // 用于绘制图表
+            };
+        case 2:
+            return {
+                displayText: "channel2: " + value,
+                chartData: { channelId: "ch2", point: value }
+            };
+    }
+}
+
+/**
+ * 驱动函数 - 无需修改。
+ */
+function processBuffer(buffer) {
+    var results = [];
+    var bytesConsumed = 0;
+    while (bytesConsumed < buffer.length) {
+        var remainingBuffer = buffer.slice(bytesConsumed);
+        var frameEndPos = findFrame(remainingBuffer);
+        if (frameEndPos < 0) { break; }
+        var frameSize = frameEndPos + 1;
+        var completeFrame = remainingBuffer.slice(0, frameSize);
+        var parsedObject = parseFrame(completeFrame);
+        if (parsedObject) { results.push(parsedObject); }
+        bytesConsumed += frameSize;
+    }
+    return { bytesConsumed: bytesConsumed, frames: results };
+}
+```
+
+*关键点解析*
+
+- **核心思想**：在 `parseFrame` 函数中使用 `switch (channelId)` 语句来区分不同的通道。
+- **自定义**：您可以轻松地复制一个 `case` 模块，修改通道ID和 `displayText`，来适配您自己的协议。
+
+------
+
+
+
+**场景二：使用特定分隔符**
+
+- **适用场景**：发送长度不固定的文本数据，例如GPS模块的NMEA语句或一些自定义的ASCII指令。
+
+*协议约定*
+
+- 数据格式为 `"ID=Value"`，例如 `"1=123.45"`。
+- 每条数据都以一个**逗号** `,` 作为结束标志。
+
+*STM32 发送端代码*
+
+```c
+void Send_Data(uint8_t channel_id, float value)
+{
+    char buffer[50];
+    
+    // 使用 sprintf 格式化字符串，例如 "1=25.50,"
+    int len = sprintf(buffer, "%d=%.2f,", channel_id, value);
+    
+    // 通过UART发送
+    if (len > 0) {
+        USART6_SendData((uint8_t*)buffer, len);
+    }
+}
+```
+
+
+
+*JavaScript 解析脚本*
+
+```JavaScript
+/**
+ * 查找分隔符 (逗号 ',' 的ASCII码是 44)。
+ */
+function findFrame(buffer) {
+    for (var i = 0; i < buffer.length; ++i) {
+        if (buffer[i] === 44) { // 查找逗号
+            return i;
+        }
+    }
+    return -1;
+}
+
+/**
+ * 将字节数组转换为字符串，并按 "ID=Value" 格式解析。
+ */
+function parseFrame(frame) {
+    // 将字节数组转换为字符串 (忽略最后的逗号)
+    var frameAsString = "";
+    for (var i = 0; i < frame.length - 1; ++i) {
+        frameAsString += String.fromCharCode(frame[i]);
+    }
+
+    // 按等号分割
+    var parts = frameAsString.split('=');
+    if (parts.length === 2) {
+        var channelId = parts[0];
+        var value = parseFloat(parts[1]); // 解析数值
+
+        if (!isNaN(value)) {
+            return {
+                displayText: "通道 " + channelId + " = " + value,
+                chartData: { channelId: "ch" + channelId, point: value }
+            };
+        }
+    }
+    return null;
+}
+
+/**
+ * 驱动函数 - 无需修改。
+ */
+function processBuffer(buffer) {
+    // ... (此函数与上一个示例完全相同) ...
+}
+```
+
+*关键点解析*
+
+- **核心思想**：`findFrame` 的任务变成了寻找分隔符（这里是逗号）。`parseFrame` 则负责将收到的字节流先转换成字符串，再进行解析。
+
+
+
+**场景三：使用固定长度**
+
+- **适用场景**：协议非常简单，每个数据包的长度都完全一样，解析效率极高。
+
+*协议约定*
+
+- 所有数据帧的长度都是固定的 **8个字节**。
+- **Byte 0**: 通道ID。
+- **Byte 1-4**: 32位有符号整数值（大端模式）。
+- **Byte 5-7**: 保留字节。
+
+*STM32 发送端代码*
+
+```c
+void Send_Data(uint8_t channel_id, int32_t value)
+{
+    uint8_t data_frame[8];
+    
+    data_frame[0] = channel_id;
+    data_frame[1] = (uint8_t)(value >> 24); // 数据高位
+    data_frame[2] = (uint8_t)(value >> 16);
+    data_frame[3] = (uint8_t)(value >> 8);
+    data_frame[4] = (uint8_t)(value);      // 数据低位
+    data_frame[5] = 0; // 保留字节
+    data_frame[6] = 0;
+    data_frame[7] = 0;
+    
+    USART6_SendData(data_frame, 8);
+}
+```
+
+
+
+*JavaScript 解析脚本*
+
+```JavaScript
+const FRAME_LENGTH = 8; // 在脚本开头定义好固定长度
+
+/**
+ * 检查数据是否足够一个完整帧的长度。
+ */
+function findFrame(buffer) {
+    if (buffer.length >= FRAME_LENGTH) {
+        return FRAME_LENGTH - 1; // 返回第一个完整帧的结束索引
+    }
+    return -1;
+}
+
+/**
+ * 按照固定的字节位置来解析数据。
+ */
+function parseFrame(frame) {
+    if (frame.length === FRAME_LENGTH) {
+        var channelId = frame[0];
+        var value = (frame[1] << 24) | (frame[2] << 16) | (frame[3] << 8) | frame[4];
+        
+        return {
+            displayText: "通道 " + channelId + " = " + value,
+            chartData: { channelId: "ch" + channelId, point: value }
+        };
+    }
+    return null;
+}
+
+/**
+ * 驱动函数 - 无需修改。
+ */
+function processBuffer(buffer) {
+    // ... (此函数与上一个示例完全相同) ...
+}
+```
+
+*关键点解析*
+
+- **核心思想**：`findFrame` 的逻辑变得极其简单，只检查长度。`parseFrame` 则像操作数组一样，直接从固定的索引（`frame[0]`, `frame[1]`...）中提取数据。
+
+---
+
+**编写脚本的重要注意事项**
+
+为了确保您自定义的脚本能够被软件正确识别和执行，请务必遵循以下的数据结构约定。这些结构是软件与脚本之间交互的“契约”，任何改动都可能导致脚本无法正常工作。
+
+*1. parseFrame 函数的返回结构*
+
+`parseFrame` 函数负责解析单个数据帧，它返回的对象必须遵循以下固定结构。
+
+```javascript
+return {
+    // displayText: [字符串],  // (可选) 用于在文本框中显示的字符串
+    // chartData: {           // (可选) 用于绘制图表的对象
+    //     channelId: [字符串], // (必选, 如果有chartData) 与软件中设置的通道标识符一致
+    //     point: [数值]      // (必选, 如果有chartData) 用于绘图的数据点
+    // }
+};
+```
+
+*字段详解*：
+
+**displayText (可选)**：
+- 类型：字符串。
+- 作用：定义了希望在软件的文本显示区看到的内容。如果您只需要绘图，可以省略此字段。
+
+**chartData (可选)**：
+- 类型：对象。
+- 作用：定义了用于绘制图表的数据。如果您只需要显示文本，可以省略此字段。
+- 但请注意：如果提供了 `chartData` 对象，那么它内部的 `channelId` 和 `point` 两个字段都必须存在。
+
+**chartData.channelId (必选, 如果有chartData)**：
+- 类型：字符串。
+- 作用：告诉软件这个数据点属于哪个通道。这个值必须与您在软件通道管理器中设置的“通道标识符”完全一致（例如 "ch1", "ch2"）。
+
+**chartData.point (必选, 如果有chartData)**：
+- 类型：数值。
+- 作用：图表上Y轴的实际数值。
+
+**关键**: 以上所有键名 (displayText, chartData, channelId, point) 都是固定的，请勿修改，否则软件将无法识别。
+
+*2. processBuffer 函数的返回结构*
+
+`processBuffer` 是软件直接调用的核心入口函数，其返回结构绝对不能改变。
+
+```javascript
+return {
+    bytesConsumed: [数值], // (必选) 本次调用成功处理的字节数
+    frames: [数组]       // (必选) 由 parseFrame 返回的对象组成的数组
+};
+```
+
+*字段详解*：
+
+**bytesConsumed (必选)**：
+- 类型：数值（整数）。
+- 作用：告知软件本次函数调用处理了输入缓冲区中的多少个字节。软件会根据这个值来清理缓冲区，为下一次数据处理做准备。
+
+**frames (必选)**：
+- 类型：数组。
+- 作用：一个数组，其中包含了本次调用中，所有被 `parseFrame` 成功解析出的数据对象。
+
+**关键**: `bytesConsumed` 和 `frames` 这两个键名以及它们的数据类型是脚本与软件交互的唯一接口，任何改动都会导致整个脚本失效。
 
 ## 🚀 本地部署
 
@@ -93,6 +516,14 @@ https://gitee.com/wangxiangyu123444/serial_debug_tool.git
 - **流控制**: 无流控、硬件流控、软件流控
 - **1MB 缓冲区**: 大容量串口读取缓冲，支持高速数据传输
 
+### 🌐 TCP网络通信
+- **TCP客户端模式**: 连接到远程TCP服务器，支持IP地址和端口配置
+- **TCP服务器模式**: 作为服务器监听连接，支持多客户端同时连接
+- **实时连接状态**: 显示连接状态和客户端信息
+- **数据格式支持**: ASCII/HEX双格式显示和发送
+- **时间戳和来源标识**: 自动标识数据来源和接收时间
+- **定时发送**: 支持自定义间隔的定时数据发送
+
 ### 📊 数据处理与可视化
 - **双格式显示**: ASCII 和 HEX 格式实时切换
 - **时间戳功能**: 可选的毫秒级时间戳显示 [HH:mm:ss.zzz]
@@ -114,17 +545,23 @@ https://gitee.com/wangxiangyu123444/serial_debug_tool.git
 - **Web引擎集成**: QWebEngineView 集成 ECharts 实现专业级数据可视化
 - **数据队列优化**: 支持大容量数据缓冲和批量处理 (60FPS刷新率)
 - **资源清理**: 程序退出时自动清理 WebEngine 缓存
+- **JavaScript脚本引擎**: 支持自定义JavaScript脚本进行数据处理和协议解析
+- **实时帧同步**: 自动检测和解析数据帧，支持复杂协议处理
+- **代码编辑器**: 内置高亮显示JavaScript代码编辑器，支持深色/浅色主题切换
+- **数据包处理器**: 单独线程处理串口和TCP数据，支持高并发数据流
 
 ## 📁 项目结构
 
 ```
 serial_debug_tool/
-├── src/                    # 源代码 (24个文件)
+├── src/                    # 源代码 (31个文件)
 │   ├── main.cpp           # 应用程序入口点 (包含SplashScreen集成)
-│   ├── core/              # 核心业务逻辑 (2个文件)
+│   ├── core/              # 核心业务逻辑 (4个文件)
 │   │   ├── SerialPortManager.cpp          # 串口管理核心类
-│   │   └── ChannelManager.cpp             # 通道管理器 (单例模式)
-│   ├── ui/                # 用户界面组件 (21个文件)
+│   │   ├── ChannelManager.cpp             # 通道管理器 (单例模式)
+│   │   ├── TcpNetworkManager.cpp          # TCP网络管理核心类
+│   │   └── ScriptManager.cpp              # JavaScript脚本管理器
+│   ├── ui/                # 用户界面组件 (26个文件)
 │   │   ├── MainWindow.cpp                 # 主窗口
 │   │   ├── SplashScreen.cpp               # 启动画面
 │   │   ├── TitleBar.cpp                   # 自定义标题栏
@@ -139,44 +576,59 @@ serial_debug_tool/
 │   │   ├── SerialPortDataReceiveWidget.cpp      # 数据接收显示
 │   │   ├── SerialPortDataSendWidget.cpp         # 数据发送输入
 │   │   ├── SerialPortRealTimeSaveWidget.cpp     # 实时保存状态显示
+│   │   ├── TcpNetworkConfigTab.cpp        # TCP网络配置标签页
+│   │   ├── TcpNetworkClientWidget.cpp     # TCP客户端组件
+│   │   ├── TcpNetworkServerWidget.cpp     # TCP服务器组件
 │   │   ├── WaveformTab.cpp                # 波形显示标签页
 │   │   ├── WaveformWidget.cpp             # ECharts 波形显示组件
 │   │   ├── WaveformCtrlWidget.cpp         # 波形控制面板
 │   │   ├── AddChannelDialog.cpp           # 添加通道对话框
 │   │   ├── RemoveChannelDialog.cpp        # 移除通道对话框
 │   │   ├── SampleRateDialog.cpp           # 采样率配置对话框
+│   │   ├── ScriptEditorDialog.cpp         # JavaScript脚本编辑对话框
 │   │   └── SettingsTab.cpp                # 设置标签页
-│   └── utils/             # 工具类 (3个文件)
+│   └── utils/             # 工具类 (6个文件)
 │       ├── StyleLoader.cpp               # QSS样式加载器
 │       ├── ThreadPoolManager.cpp         # 线程池管理器
-│       └── SerialPortSettings.cpp        # 串口参数配置工具
-├── include/               # 头文件 (与src结构对应，24个文件)
-│   ├── core/              # 核心模块头文件 (2个文件)
-│   │   ├── SerialPortManager.h
-│   │   └── ChannelManager.h
-│   ├── ui/                # UI组件头文件 (21个文件)
+│       ├── SerialPortSettings.cpp        # 串口参数配置工具
+│       ├── PacketProcessor.cpp           # 数据包处理器
+│       └── JavaScriptHighlighter.cpp     # JavaScript代码高亮器
+├── include/               # 头文件 (与src结构对应，31个文件)
+│   ├── core/              # 核心模块头文件 (4个文件)
+│   │   ├── SerialPortManager.h, ChannelManager.h
+│   │   ├── TcpNetworkManager.h
+│   │   └── ScriptManager.h
+│   ├── ui/                # UI组件头文件 (26个文件)
 │   │   ├── MainWindow.h, SplashScreen.h, TitleBar.h, CTabWidget.h
 │   │   ├── FramelessBase.h, CDialogBase.h, CMessageBox.h
 │   │   ├── SerialPortConfigTab.h, SerialPortConnectConfigWidget.h
 │   │   ├── SerialPortReceiveSettingsWidget.h, SerialPortSendSettingsWidget.h
 │   │   ├── SerialPortDataReceiveWidget.h, SerialPortDataSendWidget.h
 │   │   ├── SerialPortRealTimeSaveWidget.h
+│   │   ├── TcpNetworkConfigTab.h, TcpNetworkClientWidget.h, TcpNetworkServerWidget.h
 │   │   ├── WaveformTab.h, WaveformWidget.h, WaveformCtrlWidget.h
 │   │   ├── AddChannelDialog.h, RemoveChannelDialog.h, SampleRateDialog.h
+│   │   ├── ScriptEditorDialog.h
 │   │   └── SettingsTab.h
-│   └── utils/             # 工具类头文件 (3个文件)
+│   └── utils/             # 工具类头文件 (6个文件)
+│       ├── StyleLoader.h, ThreadPoolManager.h, SerialPortSettings.h
+│       ├── PacketProcessor.h, DataPacket.h, ThreadSetup.h
+│       └── JavaScriptHighlighter.h, NetworkModeState.h
 ├── resources/             # 应用程序资源
-│   ├── icons/            # SVG 和 ICO 图标文件 (18个图标)
-│   │   ├── 界面图标: logo.svg, serial.svg, waves.svg, settings.svg
+│   ├── icons/            # SVG 和 ICO 图标文件 (22个图标)
+│   │   ├── 界面图标: logo.svg, serial.svg, waves.svg, settings.svg, tcp_network.svg
 │   │   ├── 操作图标: send.svg, checkmark_blue.svg, down_arrow.svg
 │   │   ├── 波形图标: add_series.svg, remove_series.svg, clear_series.svg
 │   │   ├── 数据图标: import_series.svg, export_series.svg
 │   │   ├── 控制图标: start_series.svg, stop_series.svg, sample_rate.svg
-│   │   └── 应用图标: ikun.ico, ikun.svg, un_dev.svg
-│   ├── qss/              # Qt 样式表文件 (17个样式文件)
+│   │   ├── 功能图标: code.svg (脚本编辑), help.svg (帮助)
+│   │   └── 应用图标: ikun.ico, ikun.svg, silder_ikun.svg, un_dev.svg
+│   ├── qss/              # Qt 样式表文件 (21个样式文件)
 │   │   ├── 主界面: main_window.qss, title_bar.qss, tab_bar.qss
 │   │   ├── 对话框: dialog_base.qss, add_channel_dialog.qss, remove_channel_dialog.qss, sample_rate_dialog.qss
+│   │   ├── 脚本编辑: script_editor_dialog.qss (新增)
 │   │   ├── 波形界面: wave_form_tab.qss, wave_form_ctrl_widget.qss
+│   │   ├── TCP网络: tcp_network_config_tab.qss, tcp_network_client_wdiget.qss, tcp_network_server_wdiget.qss (新增)
 │   │   ├── 串口组件: serial_prot_config_tab.qss
 │   │   ├── 串口配置: serial_port_connect_config_widget.qss
 │   │   ├── 串口设置: serial_port_receive_settings_widget.qss, serial_port_send_settings_widget.qss
@@ -699,20 +1151,20 @@ sequenceDiagram
 - **图表渲染**: ECharts硬件加速，支持大数据量实时更新
 
 ### 项目规模统计
-- **源代码文件**: 24个 (.cpp文件)
-  - main.cpp (1个) + core (2个) + ui (21个) + utils (3个)
-- **头文件**: 24个 (.h文件)
+- **源代码文件**: 31个 (.cpp文件)
+  - main.cpp (1个) + core (4个) + ui (26个) + utils (6个)
+- **头文件**: 31个 (.h文件)
   - 与源文件一一对应的完整头文件结构
-- **UI组件**: 21个独立组件
-  - 包含完整的对话框系统、启动画面和波形可视化组件
-- **核心模块**: 2个 (SerialPortManager, ChannelManager)
-- **工具类**: 3个 (StyleLoader, ThreadPoolManager, SerialPortSettings)
-- **图标资源**: 17个SVG + 1个ICO (共18个)
-- **样式文件**: 17个QSS文件 (完整的样式系统)
+- **UI组件**: 26个独立组件
+  - 包含完整的对话框系统、启动画面、波形可视化组件、TCP网络组件和脚本编辑器
+- **核心模块**: 4个 (SerialPortManager, ChannelManager, TcpNetworkManager, ScriptManager)
+- **工具类**: 6个 (StyleLoader, ThreadPoolManager, SerialPortSettings, PacketProcessor, JavaScriptHighlighter, ThreadSetup)
+- **图标资源**: 22个SVG + 1个ICO (共23个)
+- **样式文件**: 21个QSS文件 (完整的样式系统)
 - **Web资源**: 2个文件 (ECharts库 + HTML页面)
 - **部署脚本**: 1个 (deploy.bat Windows部署脚本)
-- **总文件数**: 约90个文件 (包含构建输出)
-- **代码行数**: 约12000行 (估算，包含注释和空行)
+- **总文件数**: 约130个文件 (包含构建输出和图片资源)
+- **代码行数**: 约18000行 (估算，包含注释和空行)
 
 ## 📝 许可证
 
@@ -744,13 +1196,20 @@ sequenceDiagram
 - ✅ **采样率配置**: SampleRateDialog 支持自定义采样率设置
 - ✅ **实时数据流**: 串口数据到波形图表的实时更新，60FPS刷新率
 - ✅ **现代化UI设计**: 无边框窗口、自定义对话框、动画效果
-- ✅ **完整的样式系统**: 17个专用QSS文件，支持主题定制
+- ✅ **完整的样式系统**: 21个专用QSS文件，支持主题定制
 - ✅ **线程安全架构**: 多线程数据处理，UI响应流畅
 - ✅ **资源管理系统**: 完整的图标、样式、Web资源管理
 - ✅ **三向通道操作**: AddChannelDialog、RemoveChannelDialog 和 SampleRateDialog 完整实现
 - ✅ **数据队列优化**: 支持大容量数据缓冲和性能优化
 - ✅ **Web引擎集成**: QWebEngineView 完美集成 ECharts 图表库
 - ✅ **自动化部署**: deploy.bat 脚本支持一键部署
+- ✅ **TCP网络通信**: 支持客户端和服务器模式，多客户端同时连接
+- ✅ **JavaScript脚本引擎**: 完整的JS脚本执行环境，支持自定义数据处理
+- ✅ **代码编辑器**: 内置高亮显示JavaScript编辑器，支持深色/浅色主题
+- ✅ **智能帧同步**: 自动检测和解析数据帧，支持复杂协议处理
+- ✅ **高性能数据处理**: PacketProcessor单独线程处理数据，支持高并发
+- ✅ **多端口状态管理**: NetworkModeState统一管理串口和TCP的显示状态
+- ✅ **线程池管理**: ThreadSetup模板化线程设置，支持多管理器线程化
 
 ## 🔮 发展路线
 

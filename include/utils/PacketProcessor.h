@@ -56,7 +56,6 @@ private:
     void processSerialData(const DataPacket& packet);
     void processSerialDataWithScript(const DataPacket& packet);
     void processSerialDataWithoutScript(const DataPacket& packet);
-    void emitFormattedSerialData(const QString& data);
     void processTcpData(const DataPacket& packet);
 
     static PacketProcessor* m_instance;

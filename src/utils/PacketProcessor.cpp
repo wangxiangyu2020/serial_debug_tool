@@ -93,13 +93,31 @@ void PacketProcessor::processSerialData(const DataPacket& packet)
 void PacketProcessor::processSerialDataWithScript(const DataPacket& packet)
 {
     ScriptManager* scriptManager = ScriptManager::getInstance();
-    // 将新数据追加到缓冲区，进行帧同步
+    // 限制缓冲区大小，避免内存无限增长
+    const int MAX_BUFFER_SIZE = 8192;
+    if (m_serialWaveformBuffer.size() + packet.data.size() > MAX_BUFFER_SIZE)
+        m_serialWaveformBuffer.clear();
     m_serialWaveformBuffer.append(packet.data);
-
-    // 先获取通道信息
+    if (m_serialWaveformBuffer.isEmpty()) return;
+    QJSValue scriptResult = scriptManager->processBuffer("serialPort", m_serialWaveformBuffer);
+    if (!scriptResult.isObject() || scriptResult.isUndefined() || scriptResult.isNull()) return;
+    // 检查返回对象是否包含预期属性
+    if (!scriptResult.hasProperty("bytesConsumed") || !scriptResult.hasProperty("frames"))
+        return;
+    // 根据脚本返回的已处理字节数，更新缓冲区
+    int bytesConsumed = scriptResult.property("bytesConsumed").toInt();
+    if (bytesConsumed > 0) m_serialWaveformBuffer = m_serialWaveformBuffer.mid(bytesConsumed);
+    // 获取所有解析好的帧数组
+    QJSValue framesArray = scriptResult.property("frames");
+    if (!framesArray.isArray()) return;
+    // 获取所需配置
     ChannelManager* chManager = ChannelManager::getInstance();
+    const bool isRecording = chManager->isDataRecordingEnabled();
     const QList<ChannelInfo> activeChannels = chManager->getAllChannels();
     const double sampleRate = chManager->getSampleRate();
+    const bool isHex = SerialPortManager::getInstance()->isHexDisplayEnabled();
+    const bool isTimestamp = SerialPortManager::getInstance()->isTimestampEnabled();
+
     QHash<QString, QString> idToNameMap;
     QSet<QString> activeChannelIds;
     for (const auto& ch : activeChannels)
@@ -107,100 +125,49 @@ void PacketProcessor::processSerialDataWithScript(const DataPacket& packet)
         idToNameMap[ch.id] = ch.name;
         activeChannelIds.insert(ch.id);
     }
-
-    // 添加循环计数器防止无限循环
-    int maxIterations = 1000; // 设置最大迭代次数
-    int iterationCount = 0;
-
-    while (iterationCount < maxIterations && !m_serialWaveformBuffer.isEmpty())
+    // 遍历脚本返回的所有已解析帧
+    const int framesCount = framesArray.property("length").toInt();
+    for (int i = 0; i < framesCount; ++i)
     {
-        iterationCount++;
-        // 请求脚本查找一个完整帧
-        int frameEndPos = scriptManager->findFrame("serialPort", m_serialWaveformBuffer);
-        // 脚本告诉我们没有找到一个完整的帧，或者帧结束位置超出缓冲区范围，跳出循环
-        if (frameEndPos == -1 || frameEndPos >= m_serialWaveformBuffer.size() || frameEndPos < 0) break;
-        // 添加额外的安全检查
-        if (frameEndPos == 0)
+        QJSValue parsedResult = framesArray.property(i);
+        if (!parsedResult.isObject()) continue;
+        QVariant resultVariant = parsedResult.toVariant();
+        if (!resultVariant.isValid()) continue;
+        QJsonObject resultObject = QJsonDocument::fromVariant(resultVariant).object();
+        // 处理显示的文本
+        if (resultObject.contains("displayText"))
         {
-            // 如果返回位置0，可能是错误的，跳过并移除第一个字节避免死循环
-            m_serialWaveformBuffer = m_serialWaveformBuffer.mid(1);
-            continue;
-        }
-        // 根据脚本返回的位置截取一个完整的帧
-        QByteArray completeFrame = m_serialWaveformBuffer.left(frameEndPos + 1);
-        // 确保帧不为空
-        if (completeFrame.isEmpty())
-        {
-            m_serialWaveformBuffer = m_serialWaveformBuffer.mid(frameEndPos + 1);
-            continue;
-        }
-        m_serialWaveformBuffer = m_serialWaveformBuffer.mid(frameEndPos + 1);
-        // 请求脚本解析这个帧
-        QJSValue parsedResult = scriptManager->parseFrame("serialPort", completeFrame);
-        // 根据脚本返回的结果决定如何处理
-        if (parsedResult.isUndefined() || parsedResult.isNull()) continue;
-        SerialPortManager* spManager = SerialPortManager::getInstance();
-        const bool isHex = spManager->isHexDisplayEnabled();
-        // 返回字符串或者对象类型需要进行解析
-        if (parsedResult.isString())
-        {
-            // 对返回的字符串进行处理
+            QString displayText = resultObject.value("displayText").toString();
             QString formattedData = isHex
-                                        ? QString::fromLatin1(parsedResult
-                                                              .toString()
-                                                              .toLocal8Bit()
-                                                              .toHex(' ')
-                                                              .toUpper())
-                                        : parsedResult.toString();
-            this->emitFormattedSerialData(formattedData);
+                                        ? QString::fromLatin1(displayText.toLatin1().toHex(' ').toUpper())
+                                        : displayText;
+            QString timestampText;
+            if (isTimestamp)
+            {
+                QString timestamp = QDateTime::currentDateTime().toString("[HH:mm:ss.zzz]");
+                timestampText = QString("%1 %2").arg(timestamp).arg(formattedData);
+            }
+            else
+            {
+                timestampText = formattedData;
+            }
+            emit serialPortReceiveDataChanged(timestampText.toLocal8Bit());
         }
-        else if (parsedResult.isObject())
+        // 处理录波数据
+        if (isRecording && resultObject.contains("chartData"))
         {
-            // 对脚本返回的对象进行解析
-            QJsonObject resultObject = QJsonDocument::fromVariant(parsedResult.toVariant()).object();
-            // 检查是否有用于显示的文本数据
-            if (resultObject.contains("displayText"))
+            QJsonObject chartObj = resultObject.value("chartData").toObject();
+            QString channelId = chartObj.value("channelId").toString();
+            if (activeChannelIds.contains(channelId))
             {
-                // 对返回的字符串进行处理
-                QString formattedData = isHex
-                                            ? QString::fromLatin1(resultObject.value("displayText")
-                                                                              .toString()
-                                                                              .toLocal8Bit()
-                                                                              .toHex(' ')
-                                                                              .toUpper())
-                                            : resultObject.value("displayText").toString();
-                this->emitFormattedSerialData(formattedData);
-            }
-            // 判断是否需要录波
-            if (!ChannelManager::getInstance()->isDataRecordingEnabled()) continue;
-            if (resultObject.contains("chartData"))
-            {
-                QJsonObject chartObj = resultObject.value("chartData").toObject();
-                // 假设脚本返回了所有信息
-                if (chartObj.contains("channelId") && chartObj.contains("point"))
-                {
-                    QString channelId = chartObj.value("channelId").toString();
-                    double value = chartObj.value("point").toDouble();
-                    if (channelId.isEmpty() || qIsNaN(value)) continue;
-                    if (!activeChannelIds.contains(channelId)) continue;
-                    QString channelName = idToNameMap.value(channelId);
-                    if (!m_channelTimestamps.contains(channelId)) m_channelTimestamps[channelId] = 0;
-                    double currentTime = m_channelTimestamps[channelId];
-                    m_channelTimestamps[channelId] += sampleRate;
-                    QVariantList point;
-                    point << currentTime << value;
-                    emit waveformDataReady(channelName, point);
-                }
+                double value = chartObj.value("point").toDouble();
+                QString channelName = idToNameMap.value(channelId);
+                if (!m_channelTimestamps.contains(channelId)) m_channelTimestamps[channelId] = 0;
+                double currentTime = m_channelTimestamps[channelId];
+                m_channelTimestamps[channelId] += sampleRate;
+                emit waveformDataReady(channelName, QVariantList{currentTime, value});
             }
         }
-    }
-
-    // 如果达到最大迭代次数，记录警告
-    if (iterationCount >= maxIterations)
-    {
-        qWarning() << "PacketProcessor: 脚本处理达到最大迭代次数，可能存在死循环风险";
-        // 清空缓冲区避免持续问题
-        m_serialWaveformBuffer.clear();
     }
 }
 
@@ -212,7 +179,17 @@ void PacketProcessor::processSerialDataWithoutScript(const DataPacket& packet)
     QString formattedData = isHex
                                 ? QString::fromLatin1(packet.data.toHex(' ').toUpper())
                                 : QString::fromUtf8(packet.data);
-    this->emitFormattedSerialData(formattedData);
+    QString displayText;
+    if (SerialPortManager::getInstance()->isTimestampEnabled())
+    {
+        QString timestamp = QDateTime::currentDateTime().toString("[HH:mm:ss.zzz]");
+        displayText = QString("%1 %2").arg(timestamp).arg(formattedData);
+    }
+    else
+    {
+        displayText = formattedData;
+    }
+    emit serialPortReceiveDataChanged(displayText.toLocal8Bit());
     // 判断是否需要录波
     if (!ChannelManager::getInstance()->isDataRecordingEnabled()) return;
     // a. 将新数据追加到上一次剩下的不完整帧后面
@@ -252,21 +229,6 @@ void PacketProcessor::processSerialDataWithoutScript(const DataPacket& packet)
         point << currentTime << value;
         emit waveformDataReady(channelName, point);
     }
-}
-
-void PacketProcessor::emitFormattedSerialData(const QString& data)
-{
-    QString displayText;
-    if (SerialPortManager::getInstance()->isTimestampEnabled())
-    {
-        QString timestamp = QDateTime::currentDateTime().toString("[HH:mm:ss.zzz]");
-        displayText = QString("%1 %2").arg(timestamp).arg(data);
-    }
-    else
-    {
-        displayText = data;
-    }
-    emit serialPortReceiveDataChanged(displayText.toLocal8Bit());
 }
 
 void PacketProcessor::processTcpData(const DataPacket& packet)

@@ -23,19 +23,17 @@ ScriptManager* ScriptManager::getInstance()
     return m_instance;
 }
 
-int ScriptManager::findFrame(const QString& scriptName, const QByteArray& buffer)
+QJSValue ScriptManager::processBuffer(const QString& scriptName, const QByteArray& buffer)
 {
     QMutexLocker locker(&m_mutex);
 
-    // 直接从映射表中获取函数
-    if (!m_scriptFunctionsMap.contains(scriptName)) return -1;
-
-    const QList<QJSValue>& functions = m_scriptFunctionsMap[scriptName];
-    if (functions.size() < 2) return -1;
-
-    QJSValue findFrameFunction = functions[0]; // findFrame函数
-    if (!findFrameFunction.isCallable()) return -1;
-
+    if (!m_scriptFunctionsMap.contains(scriptName))
+        return QJSValue::UndefinedValue;
+    // 直接从 map 中获取 processBuffer 函数
+    QJSValue processBufferFunction = m_scriptFunctionsMap.value(scriptName);
+    if (!processBufferFunction.isCallable())
+        return QJSValue::UndefinedValue;
+    // 一次性创建 JS 数组，传递给脚本
     QJSValue jsBuffer = m_jsEngine.newArray(buffer.size());
     for (int i = 0; i < buffer.size(); ++i)
     {
@@ -43,35 +41,17 @@ int ScriptManager::findFrame(const QString& scriptName, const QByteArray& buffer
     }
     QJSValueList args;
     args << jsBuffer;
-    QJSValue result = findFrameFunction.call(args);
-    if (result.isError() || !result.isNumber()) return -1;
-    return result.toInt();
-}
+    QJSValue result = processBufferFunction.call(args);
+    // 立即清理，释放内存
+    jsBuffer = QJSValue();
 
-QJSValue ScriptManager::parseFrame(const QString& scriptName, const QByteArray& frame)
-{
-    QMutexLocker locker(&m_mutex);
-
-    // 直接从映射表中获取函数
-    if (!m_scriptFunctionsMap.contains(scriptName))
-        return QJSValue::UndefinedValue;
-
-    const QList<QJSValue>& functions = m_scriptFunctionsMap[scriptName];
-    if (functions.size() < 2)
-        return QJSValue::UndefinedValue;
-
-    QJSValue parseFrameFunction = functions[1]; // parseFrame函数
-    if (!parseFrameFunction.isCallable())
-        return QJSValue::UndefinedValue;
-
-    QJSValue jsFrame = m_jsEngine.newArray(frame.size());
-    for (int i = 0; i < frame.size(); ++i)
+    if (result.isError())
     {
-        jsFrame.setProperty(i, static_cast<unsigned char>(frame.at(i)));
+        qWarning() << "Script execution error in processBuffer:" << result.toString();
+        return QJSValue::UndefinedValue;
     }
-    QJSValueList args;
-    args << jsFrame;
-    return parseFrameFunction.call(args);
+
+    return result;
 }
 
 bool ScriptManager::isEnableSerialPortScript()
@@ -83,8 +63,17 @@ void ScriptManager::onScriptSaved(const QString& key, const QString& scriptText)
 {
     // 参数验证
     if (key.isEmpty()) return;
+    if (scriptText.size() > 50000) // 限制脚本大小为50KB
+    {
+        emit saveStatusChanged(key, "脚本过大，请优化脚本代码。");
+        return;
+    }
     // 线程同步保护
     QMutexLocker locker(&m_mutex);
+    // 清理旧的脚本函数（如果存在）
+    if (m_scriptFunctionsMap.contains(key)) m_scriptFunctionsMap.remove(key);
+    // 强制垃圾回收，清理JavaScript引擎内存
+    m_jsEngine.collectGarbage();
     // 存储脚本之前先验证脚本
     QJSValue result = m_jsEngine.evaluate(scriptText);
     if (result.isError())
@@ -108,17 +97,28 @@ void ScriptManager::onScriptSaved(const QString& key, const QString& scriptText)
         emit saveStatusChanged(key, "脚本错误: 未找到名为 'parseFrame' 的函数。");
         return;
     }
+    QJSValue processBufferFunction = m_jsEngine.globalObject().property("processBuffer");
+    if (!processBufferFunction.isCallable())
+    {
+        emit saveStatusChanged(key, "脚本错误: 未找到名为 'processBuffer' 的函数。");
+        return;
+    }
     // 存储脚本函数
-    QList<QJSValue> functions;
-    functions.append(findFrameFunction); // 索引0: findFrame函数
-    functions.append(parseFrameFunction); // 索引1: parseFrame函数
-    m_scriptFunctionsMap[key] = functions;
+    m_scriptFunctionsMap[key] = processBufferFunction;
+    // 清理编译结果
+    result = QJSValue();
     emit saveStatusChanged(key, "脚本加载成功。");
 }
 
 void ScriptManager::onSerialPortScriptEnabled(bool enabled)
 {
     m_isSerialPortScriptEnabled = enabled;
+    // 如果禁用脚本，进行一次垃圾回收
+    if (!enabled)
+    {
+        QMutexLocker locker(&m_mutex);
+        m_jsEngine.collectGarbage();
+    }
 }
 
 ScriptManager::ScriptManager(QObject* parent)

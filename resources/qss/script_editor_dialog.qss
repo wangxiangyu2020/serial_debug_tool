@@ -42,17 +42,38 @@ QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar:vertical {
     margin: 2px;
 }
 
+QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar:horizontal {
+    background-color: transparent;
+    height: 12px;
+    border-radius: 6px;
+    margin: 2px;
+}
+
 QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar::handle:vertical {
     background-color: rgba(120, 120, 120, 0.4);
     border-radius: 6px;
     min-height: 20px;
 }
 
+QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar::handle:horizontal {
+    background-color: rgba(120, 120, 120, 0.4);
+    border-radius: 6px;
+    min-width: 20px;
+}
+
 QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar::handle:vertical:hover {
     background-color: rgba(150, 150, 150, 0.6);
 }
 
+QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar::handle:horizontal:hover {
+    background-color: rgba(150, 150, 150, 0.6);
+}
+
 QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar::handle:vertical:pressed {
+    background-color: rgba(180, 180, 180, 0.8);
+}
+
+QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar::handle:horizontal:pressed {
     background-color: rgba(180, 180, 180, 0.8);
 }
 
@@ -62,8 +83,19 @@ QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar::sub-line:vertical {
     background: none;
 }
 
+QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar::add-line:horizontal,
+QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar::sub-line:horizontal {
+    width: 0px;
+    background: none;
+}
+
 QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar::add-page:vertical,
 QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar::add-page:horizontal,
+QTextEdit#m_pScriptEditor[class="dark-theme"] QScrollBar::sub-page:horizontal {
     background: none;
 }
 
@@ -75,17 +107,38 @@ QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar:vertical {
     margin: 2px;
 }
 
+QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar:horizontal {
+    background-color: transparent;
+    height: 12px;
+    border-radius: 6px;
+    margin: 2px;
+}
+
 QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar::handle:vertical {
     background-color: rgba(0, 0, 0, 0.2);
     border-radius: 6px;
     min-height: 20px;
 }
 
+QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar::handle:horizontal {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    min-width: 20px;
+}
+
 QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar::handle:vertical:hover {
     background-color: rgba(0, 0, 0, 0.3);
 }
 
+QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar::handle:horizontal:hover {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
 QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar::handle:vertical:pressed {
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar::handle:horizontal:pressed {
     background-color: rgba(0, 0, 0, 0.4);
 }
 
@@ -95,8 +148,19 @@ QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar::sub-line:vertical {
     background: none;
 }
 
+QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar::add-line:horizontal,
+QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar::sub-line:horizontal {
+    width: 0px;
+    background: none;
+}
+
 QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar::add-page:vertical,
 QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar::add-page:horizontal,
+QTextEdit#m_pScriptEditor[class="light-theme"] QScrollBar::sub-page:horizontal {
     background: none;
 }
 
