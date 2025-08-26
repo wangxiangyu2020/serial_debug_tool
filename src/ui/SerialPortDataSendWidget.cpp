@@ -103,5 +103,5 @@ void SerialPortDataSendWidget::connectSignals()
 {
     this->connect(m_pSendButton, &QPushButton::clicked, this, &SerialPortDataSendWidget::onSendButtonClicked);
     this->connect(this, &SerialPortDataSendWidget::sendDataRequested, SerialPortManager::getInstance(),
-                  &SerialPortManager::sendData2ReceiveChanged);
+                  &SerialPortManager::handleWriteData);
 }
