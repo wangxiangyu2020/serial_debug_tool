@@ -19,6 +19,11 @@ TcpNetworkClientWidget::TcpNetworkClientWidget(QWidget* parent)
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/tcp_network_client_wdiget.qss");
 }
 
+QCheckBox* TcpNetworkClientWidget::requestScriptReceiveCheckBox()
+{
+    return m_pScriptReceiveCheckBox;
+}
+
 void TcpNetworkClientWidget::onApplyState(const NetworkModeState& state)
 {
     m_currentState = state;
@@ -69,6 +74,7 @@ void TcpNetworkClientWidget::onConnectButtonClicked()
         m_pServerIpComboBox->setEnabled(true);
         m_pPortLineEdit->setEnabled(true);
         m_pTimedSendCheckBox->setChecked(false); // 恢复复选框状态
+        m_pScriptReceiveCheckBox->setChecked(false);
         m_pIntervalEdit->setEnabled(true);
         emit stopTimedSendRequested();
         emit stopConnectionRequested();
@@ -104,6 +110,18 @@ void TcpNetworkClientWidget::onStatusChanged(const QString& status)
     // 直接根据状态文本判断连接状态
     isConnected = status.contains("已连接");
     if (!isConnected && !status.contains("已断开")) return; // 既不是已连接也不是已断开，直接返回
+    if (!isConnected)
+    {
+        m_pServerIpComboBox->setEnabled(true);
+        m_pPortLineEdit->setEnabled(true);
+        m_pTimedSendCheckBox->setChecked(false); // 恢复复选框状态
+        m_pScriptReceiveCheckBox->setChecked(false);
+        m_pIntervalEdit->setEnabled(true);
+        emit stopTimedSendRequested();
+        emit stopConnectionRequested();
+    }
+    // 通知数据处理器客户端连接状态
+    emit tcpNetworkClientConnected(isConnected);
     m_pConnectButton->setProperty("connected", isConnected);
     m_pConnectButton->setText(isConnected ? "断开" : "连接");
     m_pConnectButton->style()->unpolish(m_pConnectButton);
@@ -204,6 +222,17 @@ void TcpNetworkClientWidget::onHexSendChanged(bool status)
     emit stateChanged(m_currentState.displayTimestamp, m_currentState.hexDisplay, m_currentState.hexSend);
 }
 
+void TcpNetworkClientWidget::onShowScriptEditor()
+{
+    if (m_pScriptEditorDialog->exec() == QDialog::Accepted)
+    {
+        // 获取编辑后的脚本内容
+        QString scriptContent = m_pScriptEditorDialog->getScriptContent();
+        // 处理保存逻辑,在这里只获取脚本内容，然后通过信号发送给其他地方进行处理
+        emit tcpNetworkClientScriptSaved("client", scriptContent);
+    }
+}
+
 void TcpNetworkClientWidget::setUI()
 {
     this->setAttribute(Qt::WA_StyledBackground);
@@ -250,6 +279,18 @@ void TcpNetworkClientWidget::createComponents()
 
     m_pDisplayTimestampCheckBox = new QCheckBox(tr("显示时间戳"));
     m_pHexDisplayCheckBox = new QCheckBox(tr("十六进制显示"));
+    m_pScriptReceiveCheckBox = new QCheckBox(this);
+    m_pScriptReceiveCheckBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    m_pScriptReceiveButton = new QPushButton(this);
+    m_pScriptReceiveButton->setObjectName("m_pScriptReceiveButton");
+    m_pScriptReceiveButton->setFixedSize(45, 25);
+    m_pScriptReceiveButton->setToolTip("使用脚本解析数据");
+    m_pScriptReceiveButton->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    // 添加帮助标签
+    m_pScriptHelpButton = new QPushButton(this);
+    m_pScriptHelpButton->setObjectName("m_pScriptHelpButton");
+    m_pScriptHelpButton->setFixedSize(15, 15);
+    m_pScriptHelpButton->setToolTip("目前默认的接收超时为20ms,如果不符合你的需求,\r\n可以使用自定义脚本来对接收数据进行断帧和数据解析。");
     m_pSaveDataButton = new QPushButton(tr("保存数据"));
     m_pSaveDataButton->setObjectName("m_pSaveDataButton");
     m_pClearDataButton = new QPushButton(tr("清空数据"));
@@ -272,6 +313,10 @@ void TcpNetworkClientWidget::createComponents()
 
     m_pStatusLabel = new QLabel("状态: 未连接", this);
     m_pStatusLabel->setObjectName("m_pStatusLabel");
+
+    // 创建弹框实例
+    m_pScriptEditorDialog = new ScriptEditorDialog(this);
+    m_pScriptEditorDialog->hide();
 }
 
 void TcpNetworkClientWidget::createLayout()
@@ -291,6 +336,9 @@ void TcpNetworkClientWidget::createLayout()
     QHBoxLayout* receiveToolLayout = new QHBoxLayout();
     receiveToolLayout->addWidget(m_pDisplayTimestampCheckBox);
     receiveToolLayout->addWidget(m_pHexDisplayCheckBox);
+    receiveToolLayout->addWidget(m_pScriptReceiveCheckBox);
+    receiveToolLayout->addWidget(m_pScriptReceiveButton);
+    receiveToolLayout->addWidget(m_pScriptHelpButton);
     receiveToolLayout->addStretch();
     receiveToolLayout->addWidget(m_pSaveDataButton);
     receiveToolLayout->addWidget(m_pClearDataButton);
@@ -352,4 +400,28 @@ void TcpNetworkClientWidget::connectSignals()
                   &TcpNetworkManager::startTimedSend);
     this->connect(this, &TcpNetworkClientWidget::stopTimedSendRequested, TcpNetworkManager::getInstance(),
                   &TcpNetworkManager::stopTimedSend);
+    this->connect(m_pScriptReceiveButton, &QPushButton::clicked, this, &TcpNetworkClientWidget::onShowScriptEditor);
+    this->connect(m_pScriptReceiveCheckBox, &QCheckBox::clicked, [this](bool checked)
+    {
+        // 只有启用脚本时才会获取脚本内容
+        if (checked)
+        {
+            QString scriptContent = m_pScriptEditorDialog->getScriptContent();
+            // 处理脚本启用逻辑，在这里是获取脚本内容后发送到其他地方并且将checked发送到管理器中
+            emit tcpNetworkClientScriptSaved("client", scriptContent);
+        }
+        emit tcpNetworkClientScriptEnabled(checked);
+    });
+    this->connect(this, &TcpNetworkClientWidget::tcpNetworkClientScriptSaved, ScriptManager::getInstance(),
+                  &ScriptManager::onScriptSaved);
+    this->connect(this, &TcpNetworkClientWidget::tcpNetworkClientScriptEnabled, ScriptManager::getInstance(),
+                  &ScriptManager::onTcpNetworkClientScriptEnabled);
+    this->connect(ScriptManager::getInstance(), &ScriptManager::saveStatusChanged,
+                  [this](const QString& key, const QString& status)
+                  {
+                      if (key != "client") return;
+                      CMessageBox::showToast(this, status);
+                  });
+    this->connect(this, &TcpNetworkClientWidget::tcpNetworkClientConnected, ScriptManager::getInstance(),
+                  &ScriptManager::onTcpNetworkClientConnected);
 }

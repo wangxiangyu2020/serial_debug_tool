@@ -62,7 +62,8 @@ QLineEdit:disabled {
 
 
 /* === PushButton Style (Consistent with Client) === */
-QPushButton {
+QPushButton#m_pConnectButton, QPushButton#m_pSendButton,
+QPushButton#m_pClearDataButton, QPushButton#m_pSaveDataButton,QPushButton#m_pStartListenButton{
     border-radius: 4px;
     padding: 5px 15px;
     font-size: 12px;
@@ -97,6 +98,40 @@ QPushButton#m_pStartListenButton[connected="true"]:hover {
 
 QPushButton#m_pStartListenButton[connected="true"]:pressed {
     background-color: #bd2130;
+}
+
+QPushButton#m_pScriptReceiveButton {
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    qproperty-icon: url(:/resources/icons/code.svg);
+    qproperty-iconSize: 20px;
+}
+
+QPushButton#m_pScriptReceiveButton:hover {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+
+QPushButton#m_pScriptHelpButton {
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    qproperty-icon: url(:/resources/icons/help.svg);
+    qproperty-iconSize: 10px;
+}
+
+QPushButton#m_pScriptHelpButton:hover {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
 }
 
 /* --- Secondary button --- */

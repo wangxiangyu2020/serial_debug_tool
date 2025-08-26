@@ -99,7 +99,9 @@ void PacketProcessor::processSerialDataWithScript(const DataPacket& packet)
         m_serialWaveformBuffer.clear();
     m_serialWaveformBuffer.append(packet.data);
     if (m_serialWaveformBuffer.isEmpty()) return;
-    QJSValue scriptResult = scriptManager->processBuffer("serialPort", m_serialWaveformBuffer);
+    QJSValue context = scriptManager->getJsEngine()->newObject();
+    context.setProperty("source", packet.sourceInfo);
+    QJSValue scriptResult = scriptManager->processBuffer("serialPort", m_serialWaveformBuffer, context);
     if (!scriptResult.isObject() || scriptResult.isUndefined() || scriptResult.isNull()) return;
     // 检查返回对象是否包含预期属性
     if (!scriptResult.hasProperty("bytesConsumed") || !scriptResult.hasProperty("frames"))
@@ -232,6 +234,80 @@ void PacketProcessor::processSerialDataWithoutScript(const DataPacket& packet)
 }
 
 void PacketProcessor::processTcpData(const DataPacket& packet)
+{
+    ScriptManager* scManager = ScriptManager::getInstance();
+    if (!scManager->isEnableTcpNetworkClientScript() && !scManager->isEnableTcpNetworkServerScript())
+        processTcpDataWithoutScript(packet);
+    else
+        processTcpDataWithScript(packet);
+}
+
+void PacketProcessor::processTcpDataWithScript(const DataPacket& packet)
+{
+    ScriptManager* scManager = ScriptManager::getInstance();
+    const int MAX_BUFFER_SIZE = 8192; // 同样可以为每个客户端设置最大缓存
+    // 1. 使用新的 m_tcpClientBuffers，并根据 packet.sourceInfo 操作对应的缓存
+    QByteArray& clientBuffer = m_tcpClientBuffers[packet.sourceInfo];
+    if (clientBuffer.size() + packet.data.size() > MAX_BUFFER_SIZE) clientBuffer.clear();
+    clientBuffer.append(packet.data);
+    if (clientBuffer.isEmpty()) return;
+    // 2. 创建一个 context 对象，把 sourceInfo 放进去
+    QJSValue context = scManager->getJsEngine()->newObject();
+    context.setProperty("source", packet.sourceInfo);
+    // 3. 调用新的 processBuffer 接口，传入客户端专属的缓存和 context
+    QJSValue scriptResult;
+    if (scManager->isTcpNetworkClientConnected())
+    {
+        // 假设客户端脚本名为"client"
+        scriptResult = scManager->processBuffer("client", clientBuffer, context);
+    }
+    else if (scManager->isTcpNetworkServerListen())
+    {
+        // 假设服务端脚本名为"server"
+        scriptResult = scManager->processBuffer("server", clientBuffer, context);
+    }
+    if (!scriptResult.isObject() || scriptResult.isUndefined() || scriptResult.isNull()) return;
+    if (!scriptResult.hasProperty("bytesConsumed") || !scriptResult.hasProperty("frames")) return;
+    // 4. 根据脚本返回结果，更新该客户端的缓存
+    int bytesConsumed = scriptResult.property("bytesConsumed").toInt();
+    if (bytesConsumed > 0) clientBuffer = clientBuffer.mid(bytesConsumed);
+    if (clientBuffer.isEmpty()) m_tcpClientBuffers.remove(packet.sourceInfo); // 如果缓存空了，可以移除该条目以节省内存
+
+    QJSValue framesArray = scriptResult.property("frames");
+    if (!framesArray.isArray()) return;
+    const int framesCount = framesArray.property("length").toInt();
+    TcpNetworkManager* tcpManager = TcpNetworkManager::getInstance();
+    const bool isHex = tcpManager->isHexDisplayEnabled();
+    const bool isTimestamp = tcpManager->isTimestampEnabled();
+    for (int i = 0; i < framesCount; ++i)
+    {
+        QJSValue parsedResult = framesArray.property(i);
+        if (!parsedResult.isObject()) continue;
+        QVariant resultVariant = parsedResult.toVariant();
+        if (!resultVariant.isValid()) continue;
+        QJsonObject resultObject = QJsonDocument::fromVariant(resultVariant).object();
+        if (resultObject.contains("displayText"))
+        {
+            QString displayText = resultObject.value("displayText").toString();
+            QString formattedData = isHex
+                                        ? QString::fromLatin1(displayText.toLatin1().toHex(' ').toUpper())
+                                        : displayText;
+            QString timestampText;
+            if (isTimestamp)
+            {
+                QString timestamp = QDateTime::currentDateTime().toString("[HH:mm:ss.zzz] ");
+                timestampText = timestamp + formattedData;
+            }
+            else
+            {
+                timestampText = formattedData;
+            }
+            emit tcpNetworkReceiveDataChanged(timestampText.toLocal8Bit());
+        }
+    }
+}
+
+void PacketProcessor::processTcpDataWithoutScript(const DataPacket& packet)
 {
     TcpNetworkManager* tcpManager = TcpNetworkManager::getInstance();
     // 假设TcpManager也将提供这些状态接口

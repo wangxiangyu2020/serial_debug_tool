@@ -67,7 +67,6 @@ private:
     QPushButton* m_pClearDataButton = nullptr;
 
     ScriptEditorDialog* m_pScriptEditorDialog = nullptr;
-    QTextEdit* m_pScriptEditor = nullptr;
 
     // 布局成员
     QVBoxLayout* m_pMainLayout = nullptr;

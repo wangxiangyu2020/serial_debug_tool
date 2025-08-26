@@ -93,12 +93,16 @@ void TcpNetworkConfigTab::connectSignals()
         {
             m_pClientWidget->show();
             m_pServerWidget->hide();
+            m_pClientWidget->requestScriptReceiveCheckBox()->setChecked(false);
+            emit m_pClientWidget->tcpNetworkClientScriptEnabled(false);
             emit applyClientState(m_clientState);
         }
         else if (index == 1)
         {
             m_pClientWidget->hide();
             m_pServerWidget->show();
+            m_pServerWidget->requestScriptReceiveCheckBox()->setChecked(false);
+            emit m_pServerWidget->tcpNetworkServerScriptEnabled(false);
             emit applyServerState(m_serverState);
         }
     });

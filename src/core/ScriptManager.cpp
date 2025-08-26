@@ -23,26 +23,28 @@ ScriptManager* ScriptManager::getInstance()
     return m_instance;
 }
 
-QJSValue ScriptManager::processBuffer(const QString& scriptName, const QByteArray& buffer)
+QJSValue ScriptManager::processBuffer(const QString& scriptName, const QByteArray& buffer, const QJSValue& context)
 {
     QMutexLocker locker(&m_mutex);
 
     if (!m_scriptFunctionsMap.contains(scriptName))
         return QJSValue::UndefinedValue;
-    // 直接从 map 中获取 processBuffer 函数
+
     QJSValue processBufferFunction = m_scriptFunctionsMap.value(scriptName);
     if (!processBufferFunction.isCallable())
         return QJSValue::UndefinedValue;
-    // 一次性创建 JS 数组，传递给脚本
+
     QJSValue jsBuffer = m_jsEngine.newArray(buffer.size());
     for (int i = 0; i < buffer.size(); ++i)
     {
         jsBuffer.setProperty(i, static_cast<unsigned char>(buffer.at(i)));
     }
+
     QJSValueList args;
     args << jsBuffer;
+    // --- 新增：将 context 对象作为第二个参数传给JS函数 ---
+    if (context.isObject()) args << context;
     QJSValue result = processBufferFunction.call(args);
-    // 立即清理，释放内存
     jsBuffer = QJSValue();
 
     if (result.isError())
@@ -54,59 +56,85 @@ QJSValue ScriptManager::processBuffer(const QString& scriptName, const QByteArra
     return result;
 }
 
+QJSEngine* ScriptManager::getJsEngine()
+{
+    return &m_jsEngine;
+}
+
 bool ScriptManager::isEnableSerialPortScript()
 {
     return m_isSerialPortScriptEnabled;
+}
+
+bool ScriptManager::isEnableTcpNetworkClientScript()
+{
+    return m_isTcpNetworkClientScriptEnabled;
+}
+
+bool ScriptManager::isEnableTcpNetworkServerScript()
+{
+    return m_isTcpNetworkServerScriptEnabled;
+}
+
+bool ScriptManager::isTcpNetworkClientConnected()
+{
+    return m_tcpNetworkClientConnected;
+}
+
+bool ScriptManager::isTcpNetworkServerListen()
+{
+    return m_tcpNetworkServerListening;
 }
 
 void ScriptManager::onScriptSaved(const QString& key, const QString& scriptText)
 {
     // 参数验证
     if (key.isEmpty()) return;
-    if (scriptText.size() > 50000) // 限制脚本大小为50KB
+    if (scriptText.size() > 50000)
     {
         emit saveStatusChanged(key, "脚本过大，请优化脚本代码。");
         return;
     }
-    // 线程同步保护
+
+    // 1. 使用临时的JS引擎进行验证
+    {
+        QJSEngine validationEngine;
+        QJSValue validationResult = validationEngine.evaluate(scriptText);
+
+        if (validationResult.isError())
+        {
+            emit saveStatusChanged(
+                key,
+                QString("脚本编译错误: %1\n在第 %2 行")
+                .arg(validationResult.toString())
+                .arg(validationResult.property("lineNumber").toInt()));
+            return;
+        }
+        if (!validationEngine.globalObject().property("findFrame").isCallable())
+        {
+            emit saveStatusChanged(key, "脚本错误: 未找到名为 'findFrame' 的函数。");
+            return;
+        }
+        if (!validationEngine.globalObject().property("parseFrame").isCallable())
+        {
+            emit saveStatusChanged(key, "脚本错误: 未找到名为 'parseFrame' 的函数。");
+            return;
+        }
+        if (!validationEngine.globalObject().property("processBuffer").isCallable())
+        {
+            emit saveStatusChanged(key, "脚本错误: 未找到名为 'processBuffer' 的函数。");
+            return;
+        }
+    }
+
+    // 2. 验证通过后，再对我们持久化的主引擎 m_jsEngine 进行操作
     QMutexLocker locker(&m_mutex);
-    // 清理旧的脚本函数（如果存在）
-    if (m_scriptFunctionsMap.contains(key)) m_scriptFunctionsMap.remove(key);
-    // 强制垃圾回收，清理JavaScript引擎内存
-    m_jsEngine.collectGarbage();
-    // 存储脚本之前先验证脚本
-    QJSValue result = m_jsEngine.evaluate(scriptText);
-    if (result.isError())
-    {
-        emit saveStatusChanged(
-            key,
-            QString("脚本编译错误: %1\n在第 %2 行")
-            .arg(result.toString())
-            .arg(result.property("lineNumber").toInt()));
-        return;
-    }
-    QJSValue findFrameFunction = m_jsEngine.globalObject().property("findFrame");
-    if (!findFrameFunction.isCallable())
-    {
-        emit saveStatusChanged(key, "脚本错误: 未找到名为 'findFrame' 的函数。");
-        return;
-    }
-    QJSValue parseFrameFunction = m_jsEngine.globalObject().property("parseFrame");
-    if (!parseFrameFunction.isCallable())
-    {
-        emit saveStatusChanged(key, "脚本错误: 未找到名为 'parseFrame' 的函数。");
-        return;
-    }
+    // 在主引擎上评估脚本。这会用新脚本中的函数覆盖掉旧的同名函数。
+    m_jsEngine.evaluate(scriptText);
+    // 3. 从【主引擎】获取最新的 processBuffer 函数句柄并存储
     QJSValue processBufferFunction = m_jsEngine.globalObject().property("processBuffer");
-    if (!processBufferFunction.isCallable())
-    {
-        emit saveStatusChanged(key, "脚本错误: 未找到名为 'processBuffer' 的函数。");
-        return;
-    }
-    // 存储脚本函数
     m_scriptFunctionsMap[key] = processBufferFunction;
-    // 清理编译结果
-    result = QJSValue();
+
     emit saveStatusChanged(key, "脚本加载成功。");
 }
 
@@ -119,6 +147,37 @@ void ScriptManager::onSerialPortScriptEnabled(bool enabled)
         QMutexLocker locker(&m_mutex);
         m_jsEngine.collectGarbage();
     }
+}
+
+void ScriptManager::onTcpNetworkClientScriptEnabled(bool enabled)
+{
+    m_isTcpNetworkClientScriptEnabled = enabled;
+    // 如果禁用脚本，进行一次垃圾回收
+    if (!enabled)
+    {
+        QMutexLocker locker(&m_mutex);
+        m_jsEngine.collectGarbage();
+    }
+}
+
+void ScriptManager::onTcpNetworkServerScriptEnabled(bool enabled)
+{
+    m_isTcpNetworkServerScriptEnabled = enabled;
+    if (!enabled)
+    {
+        QMutexLocker locker(&m_mutex);
+        m_jsEngine.collectGarbage();
+    }
+}
+
+void ScriptManager::onTcpNetworkClientConnected(bool connected)
+{
+    m_tcpNetworkClientConnected = connected;
+}
+
+void ScriptManager::onTcpNetworkServerListen(bool listening)
+{
+    m_tcpNetworkServerListening = listening;
 }
 
 ScriptManager::ScriptManager(QObject* parent)

@@ -57,6 +57,8 @@ private:
     void processSerialDataWithScript(const DataPacket& packet);
     void processSerialDataWithoutScript(const DataPacket& packet);
     void processTcpData(const DataPacket& packet);
+    void processTcpDataWithScript(const DataPacket& packet);
+    void processTcpDataWithoutScript(const DataPacket& packet);
 
     static PacketProcessor* m_instance;
     static QMutex m_instanceMutex;
@@ -69,6 +71,10 @@ private:
     bool m_quit = false;
 
     QByteArray m_serialWaveformBuffer;
+    // --- 新增：TCP数据缓存，Key是"IP:Port"，Value是该客户端的数据 ---
+    QHash<QString, QByteArray> m_tcpClientBuffers;
+
+
 
     bool m_useUserScript = false;
 };

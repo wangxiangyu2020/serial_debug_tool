@@ -28,6 +28,7 @@
 #include "utils/NetworkModeState.h"
 #include "utils/StyleLoader.h"
 #include <QFileDialog>
+#include <ui/ScriptEditorDialog.h>
 
 class TcpNetworkServerWidget : public QWidget
 {
@@ -36,6 +37,8 @@ class TcpNetworkServerWidget : public QWidget
 public:
     explicit TcpNetworkServerWidget(QWidget* parent = nullptr);
     virtual ~TcpNetworkServerWidget() = default;
+
+    QCheckBox* requestScriptReceiveCheckBox();
 
 public slots:
     void onApplyState(const NetworkModeState& state);
@@ -50,6 +53,9 @@ signals:
     void sendDataRequested(const QByteArray& data, QTcpSocket* clientSocket = nullptr);
     void startTimedSendRequested(double interval, const QByteArray& data, QTcpSocket* clientSocket = nullptr);
     void stopTimedSendRequested();
+    void tcpNetworkServerScriptSaved(const QString& key, const QString& scriptText);
+    void tcpNetworkServerScriptEnabled(bool enabled);
+    void tcpNetworkServerListen(bool status);
 
 protected:
     // 事件处理方法
@@ -67,6 +73,7 @@ private slots:
     void onSendButtonClicked();
     void onTimedSendCheckBoxClicked(bool status);
     void onSaveDataButtonClicked();
+    void onShowScriptEditor();
 
 private:
     void setUI();
@@ -91,6 +98,9 @@ private:
 
     QCheckBox* m_pDisplayTimestampCheckBox = nullptr;
     QCheckBox* m_pHexDisplayCheckBox = nullptr;
+    QCheckBox* m_pScriptReceiveCheckBox = nullptr;
+    QPushButton* m_pScriptReceiveButton = nullptr;
+    QPushButton* m_pScriptHelpButton = nullptr;
     QPushButton* m_pSaveDataButton = nullptr;
     QPushButton* m_pClearDataButton = nullptr;
 
@@ -111,6 +121,8 @@ private:
 
     bool isListen = false;
     NetworkModeState m_currentState;
+
+    ScriptEditorDialog* m_pScriptEditorDialog = nullptr;
 };
 
 #endif //TCPNETWORKSERVERWIDGET_H

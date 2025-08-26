@@ -18,6 +18,11 @@ TcpNetworkServerWidget::TcpNetworkServerWidget(QWidget* parent)
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/tcp_network_server_wdiget.qss");
 }
 
+QCheckBox* TcpNetworkServerWidget::requestScriptReceiveCheckBox()
+{
+    return m_pScriptReceiveCheckBox;
+}
+
 void TcpNetworkServerWidget::onApplyState(const NetworkModeState& state)
 {
     m_currentState = state;
@@ -75,6 +80,7 @@ void TcpNetworkServerWidget::onListenButtonClicked()
         m_pTimedSendCheckBox->setChecked(false); // 恢复复选框状态
         m_pIntervalEdit->setEnabled(true);
         m_pSendClientComboBox->setEnabled(true);
+        m_pScriptReceiveCheckBox->setChecked(false);
         emit stopTimedSendRequested();
         emit stopListenRequested();
         return;
@@ -107,6 +113,8 @@ void TcpNetworkServerWidget::onStatusChanged(const QString& status, int connecti
     m_pConnectionCountLabel->setText(QString("当前连接数：%1").arg(connectionCount));
     isListen = status.contains("监听中");
     if (!isListen && (!status.contains("监听失败") && !status.contains("未监听"))) return;
+    // 监听状态通知数据管理器
+    emit tcpNetworkServerListen(isListen);
     m_pStartListenButton->setProperty("connected", isListen);
     m_pStartListenButton->setText(isListen ? "停止监听" : "开始监听");
     m_pStartListenButton->style()->unpolish(m_pStartListenButton);
@@ -260,6 +268,17 @@ void TcpNetworkServerWidget::onSaveDataButtonClicked()
     CMessageBox::showToast(this, "数据已保存至" + fileName);
 }
 
+void TcpNetworkServerWidget::onShowScriptEditor()
+{
+    if (m_pScriptEditorDialog->exec() == QDialog::Accepted)
+    {
+        // 获取编辑后的脚本内容
+        QString scriptContent = m_pScriptEditorDialog->getScriptContent();
+        // 处理保存逻辑,在这里只获取脚本内容，然后通过信号发送给其他地方进行处理
+        emit tcpNetworkServerScriptSaved("server", scriptContent);
+    }
+}
+
 void TcpNetworkServerWidget::setUI()
 {
     this->setAttribute(Qt::WA_StyledBackground);
@@ -299,6 +318,18 @@ void TcpNetworkServerWidget::createComponents()
     m_pDisplayTimestampCheckBox = new QCheckBox("显示时间戳", this);
     m_pHexDisplayCheckBox = new QCheckBox("十六进制显示", this);
     m_pSaveDataButton = new QPushButton(tr("保存数据"));
+    m_pScriptReceiveCheckBox = new QCheckBox(this);
+    m_pScriptReceiveCheckBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    m_pScriptReceiveButton = new QPushButton(this);
+    m_pScriptReceiveButton->setObjectName("m_pScriptReceiveButton");
+    m_pScriptReceiveButton->setFixedSize(45, 25);
+    m_pScriptReceiveButton->setToolTip("使用脚本解析数据");
+    m_pScriptReceiveButton->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    // 添加帮助标签
+    m_pScriptHelpButton = new QPushButton(this);
+    m_pScriptHelpButton->setObjectName("m_pScriptHelpButton");
+    m_pScriptHelpButton->setFixedSize(15, 15);
+    m_pScriptHelpButton->setToolTip("目前默认的接收超时为20ms,如果不符合你的需求,\r\n可以使用自定义脚本来对接收数据进行断帧和数据解析。");
     m_pSaveDataButton->setObjectName("m_pSaveDataButton");
     m_pClearDataButton = new QPushButton("清空数据", this);
     m_pClearDataButton->setObjectName("m_pClearDataButton");
@@ -324,6 +355,10 @@ void TcpNetworkServerWidget::createComponents()
     m_pStatusTextLabel->setObjectName("m_pStatusTextLabel");
     m_pConnectionCountLabel = new QLabel(" 当前连接数: 0", this);
     m_pConnectionCountLabel->setObjectName("m_pConnectionCountLabel");
+
+    // 创建弹框实例
+    m_pScriptEditorDialog = new ScriptEditorDialog(this);
+    m_pScriptEditorDialog->hide();
 }
 
 void TcpNetworkServerWidget::createLayout()
@@ -354,6 +389,9 @@ void TcpNetworkServerWidget::createLayout()
     receiveToolLayout->addStretch();
     receiveToolLayout->addWidget(m_pDisplayTimestampCheckBox);
     receiveToolLayout->addWidget(m_pHexDisplayCheckBox);
+    receiveToolLayout->addWidget(m_pScriptReceiveCheckBox);
+    receiveToolLayout->addWidget(m_pScriptReceiveButton);
+    receiveToolLayout->addWidget(m_pScriptHelpButton);
     receiveToolLayout->addWidget(m_pSaveDataButton);
     receiveToolLayout->addWidget(m_pClearDataButton);
 
@@ -430,6 +468,30 @@ void TcpNetworkServerWidget::connectSignals()
     this->connect(this, &TcpNetworkServerWidget::stopTimedSendRequested, TcpNetworkManager::getInstance(),
                   &TcpNetworkManager::stopTimedSend);
     this->connect(m_pSaveDataButton, &QPushButton::clicked, this, &TcpNetworkServerWidget::onSaveDataButtonClicked);
+    this->connect(m_pScriptReceiveButton, &QPushButton::clicked, this, &TcpNetworkServerWidget::onShowScriptEditor);
+    this->connect(m_pScriptReceiveCheckBox, &QCheckBox::clicked, [this](bool checked)
+    {
+        // 只有启用脚本时才会获取脚本内容
+        if (checked)
+        {
+            QString scriptContent = m_pScriptEditorDialog->getScriptContent();
+            // 处理脚本启用逻辑，在这里是获取脚本内容后发送到其他地方并且将checked发送到管理器中
+            emit tcpNetworkServerScriptSaved("server", scriptContent);
+        }
+        emit tcpNetworkServerScriptEnabled(checked);
+    });
+    this->connect(this, &TcpNetworkServerWidget::tcpNetworkServerScriptSaved, ScriptManager::getInstance(),
+                  &ScriptManager::onScriptSaved);
+    this->connect(this, &TcpNetworkServerWidget::tcpNetworkServerScriptEnabled, ScriptManager::getInstance(),
+                  &ScriptManager::onTcpNetworkServerScriptEnabled);
+    this->connect(ScriptManager::getInstance(), &ScriptManager::saveStatusChanged,
+                  [this](const QString& key, const QString& status)
+                  {
+                      if (key != "server") return;
+                      CMessageBox::showToast(this, status);
+                  });
+    this->connect(this, &TcpNetworkServerWidget::tcpNetworkServerListen, ScriptManager::getInstance(),
+                  &ScriptManager::onTcpNetworkServerListen);
 }
 
 void TcpNetworkServerWidget::setTextEditProperty(QPlainTextEdit* textEdit)

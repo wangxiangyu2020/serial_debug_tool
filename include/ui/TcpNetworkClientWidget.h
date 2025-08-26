@@ -30,6 +30,8 @@
 #include <QComboBox>
 #include <QFileDialog>
 #include "utils/NetworkModeState.h"
+#include "ui/ScriptEditorDialog.h"
+#include "core/ScriptManager.h"
 
 class TcpNetworkClientWidget : public QWidget
 {
@@ -38,6 +40,8 @@ class TcpNetworkClientWidget : public QWidget
 public:
     explicit TcpNetworkClientWidget(QWidget* parent = nullptr);
     virtual ~TcpNetworkClientWidget() = default;
+
+    QCheckBox* requestScriptReceiveCheckBox();
 
 public slots:
     void onApplyState(const NetworkModeState& state);
@@ -52,6 +56,9 @@ signals:
     void startTimedSendRequested(double interval, const QByteArray& data, QTcpSocket* clientSocket = nullptr);
     void stopTimedSendRequested();
     void stateChanged(bool displayTimestamp, bool hexDisplay, bool hexSend);
+    void tcpNetworkClientScriptSaved(const QString& key, const QString& scriptText);
+    void tcpNetworkClientScriptEnabled(bool enabled);
+    void tcpNetworkClientConnected(bool connected);
 
 protected:
     // 事件处理方法
@@ -67,6 +74,7 @@ private slots:
     void onDisplayTimestampChanged(bool status);
     void onHexDisplayChanged(bool status);
     void onHexSendChanged(bool status);
+    void onShowScriptEditor();
 
 private:
     void setUI();
@@ -87,6 +95,9 @@ private:
 
     QCheckBox* m_pDisplayTimestampCheckBox = nullptr;
     QCheckBox* m_pHexDisplayCheckBox = nullptr;
+    QCheckBox* m_pScriptReceiveCheckBox = nullptr;
+    QPushButton* m_pScriptReceiveButton = nullptr;
+    QPushButton* m_pScriptHelpButton = nullptr;
     QPushButton* m_pSaveDataButton = nullptr;
     QPushButton* m_pClearDataButton = nullptr;
 
@@ -105,6 +116,8 @@ private:
 
     bool isConnected = false;
     NetworkModeState m_currentState;
+
+    ScriptEditorDialog* m_pScriptEditorDialog = nullptr;
 };
 
 #endif //TCPNETWORKCLIENTWIDGET_H

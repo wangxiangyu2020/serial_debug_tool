@@ -172,9 +172,12 @@ function findFrame(buffer) {
 }
 
 /**
- * 解析一个数据帧，支持多种通道。
+ * 解析一个完整的数据帧。
+ * @param {Array<number>} frame - 一个完整的数据帧缓冲区。
+ * @param {object} context - 上下文对象。
+ * @returns {object|null} - 返回一个包含解析数据的对象。
  */
-function parseFrame(frame) {
+function parseFrame(frame, context) {
     if (frame.length !== 5 || frame[0] !== 0xEB || frame[4] !== 0xED) {
         return null; // 格式不对，丢弃
     }
@@ -186,6 +189,9 @@ function parseFrame(frame) {
     var value = (frame[2] << 8) | frame[3];
     if (value & 0x8000) { value -= 0x10000; } // 符号转换
 
+     // --- 在 displayText 前面加上来源信息 --- (可选)
+     // var displayTextWithSource = "from " + context.source + ": " + value;
+    
     // 第3步：根据通道ID返回不同的对象
     // channelId 需要与您在软件中添加通道时的“通道标识符”一致
     switch (channelId) {
@@ -203,9 +209,13 @@ function parseFrame(frame) {
 }
 
 /**
- * 驱动函数 - 无需修改。
+ * (核心函数) 批处理整个数据缓冲区。
+ * @param {Array<number>} buffer - 从C++传入的整个原始数据缓冲区。
+ * @param {object} context - 从C++传入的上下文对象，包含了额外信息。
+ * 例如: { source: "192.168.1.100:12345" } { source: "COM1" }
+ * @returns {object} - { bytesConsumed: number, frames: Array<object> }
  */
-function processBuffer(buffer) {
+function processBuffer(buffer, context) {
     var results = [];
     var bytesConsumed = 0;
     while (bytesConsumed < buffer.length) {
@@ -214,7 +224,7 @@ function processBuffer(buffer) {
         if (frameEndPos < 0) { break; }
         var frameSize = frameEndPos + 1;
         var completeFrame = remainingBuffer.slice(0, frameSize);
-        var parsedObject = parseFrame(completeFrame);
+        var parsedObject = parseFrame(completeFrame, context); 
         if (parsedObject) { results.push(parsedObject); }
         bytesConsumed += frameSize;
     }
@@ -277,13 +287,14 @@ function findFrame(buffer) {
 /**
  * 将字节数组转换为字符串，并按 "ID=Value" 格式解析。
  */
-function parseFrame(frame) {
+function parseFrame(frame, context) {
     // 将字节数组转换为字符串 (忽略最后的逗号)
     var frameAsString = "";
     for (var i = 0; i < frame.length - 1; ++i) {
         frameAsString += String.fromCharCode(frame[i]);
     }
-
+    // --- 在 displayText 前面加上来源信息 --- (可选)
+    // var displayTextWithSource = "from " + context.source + ": " + value;
     // 按等号分割
     var parts = frameAsString.split('=');
     if (parts.length === 2) {
@@ -303,7 +314,7 @@ function parseFrame(frame) {
 /**
  * 驱动函数 - 无需修改。
  */
-function processBuffer(buffer) {
+function processBuffer(buffer,context) {
     // ... (此函数与上一个示例完全相同) ...
 }
 ```
@@ -365,7 +376,7 @@ function findFrame(buffer) {
 /**
  * 按照固定的字节位置来解析数据。
  */
-function parseFrame(frame) {
+function parseFrame(frame, context) {
     if (frame.length === FRAME_LENGTH) {
         var channelId = frame[0];
         var value = (frame[1] << 24) | (frame[2] << 16) | (frame[3] << 8) | frame[4];
@@ -381,7 +392,7 @@ function parseFrame(frame) {
 /**
  * 驱动函数 - 无需修改。
  */
-function processBuffer(buffer) {
+function processBuffer(buffer, context) {
     // ... (此函数与上一个示例完全相同) ...
 }
 ```
