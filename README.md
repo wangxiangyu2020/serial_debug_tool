@@ -1,6 +1,6 @@
-# IKUN 串口调试工具
+# IKUN 通信调试平台
 
-一个基于 Qt6 和 C++20 构建的现代化、功能丰富的串口调试工具。该应用程序为串口通信和TCP网络通信提供了直观的界面，支持多种数据格式、实时监控、专业级数据可视化和完全可定制的样式系统。集成了基于 ECharts 的波形显示功能，支持多通道数据管理和实时图表更新。新增JavaScript脚本引擎支持自定义数据处理和协议解析。
+一个基于 Qt6 和 C++20 构建的现代化、功能丰富的通信调试平台。该应用程序集成了**串口通信**、**TCP网络通信**、**JavaScript脚本引擎**、**数据可视化**等核心功能，为开发者提供了专业的数据处理和协议解析能力。支持多种数据格式、实时监控、专业级数据可视化和完全可定制的样式系统。集成了基于 ECharts 的波形显示功能，支持多通道数据管理和实时图表更新，内置强大的JavaScript脚本引擎支持自定义数据处理和复杂协议解析。
 
 ---
 
@@ -11,8 +11,17 @@
 ## 📖 使用说明
 
 ### 🔗 项目地址
+
+Gitee
+
 ```
 https://gitee.com/wangxiangyu123444/serial_debug_tool.git
+```
+
+GitHub
+
+```
+https://github.com/wangxiangyu2020/serial_debug_tool.git
 ```
 
 ### 📋 自定义脚本示例
@@ -510,6 +519,13 @@ return {
 
 ## 🌟 核心特性
 
+### 💻 核心架构
+- **数据包处理系统**: 新增 PacketProcessor 线程，专门处理串口和TCP数据流
+- **JavaScript脚本引擎**: 内置 ScriptManager 管理器，支持自定义数据协议解析
+- **统一网络管理**: TcpNetworkManager 支持客户端/服务器双模式
+- **智能缓存管理**: 基于源地址的独立数据缓存系统
+- **多线程异步处理**: 保证UI响应性和高并发数据处理能力
+
 ### 🖥️ 现代化界面
 - **启动画面**: 专业的 SplashScreen 启动界面，提升用户体验
 - **无边框窗口**: 自定义 FramelessBase 基类，支持窗口拖拽和边缘调整大小
@@ -535,6 +551,23 @@ return {
 - **时间戳和来源标识**: 自动标识数据来源和接收时间
 - **定时发送**: 支持自定义间隔的定时数据发送
 
+### 📜 JavaScript脚本引擎
+- **代码编辑器**: 内置的JavaScript代码编辑器，支持语法高亮显示
+- **自定义协议解析**: 支持用户编写JavaScript脚本进行数据帧查找和解析
+- **多模式支持**: 同时支持串口、TCP客户端、TCP服务器脚本
+- **实时编译检查**: 提供脚本语法验证和错误提示
+- **内存管理**: 自动垃圾回收和缓存大小限制，防止内存泄漏
+- **性能保护**: 限制最大迭代次数和处理时间，防止死循环
+- **上下文支持**: 支持数据源信息传递，区分不同来源的数据
+
+### 📦 数据包处理系统
+- **统一数据包**: DataPacket 封装，包含数据内容和源信息
+- **异步处理**: 独立的 PacketProcessor 线程处理数据队列
+- **智能路由**: 根据数据源自动选择串口或TCP处理逻辑
+- **缓存管理**: 基于源地址的独立缓存，支持多客户端并发
+- **高效同步**: 使用 QWaitCondition 实现生产者-消费者模式
+- **内存优化**: swap 操作减少锁持有时间，提升性能
+
 ### 📊 数据处理与可视化
 - **双格式显示**: ASCII 和 HEX 格式实时切换
 - **时间戳功能**: 可选的毫秒级时间戳显示 [HH:mm:ss.zzz]
@@ -551,7 +584,7 @@ return {
 - **HEX 发送**: 十六进制格式数据发送
 - **发送回显**: 可选的发送数据在接收区显示
 - **多线程处理**: 异步数据读写，确保界面响应性
-- **线程安全**: 使用互斥锁保护串口操作
+- **线程安全**: 使用互斥锁保护串口和网络操作
 - **通道管理**: 单例模式的通道管理器，支持动态添加/删除通道
 - **Web引擎集成**: QWebEngineView 集成 ECharts 实现专业级数据可视化
 - **数据队列优化**: 支持大容量数据缓冲和批量处理 (60FPS刷新率)
@@ -560,19 +593,21 @@ return {
 - **实时帧同步**: 自动检测和解析数据帧，支持复杂协议处理
 - **代码编辑器**: 内置高亮显示JavaScript代码编辑器，支持深色/浅色主题切换
 - **数据包处理器**: 单独线程处理串口和TCP数据，支持高并发数据流
+- **网络模式管理**: 支持空闲/客户端/服务器三种模式切换
+- **智能缓存策略**: 按源地址分割的独立数据缓存管理
 
 ## 📁 项目结构
 
 ```
 serial_debug_tool/
-├── src/                    # 源代码 (31个文件)
+├── src/                    # 源代码 (36个文件)
 │   ├── main.cpp           # 应用程序入口点 (包含SplashScreen集成)
 │   ├── core/              # 核心业务逻辑 (4个文件)
 │   │   ├── SerialPortManager.cpp          # 串口管理核心类
 │   │   ├── ChannelManager.cpp             # 通道管理器 (单例模式)
-│   │   ├── TcpNetworkManager.cpp          # TCP网络管理核心类
-│   │   └── ScriptManager.cpp              # JavaScript脚本管理器
-│   ├── ui/                # 用户界面组件 (26个文件)
+│   │   ├── TcpNetworkManager.cpp          # TCP网络管理核心类 (新增)
+│   │   └── ScriptManager.cpp              # JavaScript脚本管理器 (新增)
+│   ├── ui/                # 用户界面组件 (28个文件)
 │   │   ├── MainWindow.cpp                 # 主窗口
 │   │   ├── SplashScreen.cpp               # 启动画面
 │   │   ├── TitleBar.cpp                   # 自定义标题栏
@@ -587,45 +622,45 @@ serial_debug_tool/
 │   │   ├── SerialPortDataReceiveWidget.cpp      # 数据接收显示
 │   │   ├── SerialPortDataSendWidget.cpp         # 数据发送输入
 │   │   ├── SerialPortRealTimeSaveWidget.cpp     # 实时保存状态显示
-│   │   ├── TcpNetworkConfigTab.cpp        # TCP网络配置标签页
-│   │   ├── TcpNetworkClientWidget.cpp     # TCP客户端组件
-│   │   ├── TcpNetworkServerWidget.cpp     # TCP服务器组件
+│   │   ├── TcpNetworkConfigTab.cpp        # TCP网络配置标签页 (新增)
+│   │   ├── TcpNetworkClientWidget.cpp     # TCP客户端组件 (新增)
+│   │   ├── TcpNetworkServerWidget.cpp     # TCP服务器组件 (新增)
 │   │   ├── WaveformTab.cpp                # 波形显示标签页
 │   │   ├── WaveformWidget.cpp             # ECharts 波形显示组件
 │   │   ├── WaveformCtrlWidget.cpp         # 波形控制面板
 │   │   ├── AddChannelDialog.cpp           # 添加通道对话框
 │   │   ├── RemoveChannelDialog.cpp        # 移除通道对话框
 │   │   ├── SampleRateDialog.cpp           # 采样率配置对话框
-│   │   ├── ScriptEditorDialog.cpp         # JavaScript脚本编辑对话框
+│   │   ├── ScriptEditorDialog.cpp         # JavaScript脚本编辑对话框 (新增)
 │   │   └── SettingsTab.cpp                # 设置标签页
 │   └── utils/             # 工具类 (6个文件)
 │       ├── StyleLoader.cpp               # QSS样式加载器
 │       ├── ThreadPoolManager.cpp         # 线程池管理器
 │       ├── SerialPortSettings.cpp        # 串口参数配置工具
-│       ├── PacketProcessor.cpp           # 数据包处理器
-│       └── JavaScriptHighlighter.cpp     # JavaScript代码高亮器
-├── include/               # 头文件 (与src结构对应，31个文件)
+│       ├── PacketProcessor.cpp           # 数据包处理器 (新增)
+│       └── JavaScriptHighlighter.cpp     # JavaScript代码高亮器 (新增)
+├── include/               # 头文件 (与src结构对应，36个文件)
 │   ├── core/              # 核心模块头文件 (4个文件)
 │   │   ├── SerialPortManager.h, ChannelManager.h
-│   │   ├── TcpNetworkManager.h
-│   │   └── ScriptManager.h
-│   ├── ui/                # UI组件头文件 (26个文件)
+│   │   ├── TcpNetworkManager.h            # TCP网络管理器 (新增)
+│   │   └── ScriptManager.h                # JavaScript脚本管理器 (新增)
+│   ├── ui/                # UI组件头文件 (28个文件)
 │   │   ├── MainWindow.h, SplashScreen.h, TitleBar.h, CTabWidget.h
 │   │   ├── FramelessBase.h, CDialogBase.h, CMessageBox.h
 │   │   ├── SerialPortConfigTab.h, SerialPortConnectConfigWidget.h
 │   │   ├── SerialPortReceiveSettingsWidget.h, SerialPortSendSettingsWidget.h
 │   │   ├── SerialPortDataReceiveWidget.h, SerialPortDataSendWidget.h
 │   │   ├── SerialPortRealTimeSaveWidget.h
-│   │   ├── TcpNetworkConfigTab.h, TcpNetworkClientWidget.h, TcpNetworkServerWidget.h
+│   │   ├── TcpNetworkConfigTab.h, TcpNetworkClientWidget.h, TcpNetworkServerWidget.h (新增)
 │   │   ├── WaveformTab.h, WaveformWidget.h, WaveformCtrlWidget.h
 │   │   ├── AddChannelDialog.h, RemoveChannelDialog.h, SampleRateDialog.h
-│   │   ├── ScriptEditorDialog.h
+│   │   ├── ScriptEditorDialog.h           # 脚本编辑对话框 (新增)
 │   │   └── SettingsTab.h
-│   └── utils/             # 工具类头文件 (6个文件)
+│   └── utils/             # 工具类头文件 (8个文件)
 │       ├── StyleLoader.h, ThreadPoolManager.h, SerialPortSettings.h
-│       ├── PacketProcessor.h, DataPacket.h, ThreadSetup.h
-│       └── JavaScriptHighlighter.h, NetworkModeState.h
-├── resources/             # 应用程序资源
+│       ├── PacketProcessor.h, DataPacket.h, ThreadSetup.h (新增)
+│       ├── JavaScriptHighlighter.h, NetworkModeState.h (新增)
+└── resources/             # 应用程序资源
 │   ├── icons/            # SVG 和 ICO 图标文件 (22个图标)
 │   │   ├── 界面图标: logo.svg, serial.svg, waves.svg, settings.svg, tcp_network.svg
 │   │   ├── 操作图标: send.svg, checkmark_blue.svg, down_arrow.svg
@@ -984,20 +1019,30 @@ sequenceDiagram
   - 默认值设置支持
 
 #### **资源系统 (Resources)**
-- **图标系统**: 17个SVG矢量图标 + 1个ICO图标 (共18个)
-  - 串口功能图标：serial.svg, send.svg, checkmark_blue.svg
-  - 波形功能图标：waves.svg, add_series.svg, remove_series.svg, clear_series.svg
-  - 数据操作图标：import_series.svg, export_series.svg, start_series.svg, stop_series.svg
-  - 配置图标：sample_rate.svg (采样率配置)
-  - 界面图标：logo.svg, settings.svg, down_arrow.svg, un_dev.svg
-  - 应用图标：ikun.ico, ikun.svg
+- **图标系统**: 22个SVG矢量图标 + 1个ICO图标 (共23个)
+  - 界面图标：logo.svg, serial.svg, waves.svg, settings.svg, tcp_network.svg (新增)
+  - 操作图标：send.svg, checkmark_blue.svg, down_arrow.svg
+  - 波形图标：add_series.svg, remove_series.svg, clear_series.svg
+  - 数据图标：import_series.svg, export_series.svg
+  - 控制图标：start_series.svg, stop_series.svg, sample_rate.svg
+  - 功能图标：code.svg (脚本编辑), help.svg (帮助) (新增)
+  - 应用图标：ikun.ico, ikun.svg, silder_ikun.svg, un_dev.svg
 
-- **样式系统**: 17个专用QSS样式表文件
+- **样式系统**: 21个专用QSS样式表文件
   - 主界面样式：main_window.qss, title_bar.qss, tab_bar.qss
   - 对话框样式：dialog_base.qss, add_channel_dialog.qss, remove_channel_dialog.qss, sample_rate_dialog.qss
-  - 波形样式：wave_form_tab.qss, wave_form_ctrl_widget.qss
+  - 脚本编辑样式：script_editor_dialog.qss (新增)
+  - 波形界面样式：wave_form_tab.qss, wave_form_ctrl_widget.qss
+  - TCP网络样式：tcp_network_config_tab.qss, tcp_network_client_wdiget.qss, tcp_network_server_wdiget.qss (新增)
   - 串口组件样式：8个 serial_port_*.qss 文件
     - serial_prot_config_tab.qss (配置标签页)
+    - serial_port_connect_config_widget.qss (连接配置)
+    - serial_port_receive_settings_widget.qss (接收设置)
+    - serial_port_send_settings_widget.qss (发送设置)
+    - serial_port_data_receive_widget.qss (数据接收)
+    - serial_port_data_send_widget.qss (数据发送)
+    - serial_port_real_time_save_widget.qss (实时保存)
+  - 设置页面样式：settings_tab.qss
     - serial_port_connect_config_widget.qss (连接配置)
     - serial_port_receive_settings_widget.qss (接收设置)
     - serial_port_send_settings_widget.qss (发送设置)
@@ -1162,11 +1207,11 @@ sequenceDiagram
 - **图表渲染**: ECharts硬件加速，支持大数据量实时更新
 
 ### 项目规模统计
-- **源代码文件**: 31个 (.cpp文件)
-  - main.cpp (1个) + core (4个) + ui (26个) + utils (6个)
-- **头文件**: 31个 (.h文件)
+- **源代码文件**: 36个 (.cpp文件)
+  - main.cpp (1个) + core (4个) + ui (28个) + utils (6个)
+- **头文件**: 36个 (.h文件)
   - 与源文件一一对应的完整头文件结构
-- **UI组件**: 26个独立组件
+- **UI组件**: 28个独立组件
   - 包含完整的对话框系统、启动画面、波形可视化组件、TCP网络组件和脚本编辑器
 - **核心模块**: 4个 (SerialPortManager, ChannelManager, TcpNetworkManager, ScriptManager)
 - **工具类**: 6个 (StyleLoader, ThreadPoolManager, SerialPortSettings, PacketProcessor, JavaScriptHighlighter, ThreadSetup)
@@ -1174,8 +1219,9 @@ sequenceDiagram
 - **样式文件**: 21个QSS文件 (完整的样式系统)
 - **Web资源**: 2个文件 (ECharts库 + HTML页面)
 - **部署脚本**: 1个 (deploy.bat Windows部署脚本)
-- **总文件数**: 约130个文件 (包含构建输出和图片资源)
-- **代码行数**: 约18000行 (估算，包含注释和空行)
+- **总文件数**: 约150个文件 (包含构建输出、图片资源和文档)
+- **代码行数**: 约25000行 (估算，包含注释和空行)
+- **技术栈复杂度**: C++20 + Qt6 + JavaScript + HTML/CSS + WebEngine + 多线程 + 网络通信
 
 ## 📝 许可证
 
@@ -1201,31 +1247,48 @@ sequenceDiagram
 
 ## ✨ 已实现的高级特性
 
+### 💻 核心架构特性
+- ✅ **数据包处理系统**: PacketProcessor 独立线程，支持高并发数据处理
+- ✅ **JavaScript脚本引擎**: ScriptManager 完整JS执行环境，支持自定义数据处理
+- ✅ **TCP网络通信**: TcpNetworkManager 支持客户端/服务器双模式
+- ✅ **智能缓存管理**: 基于源地址的独立数据缓存系统
+- ✅ **多线程异步处理**: 保证UI响应性和高并发能力
+
+### 🎨 界面与交互
 - ✅ **专业启动体验**: SplashScreen 启动画面，异步加载主窗口
+- ✅ **现代化UI设计**: 无边框窗口、自定义对话框、动画效果
+- ✅ **完整的样式系统**: 21个专用QSS文件，支持主题定制
+- ✅ **代码编辑器**: 内置高亮显示JavaScript编辑器，支持深色/浅色主题
+- ✅ **资源管理系统**: 完整的图标(23个)、样式、Web资源管理
+
+### 📊 数据可视化与管理
 - ✅ **完整的波形可视化系统**: 基于ECharts的专业级数据可视化
 - ✅ **多通道数据管理**: 支持动态添加/删除数据通道，完整的通道管理对话框
 - ✅ **采样率配置**: SampleRateDialog 支持自定义采样率设置
-- ✅ **实时数据流**: 串口数据到波形图表的实时更新，60FPS刷新率
-- ✅ **现代化UI设计**: 无边框窗口、自定义对话框、动画效果
-- ✅ **完整的样式系统**: 21个专用QSS文件，支持主题定制
-- ✅ **线程安全架构**: 多线程数据处理，UI响应流畅
-- ✅ **资源管理系统**: 完整的图标、样式、Web资源管理
+- ✅ **实时数据流**: 串口/TCP数据到波形图表的实时更新，60FPS刷新率
 - ✅ **三向通道操作**: AddChannelDialog、RemoveChannelDialog 和 SampleRateDialog 完整实现
-- ✅ **数据队列优化**: 支持大容量数据缓冲和性能优化
-- ✅ **Web引擎集成**: QWebEngineView 完美集成 ECharts 图表库
-- ✅ **自动化部署**: deploy.bat 脚本支持一键部署
+
+### 📡 通信协议支持
+- ✅ **串口通信**: 完整的串口参数配置，1MB缓冲区，高速数据传输
 - ✅ **TCP网络通信**: 支持客户端和服务器模式，多客户端同时连接
-- ✅ **JavaScript脚本引擎**: 完整的JS脚本执行环境，支持自定义数据处理
-- ✅ **代码编辑器**: 内置高亮显示JavaScript编辑器，支持深色/浅色主题
 - ✅ **智能帧同步**: 自动检测和解析数据帧，支持复杂协议处理
-- ✅ **高性能数据处理**: PacketProcessor单独线程处理数据，支持高并发
 - ✅ **多端口状态管理**: NetworkModeState统一管理串口和TCP的显示状态
+
+### ⚡ 性能与优化
+- ✅ **高性能数据处理**: PacketProcessor单独线程处理数据，支持高并发
+- ✅ **数据队列优化**: 支持大容量数据缓冲和批量处理 (60FPS刷新率)
+- ✅ **线程安全架构**: 多线程数据处理，UI响应流畅
+- ✅ **Web引擎集成**: QWebEngineView 完美集成 ECharts 图表库
 - ✅ **线程池管理**: ThreadSetup模板化线程设置，支持多管理器线程化
+
+### 🔧 部署与工具
+- ✅ **自动化部署**: deploy.bat 脚本支持一键部署
+- ✅ **资源清理**: 程序退出时自动清理 WebEngine 缓存
+- ✅ **跨平台支持**: Windows优化，支持高DPI显示
 
 ## 🔮 发展路线
 
 ### 短期目标 (v2.0)
-- 完善波形控制面板的数据导入导出功能
 - 实现常见串口协议分析器 (Modbus, ASCII协议等)
 - 完善设置页面 (主题选择、快捷键配置)
 - 添加单元测试框架和自动化测试
