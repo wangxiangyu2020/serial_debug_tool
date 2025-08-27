@@ -47,8 +47,8 @@ protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
 
 private slots:
-    void onDisplayReceiveData(const QByteArray& data);
-    void onDisplaySentDataWithHighlight(const QByteArray& data);
+    void onDisplayReceiveData(const QString& data);
+    void onDisplaySentDataWithHighlight(const QString& data);
 
 private:
     // 私有方法

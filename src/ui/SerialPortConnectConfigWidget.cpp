@@ -73,6 +73,50 @@ void SerialPortConnectConfigWidget::onStatusChanged(const QString& status, int c
     m_pConnectButton->update();
 }
 
+void SerialPortConnectConfigWidget::onUpdatePortComboBox(const QList<QSerialPortInfo>& newPorts)
+{
+    // --- 准备数据 ---
+    // a. 获取当前下拉框中已有的所有端口名
+    QSet<QString> currentPortNames;
+    for (int i = 0; i < m_pPortComboBox->count(); ++i)
+    {
+        currentPortNames.insert(m_pPortComboBox->itemText(i));
+    }
+    // b. 获取系统最新报告的所有可用端口名
+    QSet<QString> newPortNames;
+    QHash<QString, QSerialPortInfo> newPortInfoMap; // 用于快速查找端口信息
+    for (const QSerialPortInfo& port : newPorts)
+    {
+        newPortNames.insert(port.portName());
+        newPortInfoMap.insert(port.portName(), port);
+    }
+    // --- 计算差异 ---
+    // c. 找出需要从下拉框中移除的端口 (存在于当前列表，但不存在于新列表中)
+    QSet<QString> portsToRemove = currentPortNames - newPortNames;
+    // d. 找出需要添加到下拉框的新端口 (存在于新列表，但不存在于当前列表中)
+    QSet<QString> portsToAdd = newPortNames - currentPortNames;
+    // --- 执行UI更新 ---
+    // 在批量修改UI前，先阻止信号发射，防止不必要的副作用
+    m_pPortComboBox->blockSignals(true);
+    // e. 移除已消失的端口
+    for (const QString& portName : portsToRemove)
+    {
+        // 查找要移除项的索引
+        int index = m_pPortComboBox->findText(portName);
+        if (index != -1)
+        {
+            m_pPortComboBox->removeItem(index);
+        }
+    }
+    // f. 添加新出现的端口
+    for (const QString& portName : portsToAdd)
+    {
+        m_pPortComboBox->addItem(portName, QVariant::fromValue(newPortInfoMap.value(portName)));
+    }
+    // 恢复信号发射
+    m_pPortComboBox->blockSignals(false);
+}
+
 // 私有方法
 void SerialPortConnectConfigWidget::setUI()
 {
@@ -196,38 +240,19 @@ void SerialPortConnectConfigWidget::connectSignals()
                   &SerialPortManager::closeSerialPort);
     this->connect(SerialPortManager::getInstance(), &SerialPortManager::statusChanged, this,
                   &SerialPortConnectConfigWidget::onStatusChanged);
+    this->connect(this, &SerialPortConnectConfigWidget::availablePortsUpdated, this,
+                  &SerialPortConnectConfigWidget::onUpdatePortComboBox);
 }
 
 void SerialPortConnectConfigWidget::detectionAvailablePorts()
 {
     while (!ThreadPoolManager::isShutdownRequested())
     {
-        // 1. 获取当前可用端口
+        // 1. 在后台线程中获取当前系统所有可用的串口
         const auto ports = QSerialPortInfo::availablePorts();
-        // 2. 创建当前可用端口名称集合
-        QSet<QString> availablePortNames;
-        for (const QSerialPortInfo& port : ports)
-        {
-            availablePortNames.insert(port.portName());
-        }
-        // 3. 移除已断开的端口（从后往前遍历避免索引问题）
-        for (int i = m_pPortComboBox->count() - 1; i >= 0; --i)
-        {
-            QString portName = m_pPortComboBox->itemText(i);
-            if (!availablePortNames.contains(portName))
-            {
-                m_pPortComboBox->removeItem(i);
-            }
-        }
-        // 4. 添加新端口（避免重复添加）
-        for (const QSerialPortInfo& port : ports)
-        {
-            QString portName = port.portName();
-            if (m_pPortComboBox->findText(portName, Qt::MatchExactly) == -1)
-            {
-                m_pPortComboBox->addItem(portName, QVariant::fromValue(port));
-            }
-        }
-        QThread::msleep(5000);
+        // 2. 发射信号，将最新的端口列表作为“包裹”发送给主线程
+        emit availablePortsUpdated(ports);
+        // 3. 每隔1秒检查一次
+        QThread::msleep(1000);
     }
 }

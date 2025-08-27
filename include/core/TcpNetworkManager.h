@@ -53,11 +53,11 @@ public slots:
     // 停止当前所有网络活动，并重置为空闲状态
     void stop();
     // 发送数据处理器
-    void handleWriteData(const QByteArray& data, QTcpSocket* clientSocket);
+    void handleWriteData(const QString& data, QTcpSocket* clientSocket);
     void setDisplayTimestampStatus(bool status);
     void setHexDisplayStatus(bool status);
     void setHexSendStatus(bool status);
-    void startTimedSend(double interval, const QByteArray& data, QTcpSocket* clientSocket);
+    void startTimedSend(double interval, const QString& data, QTcpSocket* clientSocket);
     void stopTimedSend();
 
 signals:
@@ -91,6 +91,8 @@ private:
     explicit TcpNetworkManager(QObject* parent = nullptr);
     ~TcpNetworkManager() = default;
 
+    QByteArray hexStringToByteArray(const QString& hexString);
+
     static TcpNetworkManager* m_pInstance;
     static QMutex m_mutex;
 
@@ -104,7 +106,7 @@ private:
     bool m_hexSend = false;
 
     QTimer* m_pTimedSendTimer;
-    QByteArray m_timedSendData;
+    QString m_timedSendData;
 
     QTimer* m_pFlushTimer;
     QMutex m_bufferMutex;

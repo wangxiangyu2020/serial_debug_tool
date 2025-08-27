@@ -35,7 +35,7 @@ public:
     static QPlainTextEdit* getSendTextEdit();
 
 signals:
-    void sendDataRequested(const QByteArray& data);
+    void sendDataRequested(const QString& data);
 
 protected:
     // 事件处理方法

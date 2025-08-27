@@ -49,11 +49,11 @@ public slots:
 signals:
     void startConnectionRequested(const QString&, quint16);
     void stopConnectionRequested();
-    void sendDataRequested(const QByteArray& data, QTcpSocket* clientSocket = nullptr);
+    void sendDataRequested(const QString& data, QTcpSocket* clientSocket = nullptr);
     void displayTimestamp(bool status);
     void hexDisplay(bool status);
     void hexSend(bool status);
-    void startTimedSendRequested(double interval, const QByteArray& data, QTcpSocket* clientSocket = nullptr);
+    void startTimedSendRequested(double interval, const QString& data, QTcpSocket* clientSocket = nullptr);
     void stopTimedSendRequested();
     void stateChanged(bool displayTimestamp, bool hexDisplay, bool hexSend);
     void tcpNetworkClientScriptSaved(const QString& key, const QString& scriptText);

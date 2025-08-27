@@ -38,7 +38,7 @@ public:
 signals:
     void hexSendChanged(bool status);
     void showSendStringChanged(bool status);
-    void startTimedSendRequested(double interval, const QByteArray& data);
+    void startTimedSendRequested(double interval, const QString& data);
     void stopTimedSendRequested();
 
 private slots:

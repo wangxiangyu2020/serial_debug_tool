@@ -47,23 +47,24 @@ public:
     bool isTimestampEnabled();
 
 public slots:
-    void handleWriteData(const QByteArray& writeByteArray);
+    void handleWriteData(const QString& text);
     void openSerialPort(const QMap<QString, QVariant>& serialParams);
     void closeSerialPort();
     void setHexSendStatus(bool status);
     void setHexDisplayStatus(bool status);
     void setSendStringDisplayStatus(bool status);
     void setTimestampStatus(bool status);
-    void startTimedSend(double interval, const QByteArray& data);
+    void startTimedSend(double interval, const QString& data);
     void stopTimedSend();
 
 signals:
     void statusChanged(const QString& status, int connectStatus = -1);
-    void sendData2ReceiveChanged(const QByteArray& data);
+    void sendData2ReceiveChanged(const QString& data);
 
 private slots:
     void onSerialPortRead();
     void onReadBufferTimeout(); // 【新增】处理缓冲区超时的槽函数
+    void onHandleError(QSerialPort::SerialPortError error);
 
 private:
     // 构造函数和析构函数
@@ -75,7 +76,8 @@ private:
     void serialPortWrite(const QByteArray& data);
     // 错误处理
     void handlerError(QSerialPort::SerialPortError error);
-    QByteArray& generateTimestamp(const QString& data);
+    QString generateTimestamp(const QString& data);
+    QByteArray hexStringToByteArray(const QString& hexString);
 
     enum ConnectStatus
     {
@@ -103,7 +105,7 @@ private:
 
 
     QTimer* m_pTimedSendTimer;
-    QByteArray m_timedSendData;
+    QString m_timedSendData;
 
     QByteArray m_readBuffer; // 【新增】用于缓冲零散数据的成员
     QTimer* m_pReadTimer; // 【新增】用于检测数据流暂停的定时器

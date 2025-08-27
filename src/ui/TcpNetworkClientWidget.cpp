@@ -141,7 +141,7 @@ void TcpNetworkClientWidget::onSendButtonClicked()
         CMessageBox::showToast(this, "请输入要发送的数据");
         return;
     }
-    emit sendDataRequested(m_pSendTextEdit->toPlainText().toLocal8Bit());
+    emit sendDataRequested(m_pSendTextEdit->toPlainText());
 }
 
 void TcpNetworkClientWidget::onDisplayReceiveData(const QByteArray& data)
@@ -198,7 +198,7 @@ void TcpNetworkClientWidget::onTimedSendCheckBoxClicked(bool status)
     }
     m_pIntervalEdit->setEnabled(false);
     double interval = m_pIntervalEdit->text().toDouble();
-    emit startTimedSendRequested(interval, textToSend.toLocal8Bit());
+    emit startTimedSendRequested(interval, textToSend);
 }
 
 void TcpNetworkClientWidget::onDisplayTimestampChanged(bool status)

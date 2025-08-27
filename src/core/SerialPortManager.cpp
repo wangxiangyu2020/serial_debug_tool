@@ -44,16 +44,16 @@ bool SerialPortManager::isTimestampEnabled()
 }
 
 // 数据处理方法
-void SerialPortManager::handleWriteData(const QByteArray& writeByteArray)
+void SerialPortManager::handleWriteData(const QString& text)
 {
     if (m_isSendStringDisplay)
     {
-        QByteArray showByteArray = m_isDisplayTimestamp
-                                       ? this->generateTimestamp(QString::fromUtf8(writeByteArray))
-                                       : writeByteArray;
-        emit sendData2ReceiveChanged(showByteArray);
+        QString showText = m_isDisplayTimestamp
+                               ? this->generateTimestamp(text)
+                               : text;
+        emit sendData2ReceiveChanged(showText);
     }
-    this->serialPortWrite(m_isHexSend ? writeByteArray.toHex() : writeByteArray);
+    this->serialPortWrite(m_isHexSend ? hexStringToByteArray(text) : text.toLocal8Bit());
 }
 
 // 主要业务方法
@@ -71,7 +71,6 @@ void SerialPortManager::openSerialPort(const QMap<QString, QVariant>& serialPara
 
 void SerialPortManager::closeSerialPort()
 {
-    if (!m_pSerialPort->isOpen()) return;
     m_pReadTimer->stop();
     m_pSerialPort->close();
     emit statusChanged(tr("串口已关闭"), ConnectStatus::Disconnected);
@@ -98,7 +97,7 @@ void SerialPortManager::setTimestampStatus(bool status)
     m_isDisplayTimestamp = status;
 }
 
-void SerialPortManager::startTimedSend(double interval, const QByteArray& data)
+void SerialPortManager::startTimedSend(double interval, const QString& data)
 {
     this->stopTimedSend();
 
@@ -154,6 +153,11 @@ void SerialPortManager::onReadBufferTimeout()
     PacketProcessor::getInstance()->enqueueData(packet);
 }
 
+void SerialPortManager::onHandleError(QSerialPort::SerialPortError error)
+{
+    if (error == QSerialPort::ResourceError) this->closeSerialPort();
+}
+
 // 构造函数
 SerialPortManager::SerialPortManager(QObject* parent)
     : QObject(parent), m_pSerialPort(new QSerialPort(this)),
@@ -170,6 +174,7 @@ void SerialPortManager::connectSignals()
 {
     this->connect(m_pReadTimer, &QTimer::timeout, this, &SerialPortManager::onReadBufferTimeout);
     this->connect(this->getSerialPort(), &QSerialPort::readyRead, this, &SerialPortManager::onSerialPortRead);
+    this->connect(this->getSerialPort(), &QSerialPort::errorOccurred, this, &SerialPortManager::onHandleError);
 }
 
 void SerialPortManager::configureSerialPort(const QMap<QString, QVariant>& serialParams)
@@ -238,11 +243,18 @@ void SerialPortManager::handlerError(QSerialPort::SerialPortError error)
     emit statusChanged(errorMsg, ConnectStatus::Disconnected);
 }
 
-QByteArray& SerialPortManager::generateTimestamp(const QString& data)
+QString SerialPortManager::generateTimestamp(const QString& data)
 {
     static QString timestamp;
-    static QByteArray array;
     timestamp = QDateTime::currentDateTime().toString("[HH:mm:ss.zzz] ");
-    array = (timestamp + data).toUtf8();
-    return array;
+    return timestamp + data;
+}
+
+QByteArray SerialPortManager::hexStringToByteArray(const QString& hexString)
+{
+    // 移除所有空格
+    QString cleanString = hexString;
+    cleanString.remove(QChar(' '));
+    // 使用 QByteArray 的静态函数从清理后的Hex字符串创建字节数组
+    return QByteArray::fromHex(cleanString.toLatin1());
 }

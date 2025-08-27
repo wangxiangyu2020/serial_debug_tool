@@ -50,8 +50,8 @@ signals:
     void hexDisplay(bool status);
     void hexSend(bool status);
     void stateChanged(bool displayTimestamp, bool hexDisplay, bool hexSend);
-    void sendDataRequested(const QByteArray& data, QTcpSocket* clientSocket = nullptr);
-    void startTimedSendRequested(double interval, const QByteArray& data, QTcpSocket* clientSocket = nullptr);
+    void sendDataRequested(const QString& data, QTcpSocket* clientSocket = nullptr);
+    void startTimedSendRequested(double interval, const QString& data, QTcpSocket* clientSocket = nullptr);
     void stopTimedSendRequested();
     void tcpNetworkServerScriptSaved(const QString& key, const QString& scriptText);
     void tcpNetworkServerScriptEnabled(bool enabled);

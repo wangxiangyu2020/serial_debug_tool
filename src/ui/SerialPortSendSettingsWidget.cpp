@@ -42,7 +42,7 @@ void SerialPortSendSettingsWidget::onTimedSendCheckBoxClicked(bool status)
     }
     m_pIntervalEdit->setEnabled(false);
     double interval = m_pIntervalEdit->text().toDouble();
-    emit startTimedSendRequested(interval, textToSend.toLocal8Bit());
+    emit startTimedSendRequested(interval, textToSend);
 }
 
 void SerialPortSendSettingsWidget::setUI()

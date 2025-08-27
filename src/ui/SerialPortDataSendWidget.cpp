@@ -44,8 +44,8 @@ void SerialPortDataSendWidget::onSendButtonClicked()
         return;
     }
     // 获取发送数据并传给串口管理器进行处理
-    auto sendByteArray = m_pSendTextEdit->toPlainText().toLocal8Bit();
-    emit sendDataRequested(sendByteArray);
+    QString sendText = m_pSendTextEdit->toPlainText();
+    emit sendDataRequested(sendText);
 }
 
 // 私有方法

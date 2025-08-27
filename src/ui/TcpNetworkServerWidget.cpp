@@ -205,13 +205,13 @@ void TcpNetworkServerWidget::onSendButtonClicked()
     QString text = m_pSendClientComboBox->currentText();
     if (text == tr("所有客户端"))
     {
-        emit sendDataRequested(m_pSendTextEdit->toPlainText().toLocal8Bit());
+        emit sendDataRequested(m_pSendTextEdit->toPlainText());
     }
     else
     {
         QVariant userData = m_pSendClientComboBox->currentData();
         QTcpSocket* clientSocket = userData.value<QTcpSocket*>();
-        emit sendDataRequested(m_pSendTextEdit->toPlainText().toLocal8Bit(), clientSocket);
+        emit sendDataRequested(m_pSendTextEdit->toPlainText(), clientSocket);
     }
 }
 
@@ -243,13 +243,13 @@ void TcpNetworkServerWidget::onTimedSendCheckBoxClicked(bool status)
     QString text = m_pSendClientComboBox->currentText();
     if (text == tr("所有客户端"))
     {
-        emit startTimedSendRequested(interval, textToSend.toLocal8Bit());
+        emit startTimedSendRequested(interval, textToSend);
     }
     else
     {
         QVariant userData = m_pSendClientComboBox->currentData();
         QTcpSocket* clientSocket = userData.value<QTcpSocket*>();
-        emit startTimedSendRequested(interval, textToSend.toLocal8Bit(), clientSocket);
+        emit startTimedSendRequested(interval, textToSend, clientSocket);
     }
 }
 

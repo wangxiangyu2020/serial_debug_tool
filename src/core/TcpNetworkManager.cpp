@@ -104,10 +104,10 @@ void TcpNetworkManager::stop()
     m_currentMode = Mode::Idle;
 }
 
-void TcpNetworkManager::handleWriteData(const QByteArray& data, QTcpSocket* clientSocket)
+void TcpNetworkManager::handleWriteData(const QString& data, QTcpSocket* clientSocket)
 {
-    if (clientSocket == nullptr) this->sendData(m_hexSend ? data.toHex() : data);
-    else this->sendDataToClient(clientSocket, m_hexSend ? data.toHex() : data);
+    if (clientSocket == nullptr) this->sendData(m_hexSend ? hexStringToByteArray(data) : data.toLocal8Bit());
+    else this->sendDataToClient(clientSocket, m_hexSend ? hexStringToByteArray(data) : data.toLocal8Bit());
 }
 
 void TcpNetworkManager::setDisplayTimestampStatus(bool status)
@@ -125,7 +125,7 @@ void TcpNetworkManager::setHexSendStatus(bool status)
     m_hexSend = status;
 }
 
-void TcpNetworkManager::startTimedSend(double interval, const QByteArray& data, QTcpSocket* clientSocket)
+void TcpNetworkManager::startTimedSend(double interval, const QString& data, QTcpSocket* clientSocket)
 {
     this->stopTimedSend();
 
@@ -303,4 +303,13 @@ TcpNetworkManager::TcpNetworkManager(QObject* parent)
     m_pFlushTimer = new QTimer(this);
     m_pFlushTimer->setInterval(20); // 设置20ms的清空周期
     this->connect(m_pFlushTimer, &QTimer::timeout, this, &TcpNetworkManager::onReadBufferTimeout);
+}
+
+QByteArray TcpNetworkManager::hexStringToByteArray(const QString& hexString)
+{
+    // 移除所有空格
+    QString cleanString = hexString;
+    cleanString.remove(QChar(' '));
+    // 使用 QByteArray 的静态函数从清理后的Hex字符串创建字节数组
+    return QByteArray::fromHex(cleanString.toLatin1());
 }

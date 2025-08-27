@@ -81,14 +81,14 @@ bool SerialPortDataReceiveWidget::eventFilter(QObject* watched, QEvent* event)
 }
 
 // private slots
-void SerialPortDataReceiveWidget::onDisplayReceiveData(const QByteArray& data)
+void SerialPortDataReceiveWidget::onDisplayReceiveData(const QString& data)
 {
     // 暂停重绘以提高性能
     m_pReceiveTextEdit->setUpdatesEnabled(false);
     // 获取当前滚动条位置
     QScrollBar* vScroll = m_pReceiveTextEdit->verticalScrollBar();
     bool atBottom = vScroll->value() == vScroll->maximum();
-    QString receivedString = QString::fromUtf8(data).trimmed();
+    QString receivedString = data.trimmed();
     m_pReceiveTextEdit->appendPlainText(receivedString);
     // 恢复自动滚动（如果启用且之前已在底部）
     if (atBottom)
@@ -99,7 +99,7 @@ void SerialPortDataReceiveWidget::onDisplayReceiveData(const QByteArray& data)
     m_pReceiveTextEdit->setUpdatesEnabled(true);
 }
 
-void SerialPortDataReceiveWidget::onDisplaySentDataWithHighlight(const QByteArray& data)
+void SerialPortDataReceiveWidget::onDisplaySentDataWithHighlight(const QString& data)
 {
     this->onDisplayReceiveData(data);
     // 获取最后一行（刚刚添加的数据行）

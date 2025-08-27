@@ -43,6 +43,7 @@ public:
 signals:
     void startConnectionRequested(QMap<QString, QVariant> serialParams);
     void stopConnectionRequested();
+    void availablePortsUpdated(const QList<QSerialPortInfo>& availablePorts);
 
 protected:
     // 事件处理方法
@@ -51,6 +52,7 @@ protected:
 private slots:
     void onConnectButtonClicked();
     void onStatusChanged(const QString& status, int connectStatus);
+    void onUpdatePortComboBox(const QList<QSerialPortInfo>& newPorts);
 
 private:
     // 私有方法
