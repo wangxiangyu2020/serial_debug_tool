@@ -28,6 +28,9 @@
 #include "core/ChannelManager.h"
 #include "utils/DataPacket.h"
 #include "utils/PacketProcessor.h"
+#include "ui/SerialPortConnectConfigWidget.h"
+#include "ui/SerialPortDataSendWidget.h"
+#include "ui/SerialPortSendSettingsWidget.h"
 
 class SerialPortManager : public QObject
 {

@@ -9,9 +9,6 @@
   */
 #include "core/SerialPortManager.h"
 
-#include "ui/SerialPortConnectConfigWidget.h"
-#include "ui/SerialPortDataSendWidget.h"
-#include "ui/SerialPortSendSettingsWidget.h"
 
 // 静态成员定义
 SerialPortManager* SerialPortManager::m_pInstance = nullptr;
