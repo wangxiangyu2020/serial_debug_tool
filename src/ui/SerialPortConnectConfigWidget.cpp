@@ -40,6 +40,12 @@ void SerialPortConnectConfigWidget::onConnectButtonClicked()
 {
     if (m_isConnected)
     {
+        m_pPortComboBox->setEnabled(true);
+        m_pBaudRateComboBox->setEnabled(true);
+        m_pDataBitsComboBox->setEnabled(true);
+        m_pStopBitsComboBox->setEnabled(true);
+        m_pParityComboBox->setEnabled(true);
+        m_pFlowControlComboBox->setEnabled(true);
         emit stopConnectionRequested();
         return;
     }
@@ -48,15 +54,30 @@ void SerialPortConnectConfigWidget::onConnectButtonClicked()
         CMessageBox::showToast("请选择端口");
         return;
     }
+    QString baudRateString = m_pBaudRateComboBox->currentText();
+    bool isNumber;
+    qint32 baudRateValue = baudRateString.toInt(&isNumber);
+    if (!isNumber || baudRateValue <= 0)
+    {
+        CMessageBox::showToast("请输入有效波特率");
+        return;
+    }
     QMap<QString, QVariant> serialParams
     {
         {"portInfo", QVariant::fromValue(m_pPortComboBox->currentData().value<QSerialPortInfo>())},
-        {"baudRate", m_pBaudRateComboBox->currentData().value<QSerialPort::BaudRate>()},
+        {"baudRate", baudRateValue},
         {"dataBits", m_pDataBitsComboBox->currentData().value<QSerialPort::DataBits>()},
         {"stopBits", m_pStopBitsComboBox->currentData().value<QSerialPort::StopBits>()},
         {"parity", m_pParityComboBox->currentData().value<QSerialPort::Parity>()},
         {"flowControl", m_pFlowControlComboBox->currentData().value<QSerialPort::FlowControl>()}
     };
+
+    m_pPortComboBox->setEnabled(false);
+    m_pBaudRateComboBox->setEnabled(false);
+    m_pDataBitsComboBox->setEnabled(false);
+    m_pStopBitsComboBox->setEnabled(false);
+    m_pParityComboBox->setEnabled(false);
+    m_pFlowControlComboBox->setEnabled(false);
 
     emit startConnectionRequested(serialParams);
 }
@@ -151,6 +172,8 @@ void SerialPortConnectConfigWidget::createComponents()
     m_pPortComboBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     m_pBaudRateComboBox = new QComboBox(this);
     m_pBaudRateComboBox->setObjectName("baudRateComboBox");
+    m_pBaudRateComboBox->setEditable(true);
+    m_pBaudRateComboBox->setValidator(new QIntValidator(1, 4000000, m_pBaudRateComboBox));
     m_pDataBitsComboBox = new QComboBox(this);
     m_pDataBitsComboBox->setObjectName("dataBitsComboBox");
     m_pStopBitsComboBox = new QComboBox(this);
