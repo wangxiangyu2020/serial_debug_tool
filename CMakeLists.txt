@@ -5,13 +5,11 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
+
+
 #set(CMAKE_PREFIX_PATH "D:/software/Qt/6.5.3/msvc2019_64")
-#file(COPY "D:/software/Qt/6.5.3/msvc2019_64/resources" DESTINATION ${CMAKE_BINARY_DIR})
-#file(COPY "D:/software/Qt/6.5.3/msvc2019_64/translations" DESTINATION ${CMAKE_BINARY_DIR})
-#自己
 set(CMAKE_PREFIX_PATH "D:/Software/Qt/6.5.3/msvc2019_64")
-file(COPY "D:/Software/Qt/6.5.3/msvc2019_64/resources" DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY "D:/Software/Qt/6.5.3/msvc2019_64/translations" DESTINATION ${CMAKE_BINARY_DIR})
+
 
 set(PUBLISH_BIN_RELEASE ${CMAKE_CURRENT_SOURCE_DIR}/Release)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${PUBLISH_BIN_RELEASE})
@@ -121,66 +119,21 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 # 添加 Windows 部署规则
 if (WIN32)
+
     set(DEBUG_SUFFIX)
+
     if (CMAKE_BUILD_TYPE MATCHES "Debug")
         set(DEBUG_SUFFIX "d")
     endif ()
 
     set(QT_INSTALL_PATH "${CMAKE_PREFIX_PATH}")
 
-    # 部署核心 DLL
-    foreach (QT_LIB Core Gui Widgets Svg SvgWidgets SerialPort Concurrent WebEngineWidgets WebEngineCore)
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${QT_INSTALL_PATH}/bin/Qt6${QT_LIB}${DEBUG_SUFFIX}.dll"
-                "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
-        )
-    endforeach ()
-
-    # 部署 WebEngine 进程文件 (关键!)
+    # 使用 windeployqt 进行全自动部署
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${QT_INSTALL_PATH}/bin/QtWebEngineProcess${DEBUG_SUFFIX}.exe"
-            "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
-    )
-
-    # 部署 WebEngine 资源
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${QT_INSTALL_PATH}/resources"
-            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/resources"
-    )
-
-    # 部署 WebEngine 翻译文件
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${QT_INSTALL_PATH}/translations"
-            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/translations"
-    )
-
-    # 部署插件
-    set(PLUGINS_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins")
-
-    # SVG 插件
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E make_directory "${PLUGINS_DIR}/imageformats"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${QT_INSTALL_PATH}/plugins/imageformats/qsvg${DEBUG_SUFFIX}.dll"
-            "${PLUGINS_DIR}/imageformats/"
-    )
-
-    # 添加 GIF 插件支持
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${QT_INSTALL_PATH}/plugins/imageformats/qgif${DEBUG_SUFFIX}.dll"
-            "${PLUGINS_DIR}/imageformats/"
-    )
-
-    # 平台插件
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E make_directory "${PLUGINS_DIR}/platforms"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${QT_INSTALL_PATH}/plugins/platforms/qwindows${DEBUG_SUFFIX}.dll"
-            "${PLUGINS_DIR}/platforms/"
+            COMMAND ${QT_INSTALL_PATH}/bin/windeployqt.exe
+            # --verbose 1 # 可以加上这个参数查看详细输出
+            --dir "$<TARGET_FILE_DIR:${PROJECT_NAME}>"  # 指定部署到的目录
+            "$<TARGET_FILE:${PROJECT_NAME}>"           # 指定要部署的可执行文件
+            COMMENT "Running windeployqt..."
     )
 endif ()
