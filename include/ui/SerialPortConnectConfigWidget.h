@@ -62,6 +62,7 @@ private:
     void createLayout();
     void connectSignals();
     void detectionAvailablePorts();
+    void editorComboBoxChanged(bool status);
 
     // 下拉框组件
     QComboBox* m_pPortComboBox = nullptr;

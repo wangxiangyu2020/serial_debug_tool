@@ -40,12 +40,7 @@ void SerialPortConnectConfigWidget::onConnectButtonClicked()
 {
     if (m_isConnected)
     {
-        m_pPortComboBox->setEnabled(true);
-        m_pBaudRateComboBox->setEnabled(true);
-        m_pDataBitsComboBox->setEnabled(true);
-        m_pStopBitsComboBox->setEnabled(true);
-        m_pParityComboBox->setEnabled(true);
-        m_pFlowControlComboBox->setEnabled(true);
+        editorComboBoxChanged(true);
         emit stopConnectionRequested();
         return;
     }
@@ -72,12 +67,7 @@ void SerialPortConnectConfigWidget::onConnectButtonClicked()
         {"flowControl", m_pFlowControlComboBox->currentData().value<QSerialPort::FlowControl>()}
     };
 
-    m_pPortComboBox->setEnabled(false);
-    m_pBaudRateComboBox->setEnabled(false);
-    m_pDataBitsComboBox->setEnabled(false);
-    m_pStopBitsComboBox->setEnabled(false);
-    m_pParityComboBox->setEnabled(false);
-    m_pFlowControlComboBox->setEnabled(false);
+    editorComboBoxChanged(false);
 
     emit startConnectionRequested(serialParams);
 }
@@ -87,6 +77,7 @@ void SerialPortConnectConfigWidget::onStatusChanged(const QString& status, int c
     CMessageBox::showToast(status);
     if (connectStatus != 1 && connectStatus != 0) return;
     m_isConnected = connectStatus == 1;
+    if (!m_isConnected) editorComboBoxChanged(true);
     m_pConnectButton->setProperty("connected", m_isConnected);
     m_pConnectButton->setText(m_isConnected ? "断开" : "连接");
     m_pConnectButton->style()->unpolish(m_pConnectButton);
@@ -278,4 +269,14 @@ void SerialPortConnectConfigWidget::detectionAvailablePorts()
         // 3. 每隔1秒检查一次
         QThread::msleep(1000);
     }
+}
+
+void SerialPortConnectConfigWidget::editorComboBoxChanged(bool status)
+{
+    m_pPortComboBox->setEnabled(status);
+    m_pBaudRateComboBox->setEnabled(status);
+    m_pDataBitsComboBox->setEnabled(status);
+    m_pStopBitsComboBox->setEnabled(status);
+    m_pParityComboBox->setEnabled(status);
+    m_pFlowControlComboBox->setEnabled(status);
 }
