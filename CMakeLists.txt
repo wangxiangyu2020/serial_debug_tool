@@ -70,6 +70,7 @@ qt_add_resources(${PROJECT_NAME} "resources"
         resources/icons/stop_series.svg
         resources/icons/sample_rate.svg
         resources/icons/tcp_network.svg
+        resources/icons/modbus.svg
         resources/icons/silder_ikun.svg
         resources/icons/code.svg
         resources/icons/help.svg
@@ -97,6 +98,8 @@ qt_add_resources(${PROJECT_NAME} "resources"
         resources/qss/script_editor_dialog.qss
         resources/web/echarts.min.js
         resources/web/wave.html
+        resources/qss/modbus_config_tab.qss
+        resources/qss/modbus_display_widget.qss
         README.md
 )
 

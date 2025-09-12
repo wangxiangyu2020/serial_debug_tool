@@ -31,11 +31,14 @@ void CTabWidget::setUI()
     m_pWaveformTab = new WaveformTab();
     m_pSettingsTab = new SettingsTab();
     m_pTcpNetworkConfigTab = new TcpNetworkConfigTab();
+    m_pModbusConfigTab = new ModbusConfigTab();
 
     int serialTabIndex = this->addTab(m_pSerialPortConfigTab, QIcon(":/resources/icons/serial.svg"), "");
     this->setTabToolTip(serialTabIndex, "串口通信");
     int tcpTabIndex = this->addTab(m_pTcpNetworkConfigTab, QIcon(":/resources/icons/tcp_network.svg"), "");
     this->setTabToolTip(tcpTabIndex, "TCP/IP");
+    int modbusTabIndex = this->addTab(m_pModbusConfigTab, QIcon(":/resources/icons/modbus.svg"), "");
+    this->setTabToolTip(modbusTabIndex, "Modbus RTU");
     int waveTabIndex = this->addTab(m_pWaveformTab, QIcon(":/resources/icons/waves.svg"), "");
     this->setTabToolTip(waveTabIndex, "示波器");
     int settingsTabIndex = this->addTab(m_pSettingsTab, QIcon(":/resources/icons/settings.svg"), "");

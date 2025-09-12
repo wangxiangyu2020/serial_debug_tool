@@ -22,6 +22,7 @@
 #include <QTabBar>
 #include <QHBoxLayout>
 #include <QSpacerItem>
+#include "ui/ModbusConfigTab.h"
 
 class CTabWidget : public QTabWidget
 {
@@ -41,6 +42,7 @@ private:
     WaveformTab* m_pWaveformTab = nullptr;
     SettingsTab* m_pSettingsTab = nullptr;
     TcpNetworkConfigTab* m_pTcpNetworkConfigTab = nullptr;
+    ModbusConfigTab* m_pModbusConfigTab = nullptr;
 };
 
 #endif //TABCONTAINER_H
