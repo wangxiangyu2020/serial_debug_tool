@@ -9,15 +9,6 @@
   */
 
 #include "ui/ModbusDisplayWidget.h"
-#include <QLabel>
-#include <QSpinBox>
-#include <QComboBox>
-#include <QLineEdit>
-#include <QPushButton>
-#include <QFrame>
-#include <QPlainTextEdit>
-#include <QTableView>
-#include <QHeaderView>
 
 ModbusDisplayWidget::ModbusDisplayWidget(QWidget* parent)
     : QWidget(parent)
@@ -46,7 +37,8 @@ void ModbusDisplayWidget::onPollButtonToggled(bool checked)
 
 void ModbusDisplayWidget::onConfigTagsButtonClicked()
 {
-    /* TODO: 弹出配置点位表的对话框 */
+    TagManagerDialog dialog(m_modbusTags, this);
+    dialog.exec();
 }
 
 void ModbusDisplayWidget::onClearLogButtonClicked() { m_pLogTextEdit->clear(); }
@@ -206,10 +198,9 @@ void ModbusDisplayWidget::createLayout()
 
 void ModbusDisplayWidget::connectSignals()
 {
-    connect(m_pReadButton, &QPushButton::clicked, this, &ModbusDisplayWidget::onReadButtonClicked);
-    connect(m_pWriteButton, &QPushButton::clicked, this, &ModbusDisplayWidget::onWriteButtonClicked);
-    connect(m_pPollButton, &QPushButton::toggled, this, &ModbusDisplayWidget::onPollButtonToggled);
-    connect(m_pConfigTagsButton, &QPushButton::clicked, this, &ModbusDisplayWidget::onConfigTagsButtonClicked);
-    // connect(m_pExportDataButton, &QPushButton::clicked, this, &ModbusDisplayWidget::onExportDataButtonClicked); // <-- 已移除
-    connect(m_pClearLogButton, &QPushButton::clicked, this, &ModbusDisplayWidget::onClearLogButtonClicked);
+    this->connect(m_pReadButton, &QPushButton::clicked, this, &ModbusDisplayWidget::onReadButtonClicked);
+    this->connect(m_pWriteButton, &QPushButton::clicked, this, &ModbusDisplayWidget::onWriteButtonClicked);
+    this->connect(m_pPollButton, &QPushButton::toggled, this, &ModbusDisplayWidget::onPollButtonToggled);
+    this->connect(m_pConfigTagsButton, &QPushButton::clicked, this, &ModbusDisplayWidget::onConfigTagsButtonClicked);
+    this->connect(m_pClearLogButton, &QPushButton::clicked, this, &ModbusDisplayWidget::onClearLogButtonClicked);
 }

@@ -22,6 +22,7 @@
 #include <QPainterPath>
 #include <QApplication>
 #include <QScreen>
+#include "QPushButton"
 
 class CMessageBox : public QDialog
 {
@@ -29,6 +30,7 @@ class CMessageBox : public QDialog
 
 public:
     // 构造函数和析构函数
+    explicit CMessageBox(QWidget* parent, const QString& title, const QString& message);
     explicit CMessageBox(QWidget* parent = nullptr,
                          const QString& message = "",
                          int displayTime = 2000);
@@ -37,6 +39,7 @@ public:
     // 主要业务方法
     void showToast();
 
+    static bool confirm(QWidget* parent, const QString& title, const QString& message);
     // 静态方法
     static void showToast(const QString& message);
     static void showToast(QWidget* parent, const QString& message);
@@ -49,11 +52,27 @@ private slots:
     void fadeOut();
 
 private:
+    // 布局设置方法
+    void setupConfirmLayout();
+    void setupToastLayout();
+    void setupToastAnimation(int displayTime);
+    
+    // 绘制方法
+    void drawConfirmDialog(QPainter& painter);
+    void drawToastDialog(QPainter& painter);
+
     // UI组件成员
     QLabel* m_pMessageLabel = nullptr;
     QTimer* m_pTimer = nullptr;
     QPropertyAnimation* m_pFadeAnimation = nullptr;
     QGraphicsOpacityEffect* m_pOpacityEffect = nullptr;
+
+    // Confirm专用的变量
+    QLabel* m_pTitleLabel = nullptr;
+    QPushButton* m_pOkButton = nullptr;
+    QPushButton* m_pCancelButton = nullptr;
+
+    bool m_isConfirmDialog = false;
 };
 
 #endif //CMESSAGEBOX_H

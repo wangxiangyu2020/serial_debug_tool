@@ -1,0 +1,59 @@
+/* === QListWidget Style (优化版) === */
+QListWidget {
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 4px;
+    font-size: 12px;
+    outline: none; /* 去除聚焦时的外边框 */
+}
+
+/* 列表项的基础样式 */
+QListWidget::item {
+    padding: 8px 12px;
+    border-radius: 4px;
+    color: #212529;
+    border: none; /* 去除边框 */
+    border-bottom: 1px solid #e9ecef; /* 添加底部分隔线 */
+    outline: none; /* 去除虚线框 */
+    margin: 0px; /* 移除间距以让分隔线连续 */
+}
+
+/* 最后一个列表项不显示分隔线 */
+QListWidget::item:last {
+    border-bottom: none;
+}
+
+/* 鼠标悬停样式 */
+QListWidget::item:hover {
+    background-color: #e9ecef;
+    color: #212529;
+}
+
+/* 选中状态样式 */
+QListWidget::item:selected {
+    background-color: #cce7ff;
+    color: #0056b3;
+    border: none;
+    outline: none;
+}
+
+/* 选中且悬停样式 */
+QListWidget::item:selected:hover {
+    background-color: #b3d9ff;
+    color: #0056b3;
+}
+
+/* 列表项被选中且窗口处于非激活状态时的样式 */
+QListWidget::item:selected:!active {
+    background-color: #cce7ff;
+    color: #0056b3;
+    border: none;
+    outline: none;
+}
+
+/* 聚焦状态样式 */
+QListWidget::item:focus {
+    border: none;
+    outline: none;
+}

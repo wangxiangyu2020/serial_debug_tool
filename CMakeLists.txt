@@ -100,6 +100,7 @@ qt_add_resources(${PROJECT_NAME} "resources"
         resources/web/wave.html
         resources/qss/modbus_config_tab.qss
         resources/qss/modbus_display_widget.qss
+        resources/qss/tag_manager_dialog.qss
         README.md
 )
 

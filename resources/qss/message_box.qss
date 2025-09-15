@@ -1,0 +1,80 @@
+/* === 确认弹框样式 (兼容原有风格的现代化版本) === */
+.CMessageBox[dialogType="confirm"] {
+    background-color: transparent;
+}
+
+.CMessageBox[dialogType="confirm"] QLabel#titleLabel {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2c3e50;
+    font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
+    letter-spacing: 0.5px;
+}
+
+.CMessageBox[dialogType="confirm"] QLabel#messageLabel {
+    font-size: 14px;
+    font-weight: 400;
+    color: #5a6c7d;
+    font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
+    line-height: 22px;
+    letter-spacing: 0.3px;
+}
+
+.CMessageBox[dialogType="confirm"] QPushButton#okButton {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    letter-spacing: 0.5px;
+}
+
+.CMessageBox[dialogType="confirm"] QPushButton#okButton:hover {
+    background-color: #0056b3;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.CMessageBox[dialogType="confirm"] QPushButton#okButton:pressed {
+    background-color: #004085;
+    box-shadow: 0 2px 6px rgba(0, 123, 255, 0.2);
+}
+
+.CMessageBox[dialogType="confirm"] QPushButton#cancelButton {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    letter-spacing: 0.5px;
+}
+
+.CMessageBox[dialogType="confirm"] QPushButton#cancelButton:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+    color: #495057;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.CMessageBox[dialogType="confirm"] QPushButton#cancelButton:pressed {
+    background-color: #dee2e6;
+    border-color: #6c757d;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* === Toast弹框样式 (保持原有简洁风格) === */
+.CMessageBox[dialogType="toast"] {
+    background-color: transparent;
+}
+
+.CMessageBox[dialogType="toast"] QLabel#messageLabel {
+    font-size: 14px;
+    font-weight: 500;
+    color: #ffffff;
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+}

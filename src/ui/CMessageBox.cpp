@@ -8,54 +8,186 @@
   ******************************************************************************
   */
 #include "ui/CMessageBox.h"
+#include "utils/StyleLoader.h"
+#include <QHBoxLayout>
 
-// 构造函数和析构函数
-CMessageBox::CMessageBox(QWidget* parent, const QString& message, int displayTime)
-    : QDialog(parent)
+/**
+ * @brief Confirm对话框的私有构造函数
+ */
+CMessageBox::CMessageBox(QWidget* parent, const QString& title, const QString& message)
+    : QDialog(parent), m_isConfirmDialog(true)
 {
-    // 设置窗口属性
-    setWindowFlags(Qt::FramelessWindowHint | Qt::Dialog | Qt::Popup);
-    setAttribute(Qt::WA_TranslucentBackground);
-    setFixedSize(250, 80);
+    // 1. 设置窗口属性 (保持原有尺寸)
+    this->setWindowFlags(Qt::FramelessWindowHint | Qt::Dialog);
+    this->setAttribute(Qt::WA_TranslucentBackground);
+    this->setModal(true);
+    this->setFixedSize(320, 160);
+    this->setProperty("dialogType", "confirm");
+
+    // 2. 创建文本控件 (保持原有居中布局)
+    m_pTitleLabel = new QLabel(title, this);
+    m_pTitleLabel->setObjectName("titleLabel");
+    m_pTitleLabel->setAlignment(Qt::AlignCenter);
+    m_pTitleLabel->setWordWrap(true);
+
+    m_pMessageLabel = new QLabel(message, this);
+    m_pMessageLabel->setObjectName("messageLabel");
+    m_pMessageLabel->setAlignment(Qt::AlignCenter);
+    m_pMessageLabel->setWordWrap(true);
+
+    // 3. 创建按钮
+    m_pOkButton = new QPushButton("确定", this);
+    m_pOkButton->setObjectName("okButton");
+    m_pOkButton->setCursor(Qt::PointingHandCursor);
+    // 确定按钮 - 蓝色 (调整为更小的尺寸)
+    m_pOkButton->setStyleSheet(
+        "QPushButton {"
+        "    background-color: #007bff; color: white; border: none;"
+        "    border-radius: 4px; padding: 6px 16px; font-size: 12px;"
+        "    font-weight: 500; font-family: 'Microsoft YaHei';"
+        "    min-width: 60px; max-height: 28px;"
+        "}"
+        "QPushButton:hover { background-color: #0056b3; }"
+        "QPushButton:pressed { background-color: #004085; }"
+    );
+
+    m_pCancelButton = new QPushButton("取消", this);
+    m_pCancelButton->setObjectName("cancelButton");
+    m_pCancelButton->setCursor(Qt::PointingHandCursor);
+    // 取消按钮 - 灰色 (调整为更小的尺寸)
+    m_pCancelButton->setStyleSheet(
+        "QPushButton {"
+        "    background-color: #f8f9fa;"
+        "    color: #6c757d;"
+        "    border: 1px solid #dee2e6;"
+        "    border-radius: 4px;"
+        "    padding: 6px 16px;"
+        "    font-size: 12px;"
+        "    font-weight: 500;"
+        "    font-family: 'Microsoft YaHei';"
+        "    min-width: 60px; max-height: 28px;"
+        "}"
+        "QPushButton:hover {"
+        "    background-color: #e9ecef;"
+        "    border-color: #adb5bd;"
+        "    color: #495057;"
+        "}"
+        "QPushButton:pressed {"
+        "    background-color: #dee2e6;"
+        "    border-color: #6c757d;"
+        "}"
+    );
+
+    // 4. 创建布局 (保持原有垂直布局)
+    setupConfirmLayout();
+
+    // 5. 加载样式
+    StyleLoader::loadStyleFromFile(this, ":/resources/qss/message_box.qss");
+
+    // 6. 连接信号
+    connect(m_pOkButton, &QPushButton::clicked, this, &QDialog::accept);
+    connect(m_pCancelButton, &QPushButton::clicked, this, &QDialog::reject);
+}
+
+void CMessageBox::setupConfirmLayout()
+{
+    // 主布局 (保持原有的垂直布局)
+    QVBoxLayout* mainLayout = new QVBoxLayout(this);
+    mainLayout->setContentsMargins(24, 20, 24, 20);
+    mainLayout->setSpacing(0);
+
+    // 标题区域
+    mainLayout->addWidget(m_pTitleLabel);
+    mainLayout->addSpacing(12);
+    
+    // 消息区域
+    mainLayout->addWidget(m_pMessageLabel, 1);
+    mainLayout->addSpacing(24);
+
+    // 按钮区域 (保持原有布局)
+    QHBoxLayout* buttonLayout = new QHBoxLayout();
+    buttonLayout->setSpacing(12);
+    buttonLayout->addStretch();
+    buttonLayout->addWidget(m_pCancelButton);
+    buttonLayout->addWidget(m_pOkButton);
+
+    mainLayout->addLayout(buttonLayout);
+}
+
+/**
+ * @brief 显示确认对话框的静态方法
+ */
+bool CMessageBox::confirm(QWidget* parent, const QString& title, const QString& message)
+{
+    // 使用新的私有构造函数创建对话框
+    CMessageBox confirmDialog(parent, title, message);
+    return confirmDialog.exec() == QDialog::Accepted;
+}
+
+// Toast构造函数 (保持原有简洁设计)
+CMessageBox::CMessageBox(QWidget* parent, const QString& message, int displayTime)
+    : QDialog(parent), m_isConfirmDialog(false)
+{
+    // 设置窗口属性 (保持原有尺寸)
+    this->setWindowFlags(Qt::FramelessWindowHint | Qt::Dialog | Qt::Popup);
+    this->setAttribute(Qt::WA_TranslucentBackground);
+    this->setFixedSize(250, 80);
+    this->setProperty("dialogType", "toast");
 
     // 创建透明度效果
     m_pOpacityEffect = new QGraphicsOpacityEffect(this);
     m_pOpacityEffect->setOpacity(1.0);
-    setGraphicsEffect(m_pOpacityEffect);
+    this->setGraphicsEffect(m_pOpacityEffect);
 
-    // 主布局
+    // 消息标签 (保持原有居中布局)
+    m_pMessageLabel = new QLabel(message, this);
+    m_pMessageLabel->setObjectName("messageLabel");
+    m_pMessageLabel->setAlignment(Qt::AlignCenter);
+    m_pMessageLabel->setWordWrap(true);
+    // 直接设置白色字体
+    m_pMessageLabel->setStyleSheet("font-size: 14px; color: white; font-weight: 500; font-family: 'Microsoft YaHei';");
+
+    // 布局 (保持原有简洁布局)
+    this->setupToastLayout();
+
+    // 加载样式
+    StyleLoader::loadStyleFromFile(this, ":/resources/qss/message_box.qss");
+
+    // 设置计时器和动画
+    this->setupToastAnimation(displayTime);
+}
+
+void CMessageBox::setupToastLayout()
+{
+    // 保持原有的简洁垂直布局
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(20, 15, 20, 15);
     mainLayout->setSpacing(10);
-
-    // 消息标签
-    m_pMessageLabel = new QLabel(message, this);
-    m_pMessageLabel->setStyleSheet("font-size: 14px; color: white; font-weight: 500;");
-    m_pMessageLabel->setAlignment(Qt::AlignCenter);
-    m_pMessageLabel->setWordWrap(true);
-
-    // 添加标签到布局
+    
     mainLayout->addWidget(m_pMessageLabel);
+}
 
+void CMessageBox::setupToastAnimation(int displayTime)
+{
     // 设置计时器
     m_pTimer = new QTimer(this);
     m_pTimer->setSingleShot(true);
-    connect(m_pTimer, &QTimer::timeout, this, &CMessageBox::fadeOut);
+    this->connect(m_pTimer, &QTimer::timeout, this, &CMessageBox::fadeOut);
     m_pTimer->setInterval(displayTime);
 
     // 设置淡出动画
     m_pFadeAnimation = new QPropertyAnimation(m_pOpacityEffect, "opacity", this);
-    m_pFadeAnimation->setDuration(500); // 500ms淡出时间
+    m_pFadeAnimation->setDuration(500);
     m_pFadeAnimation->setStartValue(1.0);
     m_pFadeAnimation->setEndValue(0.0);
     m_pFadeAnimation->setEasingCurve(QEasingCurve::OutCubic);
-    connect(m_pFadeAnimation, &QPropertyAnimation::finished, this, &QDialog::accept);
+    this->connect(m_pFadeAnimation, &QPropertyAnimation::finished, this, &QDialog::accept);
 }
 
 // 主要业务方法
 void CMessageBox::showToast()
 {
-    show();
+    this->show();
 
     // 优先使用父窗口计算位置
     QWidget* parent = parentWidget();
@@ -134,14 +266,69 @@ void CMessageBox::paintEvent(QPaintEvent* event)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    // 绘制背景
-    QPainterPath path;
-    path.addRoundedRect(rect(), 10, 10);
-    painter.fillPath(path, QColor(74, 144, 226, 220)); // 半透明蓝色背景
+    if (m_isConfirmDialog) {
+        // 确认弹框 - 现代化设计
+        drawConfirmDialog(painter);
+    } else {
+        // Toast弹框 - 现代化设计
+        drawToastDialog(painter);
+    }
+}
 
+void CMessageBox::drawConfirmDialog(QPainter& painter)
+{
+    QRect dialogRect = rect();
+    
+    // 启用抗锯齿，确保圆角平滑
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+    
+    // 绘制阴影 - 使用圆角路径
+    painter.setPen(Qt::NoPen);
+    for (int i = 1; i <= 4; ++i) {
+        QRect shadowRect = dialogRect.adjusted(-i, -i, i, i);
+        QPainterPath shadowPath;
+        shadowPath.addRoundedRect(shadowRect, 10, 10);
+        painter.setBrush(QColor(0, 0, 0, 4));
+        painter.drawPath(shadowPath);
+    }
+    
+    // 绘制主背景 - 只使用圆角路径
+    QPainterPath mainPath;
+    mainPath.addRoundedRect(dialogRect, 10, 10);
+    painter.setBrush(QColor(255, 255, 255, 250));
+    painter.drawPath(mainPath);
+    
+    // 绘制边框 - 只使用圆角路径
+    QPainterPath borderPath;
+    borderPath.addRoundedRect(dialogRect.adjusted(0, 0, -1, -1), 10, 10);
+    painter.setBrush(Qt::NoBrush);
+    painter.setPen(QPen(QColor(230, 230, 230, 200), 1));
+    painter.drawPath(borderPath);
+}
+
+void CMessageBox::drawToastDialog(QPainter& painter)
+{
+    QRect dialogRect = rect();
+    
+    // 绘制阴影 (保持原有风格)
+    painter.setPen(Qt::NoPen);
+    for (int i = 0; i < 5; ++i) {
+        int alpha = 6 - i;
+        painter.setBrush(QColor(0, 0, 0, alpha));
+        QPainterPath shadowPath;
+        shadowPath.addRoundedRect(dialogRect.adjusted(-i, -i, i, i), 10 + i, 10 + i);
+        painter.drawPath(shadowPath);
+    }
+    
+    // 绘制主背景 - 更淡的蓝色背景
+    QPainterPath mainPath;
+    mainPath.addRoundedRect(dialogRect, 10, 10);
+    painter.fillPath(mainPath, QColor(74, 144, 226, 150)); // 进一步降低透明度到150
+    
     // 绘制边框
-    painter.setPen(QPen(QColor(255, 255, 255, 100), 1));
-    painter.drawRoundedRect(rect().adjusted(0, 0, -1, -1), 10, 10);
+    painter.setPen(QPen(QColor(255, 255, 255, 60), 1));
+    painter.drawRoundedRect(dialogRect.adjusted(0, 0, -1, -1), 10, 10);
 }
 
 // private slots

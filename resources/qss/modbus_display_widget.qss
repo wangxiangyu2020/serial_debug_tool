@@ -96,6 +96,43 @@ QSpinBox::up-arrow, QSpinBox::down-arrow {
     background: transparent;
 }
 
+QDoubleSpinBox {
+    background-color: white;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    color: #212529;
+    min-height: 22px;
+}
+
+QDoubleSpinBox:hover {
+    border-color: #adb5bd;
+}
+
+QDoubleSpinBox:focus {
+    border-color: #86b7fe;
+}
+
+QDoubleSpinBox:disabled {
+    background-color: #e9ecef;
+    color: #6c757d;
+}
+
+QDoubleSpinBox::up-button, QDoubleSpinBox::down-button {
+    width: 0px;
+    height: 0px;
+    border: none;
+    background: transparent;
+}
+
+QDoubleSpinBox::up-arrow, QDoubleSpinBox::down-arrow {
+    width: 0px;
+    height: 0px;
+    border: none;
+    background: transparent;
+}
+
 /* === 紧凑型下拉框样式 === */
 QComboBox {
     background-color: white;

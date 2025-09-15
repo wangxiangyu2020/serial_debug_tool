@@ -17,16 +17,17 @@
 #include <QVBoxLayout>
 #include <QGridLayout>
 #include <QHBoxLayout>
+#include <QLabel>
+#include <QSpinBox>
+#include <QComboBox>
+#include <QLineEdit>
+#include <QPushButton>
+#include <QFrame>
+#include <QPlainTextEdit>
+#include <QTableView>
+#include <QHeaderView>
+#include <ui/TagManagerDialog.h>
 
-// 使用前向声明
-class QLabel;
-class QSpinBox;
-class QComboBox;
-class QLineEdit;
-class QPushButton;
-class QFrame;
-class QPlainTextEdit;
-class QTableView;
 
 class ModbusDisplayWidget : public QWidget
 {
@@ -95,6 +96,8 @@ private:
     // --- "日志区" 内的控件 ---
     QPlainTextEdit* m_pLogTextEdit = nullptr;
     QPushButton* m_pClearLogButton = nullptr;
+
+    QList<ModbusTag> m_modbusTags;
 };
 
 #endif //MODBUSDISPLAYWIDGET_H

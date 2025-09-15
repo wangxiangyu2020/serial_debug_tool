@@ -111,7 +111,7 @@ QString SettingsTab::convertMarkdownToHtml(const QString& markdown)
     html.replace(QRegularExpression("```([\\s\\S]*?)```"), "<pre><code>\\1</code></pre>");
 
     // 2. 处理行内代码
-    html.replace(QRegularExpression("`([^`\n]+)`"), "<code>\\1</code>");
+    html.replace(QRegularExpression("`([^`\\n]+)`"), "<code>\\1</code>");
 
     // 3. 处理标题（从高级到低级）
     html.replace(QRegularExpression("^#### (.+)$", QRegularExpression::MultilineOption), "<h4>\\1</h4>");
@@ -123,11 +123,11 @@ QString SettingsTab::convertMarkdownToHtml(const QString& markdown)
     html.replace(QRegularExpression("\\[([^\\]]+)\\]\\(([^\\)]+)\\)"), "<a href=\"\\2\">\\1</a>");
 
     // 5. 处理粗体和斜体
-    html.replace(QRegularExpression("\\*\\*([^*\n]+)\\*\\*"), "<strong>\\1</strong>");
-    html.replace(QRegularExpression("\\*([^*\n]+)\\*"), "<em>\\1</em>");
+    html.replace(QRegularExpression("\\*\\*([^*\\n]+)\\*\\*"), "<strong>\\1</strong>");
+    html.replace(QRegularExpression("\\*([^*\\n]+)\\*"), "<em>\\1</em>");
 
     // 6. 处理删除线
-    html.replace(QRegularExpression("~~([^~\n]+)~~"), "<del>\\1</del>");
+    html.replace(QRegularExpression("~~([^~\\n]+)~~"), "<del>\\1</del>");
 
     // 7. 处理水平线
     html.replace(QRegularExpression("^---+$", QRegularExpression::MultilineOption), "<hr>");
@@ -177,20 +177,22 @@ QString SettingsTab::convertMarkdownToHtml(const QString& markdown)
     result.replace("\n", "<br>");
 
     return QString("<html><head><style>"
-        "body { font-family: 'Microsoft YaHei UI', sans-serif; padding: 20px; line-height: 1.6; }"
-        "h1 { color: #000000; border-bottom: 2px solid #3498db; padding-bottom: 5px; margin-bottom: 10px; font-weight: bold; }"
-        "h2 { color: #000000; border-bottom: 1px solid #bdc3c7; padding-bottom: 3px; margin-bottom: 8px; }"
-        "h3 { color: #000000; margin-bottom: 6px; }"
-        "h4 { color: #000000; margin-bottom: 6px; }"
-        "code { background: #f8f9fa; padding: 2px 4px; border-radius: 3px; font-family: 'Consolas', monospace; }"
-        "pre { background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto; border-left: 4px solid #3498db; }"
-        "pre code { background: none; padding: 0; }"
-        "ul { margin: 10px 0; padding-left: 20px; }"
-        "li { margin: 5px 0; }"
-        "blockquote { border-left: 4px solid #3498db; margin: 10px 0; padding: 10px 20px; background: #ecf0f1; }"
-        "a { color: #3498db; text-decoration: none; }"
-        "a:hover { text-decoration: underline; }"
-        "hr { border: none; height: 1px; background: #bdc3c7; margin: 20px 0; }"
+        "body { font-family: 'Microsoft YaHei UI', sans-serif; padding: 20px; line-height: 1.8; color: #333; }"
+        "h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 8px; margin-bottom: 16px; font-weight: 600; }"
+        "h2 { color: #2c3e50; border-bottom: 1px solid #bdc3c7; padding-bottom: 6px; margin-bottom: 12px; font-weight: 600; }"
+        "h3 { color: #2c3e50; margin-bottom: 10px; font-weight: 600; }"
+        "h4 { color: #2c3e50; margin-bottom: 8px; font-weight: 600; }"
+        "code { background: #f8f9fa; padding: 3px 6px; border-radius: 4px; font-family: 'Consolas', 'Monaco', monospace; font-size: 90%; color: #e74c3c; }"
+        "pre { background: #f8f9fa; padding: 16px; border-radius: 6px; overflow-x: auto; border-left: 4px solid #3498db; margin: 16px 0; }"
+        "pre code { background: none; padding: 0; color: #2c3e50; font-size: 14px; }"
+        "ul { margin: 12px 0; padding-left: 24px; }"
+        "li { margin: 6px 0; line-height: 1.6; }"
+        "blockquote { border-left: 4px solid #3498db; margin: 16px 0; padding: 12px 20px; background: #ecf0f1; border-radius: 0 4px 4px 0; }"
+        "a { color: #3498db; text-decoration: none; font-weight: 500; }"
+        "a:hover { text-decoration: underline; color: #2980b9; }"
+        "hr { border: none; height: 2px; background: linear-gradient(to right, #3498db, #ecf0f1); margin: 24px 0; }"
         "del { color: #7f8c8d; }"
+        "strong { color: #2c3e50; font-weight: 600; }"
+        "em { color: #34495e; font-style: italic; }"
         "</style></head><body>") + result + "</body></html>";
 }

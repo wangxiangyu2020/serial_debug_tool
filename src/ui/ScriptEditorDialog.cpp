@@ -138,10 +138,10 @@ void ScriptEditorDialog::createComponents()
     this->setWindowTitle("脚本编辑器");
     this->setMinimumSize(600, 400);
     // 添加窗口控制按钮
-    this->setWindowFlags(Qt::Window |
-        Qt::WindowCloseButtonHint |
-        Qt::WindowMinimizeButtonHint |
-        Qt::WindowMaximizeButtonHint);
+    this->setWindowFlags(Qt::Window
+        | Qt::WindowCloseButtonHint
+        | Qt::WindowMinimizeButtonHint
+        | Qt::WindowMaximizeButtonHint);
     // 说明文本
     m_pDescriptionLabel = new QLabel(
         "编写JavaScript脚本来处理接收到的数据。脚本需要实现以下函数：\n"
