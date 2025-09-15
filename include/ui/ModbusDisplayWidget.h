@@ -26,7 +26,8 @@
 #include <QPlainTextEdit>
 #include <QTableView>
 #include <QHeaderView>
-#include <ui/TagManagerDialog.h>
+#include "ui/TagManagerDialog.h"
+#include "ui/ModbusTagModel.h"
 
 
 class ModbusDisplayWidget : public QWidget
@@ -98,6 +99,7 @@ private:
     QPushButton* m_pClearLogButton = nullptr;
 
     QList<ModbusTag> m_modbusTags;
+    ModbusTagModel* m_pTagModel = nullptr;
 };
 
 #endif //MODBUSDISPLAYWIDGET_H

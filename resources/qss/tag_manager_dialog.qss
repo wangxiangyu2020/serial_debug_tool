@@ -57,3 +57,16 @@ QListWidget::item:focus {
     border: none;
     outline: none;
 }
+
+QPushButton#m_pDeleteButton {
+    background-color: #dc3545;
+    color: white;
+}
+
+QPushButton#m_pDeleteButton:hover {
+    background-color: #bb2d3b;
+}
+
+QPushButton#m_pDeleteButton:pressed {
+    background-color: #a52834;
+}

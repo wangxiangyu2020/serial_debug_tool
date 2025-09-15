@@ -38,7 +38,9 @@ void ModbusDisplayWidget::onPollButtonToggled(bool checked)
 void ModbusDisplayWidget::onConfigTagsButtonClicked()
 {
     TagManagerDialog dialog(m_modbusTags, this);
-    dialog.exec();
+    if (dialog.exec() == QDialog::Accepted) {
+        m_pTagModel->layoutRefresh();
+    }
 }
 
 void ModbusDisplayWidget::onClearLogButtonClicked() { m_pLogTextEdit->clear(); }
@@ -49,6 +51,8 @@ void ModbusDisplayWidget::setUI()
     this->createComponents();
     this->createLayout();
     this->connectSignals();
+    m_pTagModel = new ModbusTagModel(&m_modbusTags, this);
+    m_pDisplayTableView->setModel(m_pTagModel);
 }
 
 void ModbusDisplayWidget::createComponents()
@@ -120,7 +124,8 @@ void ModbusDisplayWidget::createComponents()
     // --- 4. 创建"数据显示区"内的控件 ---
     m_pDisplayTableView = new QTableView(this);
     m_pDisplayTableView->horizontalHeader()->setStretchLastSection(true);
-    // m_pExportDataButton = new QPushButton("导出数据", this); // <-- 已移除
+    QHeaderView* verticalHeader = m_pDisplayTableView->verticalHeader();
+    verticalHeader->setSectionResizeMode(QHeaderView::ResizeToContents);
 
     // --- 5. 创建"日志区"内的控件 ---
     m_pLogTextEdit = new QPlainTextEdit(this);

@@ -47,6 +47,10 @@ struct ModbusTag {
     double gain = 1.0;                // 增益/乘法系数
     double offset = 0.0;              // 偏移/加法量
 
+    // 运行数据
+    QVariant currentValue; // 用于存储从设备读取并换算后的实时值
+    QVariant rawValue;     // 用于存储从设备读取的原始值 (可选，便于调试)
+
     // 默认构造函数
     ModbusTag() = default;
 };

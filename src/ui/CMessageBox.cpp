@@ -57,8 +57,8 @@ CMessageBox::CMessageBox(QWidget* parent, const QString& title, const QString& m
     // 取消按钮 - 灰色 (调整为更小的尺寸)
     m_pCancelButton->setStyleSheet(
         "QPushButton {"
-        "    background-color: #f8f9fa;"
-        "    color: #6c757d;"
+        "    background-color: #6c757d;"
+        "    color: white;"
         "    border: 1px solid #dee2e6;"
         "    border-radius: 4px;"
         "    padding: 6px 16px;"
@@ -68,12 +68,11 @@ CMessageBox::CMessageBox(QWidget* parent, const QString& title, const QString& m
         "    min-width: 60px; max-height: 28px;"
         "}"
         "QPushButton:hover {"
-        "    background-color: #e9ecef;"
+        "    background-color: #5c636a;"
         "    border-color: #adb5bd;"
-        "    color: #495057;"
         "}"
         "QPushButton:pressed {"
-        "    background-color: #dee2e6;"
+        "    background-color: #545b62;"
         "    border-color: #6c757d;"
         "}"
     );

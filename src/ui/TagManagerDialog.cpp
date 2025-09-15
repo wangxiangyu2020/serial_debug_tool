@@ -9,7 +9,6 @@
   */
 
 #include "ui/TagManagerDialog.h"
-#include <QHBoxLayout>
 
 TagManagerDialog::TagManagerDialog(QList<ModbusTag>& tags, QWidget* parent)
     : QDialog(parent), m_tags(tags)
@@ -128,6 +127,8 @@ void TagManagerDialog::createComponents()
     m_pAddButton = new QPushButton("添加", this);
     m_pEditButton = new QPushButton("编辑", this);
     m_pDeleteButton = new QPushButton("删除", this);
+    m_pDeleteButton->setObjectName("m_pDeleteButton");
+    m_pSaveButton = new QPushButton("保存", this);
 }
 
 void TagManagerDialog::createLayout()
@@ -139,6 +140,7 @@ void TagManagerDialog::createLayout()
     pButtonLayout->addWidget(m_pAddButton);
     pButtonLayout->addWidget(m_pEditButton);
     pButtonLayout->addWidget(m_pDeleteButton);
+    pButtonLayout->addWidget(m_pSaveButton);
     m_pMainLayout->addLayout(pButtonLayout);
 }
 
@@ -149,6 +151,7 @@ void TagManagerDialog::connectSignals()
     // 双击列表项的事件也连接到编辑功能
     this->connect(m_pListWidget, &QListWidget::itemDoubleClicked, this, &TagManagerDialog::onEditButtonClicked);
     this->connect(m_pDeleteButton, &QPushButton::clicked, this, &TagManagerDialog::onDeleteButtonClicked);
+    this->connect(m_pSaveButton, &QPushButton::clicked, this, &TagManagerDialog::accept);
 }
 
 void TagManagerDialog::populateList()

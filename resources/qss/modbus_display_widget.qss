@@ -293,47 +293,126 @@ QTableView {
     background-color: #ffffff;
     alternate-background-color: #f8f9fa;
     color: #495057;
-    gridline-color: #dee2e6;
+    gridline-color: #e9ecef;
     border: 1px solid #dee2e6;
     border-radius: 4px;
     font-size: 12px;
-    selection-background-color: #cfe2ff;
-    selection-color: #212529;
+    selection-background-color: #cce7ff;
+    selection-color: #0056b3;
+    outline: none;
+    show-decoration-selected: 1;
 }
 
+/* 表格项样式 - 与QListWidget保持一致 */
 QTableView::item {
-    padding: 6px;
+    padding: 8px 12px;
     border: none;
+    border-bottom: 1px solid #e9ecef;
+    outline: none;
+    color: #212529;
 }
 
+/* 表格项选中状态 - 与QListWidget完全一致 */
 QTableView::item:selected {
-    background-color: #cfe2ff;
+    background-color: #cce7ff;
+    color: #0056b3;
+    border: none;
+    outline: none;
 }
 
+/* 表格项悬停效果 */
 QTableView::item:hover {
     background-color: #e9ecef;
+    color: #212529;
 }
 
-/* 表格头部样式 */
-QHeaderView::section {
-    background-color: #e9ecef;
-    color: #495057;
-    padding: 8px;
-    border: 1px solid #dee2e6;
-    font-size: 12px;
-    font-weight: bold;
+/* 选中且悬停样式 */
+QTableView::item:selected:hover {
+    background-color: #b3d9ff;
+    color: #0056b3;
 }
 
+/* 非激活状态下的选中样式 */
+QTableView::item:selected:!active {
+    background-color: #cce7ff;
+    color: #0056b3;
+    border: none;
+    outline: none;
+}
+
+/* 聚焦状态样式 */
+QTableView::item:focus {
+    border: none;
+    outline: none;
+}
+
+/* === 水平表头样式（列标题） === */
 QHeaderView::section:horizontal {
-    border-top: none;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #f8f9fa, stop:1 #e9ecef);
+    color: #495057;
+    padding: 10px 8px;
+    border: none;
+    border-right: 1px solid #dee2e6;
+    border-bottom: 2px solid #dee2e6;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: left;
 }
 
+QHeaderView::section:horizontal:hover {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #e9ecef, stop:1 #dee2e6);
+}
+
+QHeaderView::section:horizontal:pressed {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #dee2e6, stop:1 #ced4da);
+}
+
+/* 最后一列不显示右边框 */
+QHeaderView::section:horizontal:last {
+    border-right: none;
+}
+
+/* === 垂直表头样式（行号） === */
 QHeaderView::section:vertical {
-    border-left: none;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                                stop:0 #f8f9fa, stop:1 #e9ecef);
+    color: #6c757d;
+    padding: 6px 12px;
+    border: none;
+    border-right: 2px solid #dee2e6;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 11px;
+    font-weight: 500;
+    text-align: center;
+    min-width: 40px;
 }
 
-QHeaderView::section:hover {
-    background-color: #dee2e6;
+QHeaderView::section:vertical:hover {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                                stop:0 #e9ecef, stop:1 #dee2e6);
+    color: #495057;
+}
+
+QHeaderView::section:vertical:pressed {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                                stop:0 #dee2e6, stop:1 #ced4da);
+}
+
+/* 最后一行不显示底边框 */
+QHeaderView::section:vertical:last {
+    border-bottom: none;
+}
+
+/* === 表格角落样式 === */
+QTableCornerButton::section {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                                stop:0 #f8f9fa, stop:1 #e9ecef);
+    border: none;
+    border-right: 2px solid #dee2e6;
+    border-bottom: 2px solid #dee2e6;
 }
 
 /* === PlainTextEdit Style === */

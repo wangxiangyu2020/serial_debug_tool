@@ -20,6 +20,7 @@
 #include "utils/ModbusTag.h"
 #include "ui/AddEditModbusTagDialog.h"
 #include "ui/CMessageBox.h"
+#include <QHBoxLayout>
 
 class TagManagerDialog : public QDialog
 {
@@ -52,6 +53,7 @@ private:
     QPushButton* m_pAddButton = nullptr;
     QPushButton* m_pEditButton = nullptr;
     QPushButton* m_pDeleteButton = nullptr;
+    QPushButton* m_pSaveButton = nullptr;
 };
 
 #endif //TAGMANAGERDIALOG_H
