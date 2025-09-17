@@ -12,6 +12,7 @@
 #define MODBUSTAG_H
 
 #include <QString>
+#include <QVariant>
 #include <QMetaType>
 
 // Modbus点位（或称标签）的配置结构体

@@ -17,10 +17,27 @@ ModbusDisplayWidget::ModbusDisplayWidget(QWidget* parent)
     StyleLoader::loadStyleFromFile(this, ":/resources/qss/modbus_display_widget.qss");
 }
 
-// --- 槽函数实现 (图标已移除，导出槽已移除) ---
 void ModbusDisplayWidget::onReadButtonClicked()
 {
-    /* TODO: 实现手动读取逻辑 */
+    // 从UI获取参数
+    int slaveId = m_pReadSlaveIdSpinBox->value();
+    // 从QComboBox获取用户输入的地址文本并转为整数，例如 "40001" -> 40001
+    int startAddr_UI = m_pReadAddrComboBox->currentText().toInt();
+    int quantity = m_pReadQtySpinBox->value();
+    // 我们约定，保持寄存器的地址必须从40001开始
+    if (startAddr_UI < 40001) {
+        // 在日志中给出清晰的错误提示
+        m_pLogTextEdit->appendPlainText("错误: 读取地址无效，保持寄存器地址应从40001开始。");
+        return; // 中断操作
+    }
+    // Modbus协议帧中的地址是从0开始的，所以需要减去偏移量
+    int startAddr_Protocol = startAddr_UI - 40001; // 例如: 40001 -> 0, 40002 -> 1
+    // 将转换后的【协议地址】传递给控制器
+    m_pModbusController->readHoldingRegister(slaveId, startAddr_Protocol, quantity);
+    // 日志中仍然显示用户输入的UI地址，这样更直观
+    QString logMsg = QString("发送读取请求 -> 从站: %1, 地址: %2, 数量: %3")
+                         .arg(slaveId).arg(startAddr_UI).arg(quantity);
+    m_pLogTextEdit->appendPlainText(logMsg);
 }
 
 void ModbusDisplayWidget::onWriteButtonClicked()
@@ -38,15 +55,41 @@ void ModbusDisplayWidget::onPollButtonToggled(bool checked)
 void ModbusDisplayWidget::onConfigTagsButtonClicked()
 {
     TagManagerDialog dialog(m_modbusTags, this);
-    if (dialog.exec() == QDialog::Accepted) {
+    if (dialog.exec() == QDialog::Accepted)
+    {
         m_pTagModel->layoutRefresh();
     }
 }
 
 void ModbusDisplayWidget::onClearLogButtonClicked() { m_pLogTextEdit->clear(); }
 
+void ModbusDisplayWidget::onModbusDataReady(int startAddress, const QList<quint16>& values)
+{
+    for (int i = 0; i < values.size(); ++i)
+    {
+        int currentAddress = startAddress + i;
+        // 查找 m_modbusTags 中地址匹配的 tag
+        for (int j = 0; j < m_modbusTags.size(); ++j)
+        {
+            if (m_modbusTags[j].address == currentAddress)
+            {
+                m_modbusTags[j].rawValue = values[i];
+                // TODO: 根据数据类型、增益、偏移量等计算 currentValue
+                m_modbusTags[j].currentValue = values[i] * m_modbusTags[j].gain + m_modbusTags[j].offset;
+                // 通知模型更新这一行的数据
+                m_pTagModel->valueUpdate(j);
+                break; // 找到后就跳出内层循环
+            }
+        }
+    }
+    // 在日志中显示成功信息
+    m_pLogTextEdit->appendPlainText(QString("成功接收并解析了 %1 个寄存器值。").arg(values.size()));
+}
+
 void ModbusDisplayWidget::setUI()
 {
+    // 初始化modbus控制器
+    m_pModbusController = new ModbusController(SerialPortManager::getInstance(), this);
     this->setAttribute(Qt::WA_StyledBackground);
     this->createComponents();
     this->createLayout();
@@ -208,4 +251,9 @@ void ModbusDisplayWidget::connectSignals()
     this->connect(m_pPollButton, &QPushButton::toggled, this, &ModbusDisplayWidget::onPollButtonToggled);
     this->connect(m_pConfigTagsButton, &QPushButton::clicked, this, &ModbusDisplayWidget::onConfigTagsButtonClicked);
     this->connect(m_pClearLogButton, &QPushButton::clicked, this, &ModbusDisplayWidget::onClearLogButtonClicked);
+    this->connect(m_pModbusController, &ModbusController::errorOccurred, [this](const QString& errorString)
+    {
+        CMessageBox::showToast(this, errorString);
+    });
+    this->connect(m_pModbusController, &ModbusController::dataReady, this, &ModbusDisplayWidget::onModbusDataReady);
 }

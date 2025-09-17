@@ -42,13 +42,7 @@ QVariant ModbusTagModel::headerData(int section, Qt::Orientation orientation, in
         default: return QVariant();
         }
     }
-    else
-    {
-        // orientation == Qt::Vertical
-        // 如果是垂直表头（行标题），则返回行号
-        // section 是从0开始的行索引，我们+1使其从1开始显示
-        return section + 1;
-    }
+    return section + 1;
 }
 
 QVariant ModbusTagModel::data(const QModelIndex& index, int role) const

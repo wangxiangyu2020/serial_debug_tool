@@ -51,6 +51,7 @@ public:
 
 public slots:
     void handleWriteData(const QString& text);
+    void handleWriteDataFromModbus(const QByteArray& data);
     void openSerialPort(const QMap<QString, QVariant>& serialParams);
     void closeSerialPort();
     void setHexSendStatus(bool status);
@@ -63,6 +64,7 @@ public slots:
 signals:
     void statusChanged(const QString& status, int connectStatus = -1);
     void sendData2ReceiveChanged(const QString& data);
+    void sendReadData2Modbus(const QByteArray& data);
 
 private slots:
     void onSerialPortRead();

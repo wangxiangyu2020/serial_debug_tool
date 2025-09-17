@@ -28,6 +28,7 @@
 #include <QHeaderView>
 #include "ui/TagManagerDialog.h"
 #include "ui/ModbusTagModel.h"
+#include "core/ModbusController.h"
 
 
 class ModbusDisplayWidget : public QWidget
@@ -44,6 +45,7 @@ private slots:
     void onPollButtonToggled(bool checked);
     void onConfigTagsButtonClicked();
     void onClearLogButtonClicked();
+    void onModbusDataReady(int startAddress, const QList<quint16>& values);
 
 private:
     void setUI();
@@ -100,6 +102,8 @@ private:
 
     QList<ModbusTag> m_modbusTags;
     ModbusTagModel* m_pTagModel = nullptr;
+
+    ModbusController* m_pModbusController = nullptr;
 };
 
 #endif //MODBUSDISPLAYWIDGET_H

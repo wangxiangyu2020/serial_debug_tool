@@ -53,6 +53,11 @@ void SerialPortManager::handleWriteData(const QString& text)
     this->serialPortWrite(m_isHexSend ? hexStringToByteArray(text) : text.toLocal8Bit());
 }
 
+void SerialPortManager::handleWriteDataFromModbus(const QByteArray& data)
+{
+    this->serialPortWrite(data);
+}
+
 // 主要业务方法
 void SerialPortManager::openSerialPort(const QMap<QString, QVariant>& serialParams)
 {
@@ -129,7 +134,9 @@ void SerialPortManager::onSerialPortRead()
 {
     if (!m_pSerialPort || !m_pSerialPort->isOpen()) return;
     QMutexLocker locker(&m_bufferMutex);
-    m_readBuffer.append(m_pSerialPort->readAll());
+    const QByteArray& readData = m_pSerialPort->readAll();
+    m_readBuffer.append(readData);
+    emit sendReadData2Modbus(readData);
 }
 
 void SerialPortManager::onReadBufferTimeout()
