@@ -43,7 +43,6 @@ void ModbusController::writeSingleRegister(int slaveId, int address, int value)
 
 void ModbusController::onDataReceived(const QByteArray& data)
 {
-    qDebug() << "Data Received: " << data;
     // 将新收到的数据追加的缓存中
     m_buffer.append(data);
     // 尝试解析数据
@@ -142,7 +141,6 @@ QByteArray ModbusController::buildReadRequest(int slaveId, int startAddress, int
     quint16 crc = this->calculateCRC(request);
     request.append(static_cast<char>(crc & 0xFF)); // crc 低位在前
     request.append(static_cast<char>((crc >> 8) & 0xFF));
-    qDebug() << "发送数据：" << request.toHex();
     return request;
 }
 

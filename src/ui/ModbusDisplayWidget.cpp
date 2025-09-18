@@ -25,7 +25,8 @@ void ModbusDisplayWidget::onReadButtonClicked()
     int startAddr_UI = m_pReadAddrComboBox->currentText().toInt();
     int quantity = m_pReadQtySpinBox->value();
     // 我们约定，保持寄存器的地址必须从40001开始
-    if (startAddr_UI < 40001) {
+    if (startAddr_UI < 40001)
+    {
         // 在日志中给出清晰的错误提示
         m_pLogTextEdit->appendPlainText("错误: 读取地址无效，保持寄存器地址应从40001开始。");
         return; // 中断操作
@@ -36,7 +37,7 @@ void ModbusDisplayWidget::onReadButtonClicked()
     m_pModbusController->readHoldingRegister(slaveId, startAddr_Protocol, quantity);
     // 日志中仍然显示用户输入的UI地址，这样更直观
     QString logMsg = QString("发送读取请求 -> 从站: %1, 地址: %2, 数量: %3")
-                         .arg(slaveId).arg(startAddr_UI).arg(quantity);
+                     .arg(slaveId).arg(startAddr_UI).arg(quantity);
     m_pLogTextEdit->appendPlainText(logMsg);
 }
 
@@ -67,7 +68,8 @@ void ModbusDisplayWidget::onModbusDataReady(int startAddress, const QList<quint1
 {
     for (int i = 0; i < values.size(); ++i)
     {
-        int currentAddress = startAddress + i;
+        // 这里的地址需要加上之前减去的40001
+        int currentAddress = startAddress + 40001 + i;
         // 查找 m_modbusTags 中地址匹配的 tag
         for (int j = 0; j < m_modbusTags.size(); ++j)
         {
@@ -116,7 +118,7 @@ void ModbusDisplayWidget::createComponents()
     m_pReadAddrLabel = new QLabel("起始:");
     m_pReadAddrComboBox = new QComboBox(this);
     m_pReadAddrComboBox->setEditable(true);
-    m_pReadAddrComboBox->addItems({"0", "1", "10", "100", "1000", "40001", "40002"});
+    m_pReadAddrComboBox->addItems({"40001", "40002"});
     m_pReadAddrComboBox->setFixedWidth(120);
     m_pReadQtyLabel = new QLabel("数量:");
     m_pReadQtySpinBox = new QSpinBox(this);
@@ -138,7 +140,7 @@ void ModbusDisplayWidget::createComponents()
     m_pWriteAddrLabel = new QLabel("地址:");
     m_pWriteAddrComboBox = new QComboBox(this);
     m_pWriteAddrComboBox->setEditable(true);
-    m_pWriteAddrComboBox->addItems({"0", "1", "10", "100", "1000", "40001", "40002"});
+    m_pWriteAddrComboBox->addItems({"30001", "30002"});
     m_pWriteAddrComboBox->setFixedWidth(120);
     m_pWriteValueLabel = new QLabel("值:");
     m_pWriteValueLineEdit = new QLineEdit(this);
