@@ -189,7 +189,6 @@ QString TagManagerDialog::dataTypeToString(ModbusTag::DataType type)
     case ModbusTag::DataType::Float32: return "Float";
     case ModbusTag::DataType::Int32: return "Int32";
     case ModbusTag::DataType::UInt32: return "UInt32";
-    case ModbusTag::DataType::Double64: return "Double";
     default: return "Unknown";
     }
 }

@@ -29,7 +29,15 @@
 #include "ui/TagManagerDialog.h"
 #include "ui/ModbusTagModel.h"
 #include "core/ModbusController.h"
+#include "utils/ModbusUtils.h"
+#include <QTimer>
 
+struct ModbusReadRequest
+{
+    int slaveId;
+    int startAddress; // 协议地址 (从0开始)
+    int quantity;
+};
 
 class ModbusDisplayWidget : public QWidget
 {
@@ -43,15 +51,18 @@ private slots:
     void onReadButtonClicked();
     void onWriteButtonClicked();
     void onPollButtonToggled(bool checked);
+    void onPollTimerTimeout();
     void onConfigTagsButtonClicked();
     void onClearLogButtonClicked();
     void onModbusDataReady(int startAddress, const QList<quint16>& values);
+    void onWriteSuccessful(int functionCode, int address);
 
 private:
     void setUI();
     void createComponents();
     void createLayout();
     void connectSignals();
+    void generateReadRequests();
 
     // --- 整体布局 ---
     QVBoxLayout* m_pMainLayout = nullptr;
@@ -85,6 +96,8 @@ private:
     QComboBox* m_pWriteFuncCodeComboBox = nullptr;
     QLabel* m_pWriteDataTypeLabel = nullptr;
     QComboBox* m_pWriteDataTypeComboBox = nullptr;
+    QLabel* m_pWriteByteOrderLabel = nullptr;
+    QComboBox* m_pWriteByteOrderComboBox = nullptr;
     QPushButton* m_pWriteButton = nullptr;
 
     // --- "控制与配置区" 内的控件 ---
@@ -104,6 +117,12 @@ private:
     ModbusTagModel* m_pTagModel = nullptr;
 
     ModbusController* m_pModbusController = nullptr;
+
+    QTimer* m_pPollTimer = nullptr;
+    bool m_isPolling = false;
+    // 用于存放优化后的读请求列表
+    QList<ModbusReadRequest> m_readRequests;
+    int m_currentRequestIndex = 0; // 当前发送到哪个请求的索引
 };
 
 #endif //MODBUSDISPLAYWIDGET_H

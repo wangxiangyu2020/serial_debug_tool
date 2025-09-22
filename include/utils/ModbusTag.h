@@ -31,7 +31,6 @@ struct ModbusTag {
         UInt32,         // 32位无符号整数
         Int32,          // 32位有符号整数
         Float32,        // 32位浮点数
-        Double64        // 64位双精度浮点数
     };
     DataType dataType = DataType::UInt16;
 

@@ -248,8 +248,6 @@ QComboBox QAbstractItemView QScrollBar::sub-page:vertical {
 }
 
 /* === PushButton Style === */
-QPushButton#m_pConnectButton, QPushButton#m_pSendButton,
-QPushButton#m_pClearDataButton, QPushButton#m_pSaveDataButton,
 QPushButton {
     border-radius: 4px;
     padding: 5px 15px;

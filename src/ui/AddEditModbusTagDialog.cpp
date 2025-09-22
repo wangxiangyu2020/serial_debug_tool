@@ -31,15 +31,14 @@ void AddEditModbusTagDialog::onDataTypeChanged(int index)
     // 只有当数据类型大于16位时，字节序设置才有意义
     bool isMultiByte = (dataType == ModbusTag::DataType::UInt32
                         || dataType == ModbusTag::DataType::Int32
-                        || dataType == ModbusTag::DataType::Float32
-                        || dataType == ModbusTag::DataType::Double64);
+                        || dataType == ModbusTag::DataType::Float32);
 
     m_pByteOrderComboBox->setEnabled(isMultiByte);
 }
 
 void AddEditModbusTagDialog::setUI()
 {
-    this->setMinimumWidth(350);
+    this->setMinimumSize(350, 364);
     this->createComponents();
     this->createLayout();
     this->connectSignals();
@@ -65,15 +64,12 @@ void AddEditModbusTagDialog::createComponents()
     m_pDataTypeComboBox->addItem("32位无符号整数 (UInt32)", QVariant::fromValue(ModbusTag::DataType::UInt32));
     m_pDataTypeComboBox->addItem("32位有符号整数 (Int32)", QVariant::fromValue(ModbusTag::DataType::Int32));
     m_pDataTypeComboBox->addItem("32位浮点数 (Float32)", QVariant::fromValue(ModbusTag::DataType::Float32));
-    m_pDataTypeComboBox->addItem("64位双精度浮点数 (Double64)", QVariant::fromValue(ModbusTag::DataType::Double64));
 
     m_pByteOrderComboBox = new QComboBox(this);
-    m_pByteOrderComboBox->addItem("Big-Endian (ABCD)", QVariant::fromValue(ModbusTag::ByteOrder::BigEndian));
-    m_pByteOrderComboBox->addItem("Little-Endian (DCBA)", QVariant::fromValue(ModbusTag::ByteOrder::LittleEndian));
-    m_pByteOrderComboBox->addItem("Big-Endian Byte Swap (BADC)",
-                                  QVariant::fromValue(ModbusTag::ByteOrder::BigEndianByteSwap));
-    m_pByteOrderComboBox->addItem("Little-Endian Byte Swap (CDAB)",
-                                  QVariant::fromValue(ModbusTag::ByteOrder::LittleEndianByteSwap));
+    m_pByteOrderComboBox->addItem("大端模式 (ABCD)", QVariant::fromValue(ModbusTag::ByteOrder::BigEndian));
+    m_pByteOrderComboBox->addItem("小端模式 (DCBA)", QVariant::fromValue(ModbusTag::ByteOrder::LittleEndian));
+    m_pByteOrderComboBox->addItem("大端字节交换 (BADC)", QVariant::fromValue(ModbusTag::ByteOrder::BigEndianByteSwap));
+    m_pByteOrderComboBox->addItem("字交换 (CDAB)", QVariant::fromValue(ModbusTag::ByteOrder::LittleEndianByteSwap));
 
     m_pGainSpinBox = new QDoubleSpinBox(this);
     m_pGainSpinBox->setDecimals(4);

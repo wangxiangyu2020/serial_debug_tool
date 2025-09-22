@@ -14,6 +14,7 @@
 
 #include <QObject>
 #include <QTimer>
+#include <QtGlobal>
 #include "utils/ModbusTag.h"
 #include "core/SerialPortManager.h"
 
@@ -26,11 +27,13 @@ public:
     ~ModbusController() = default;
     // ui 公共接口
     void readHoldingRegister(int slaveId, int startAddress, int quantity);
-    void writeSingleRegister(int slaveId, int address, int value);
+    void writeSingleRegister(int slaveId, int startAddress, quint16 value);
+    void writeMultipleRegisters(int slaveId, int startAddress, const QList<quint16>& values);
 
 signals:
     void dataReady(int startAddress, const QList<quint16>& values);
     void errorOccurred(const QString& errorString);
+    void writeSuccessful(int functionCode, int address);
 
 private slots:
     void onDataReceived(const QByteArray& data);
