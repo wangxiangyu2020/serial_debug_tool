@@ -60,7 +60,7 @@ void ModbusController::writeSingleRegister(int slaveId, int startAddress, quint1
     request.append(static_cast<char>((value >> 8) & 0xFF));
     request.append(static_cast<char>(value & 0xFF));
     // CRC
-    quint16 crc = calculateCRC(request);
+    quint16 crc = calculateCrc(request);
     request.append(static_cast<char>(crc & 0xFF));
     request.append(static_cast<char>((crc >> 8) & 0xFF));
 
@@ -103,7 +103,7 @@ void ModbusController::writeMultipleRegisters(int slaveId, int startAddress, con
         request.append(static_cast<char>(value & 0xFF));
     }
     // CRC
-    quint16 crc = calculateCRC(request);
+    quint16 crc = calculateCrc(request);
     request.append(static_cast<char>(crc & 0xFF));
     request.append(static_cast<char>((crc >> 8) & 0xFF));
 
@@ -131,8 +131,8 @@ void ModbusController::onDataReceived(const QByteArray& data)
             QByteArray response = m_buffer.left(5);
             m_buffer.remove(0, 5);
             // CRC校验
-            quint16 receiveCRC = (static_cast<quint8>(response[4] << 8)) | static_cast<quint8>(response[3]);
-            if (this->calculateCRC(response.left(3)) != receiveCRC)
+            quint16 receivedCrc = (static_cast<quint16>(static_cast<quint8>(response[4])) << 8) | static_cast<quint8>(response[3]);
+            if (this->calculateCrc(response.left(3)) != receivedCrc)
             {
                 emit errorOccurred(QString("异常响应CRC校验失败"));
                 continue; // 继续处理下一个数据包
@@ -169,9 +169,8 @@ void ModbusController::onDataReceived(const QByteArray& data)
             QByteArray response = m_buffer.left(frameLength);
             m_buffer.remove(0, frameLength);
             // CRC 校验
-            quint16 receivedCrc = (static_cast<quint8>(response[frameLength - 1]) << 8) | static_cast<quint8>(response[
-                frameLength - 2]);
-            if (calculateCRC(response.left(frameLength - 2)) != receivedCrc)
+            quint16 receivedCrc = (static_cast<quint16>(static_cast<quint8>(response[frameLength - 1])) << 8) | static_cast<quint8>(response[frameLength - 2]);
+            if (this->calculateCrc(response.left(frameLength - 2)) != receivedCrc)
             {
                 emit errorOccurred("正常响应CRC校验失败");
                 continue;
@@ -204,8 +203,8 @@ void ModbusController::onDataReceived(const QByteArray& data)
             QByteArray response = m_buffer.left(8);
             m_buffer.remove(0, 8);
             // CRC 校验
-            quint16 receivedCrc = (static_cast<quint8>(response[7] << 8)) | static_cast<quint8>(response[6]);
-            if (this->calculateCRC(response.left(6)) != receivedCrc)
+            quint16 receivedCrc = (static_cast<quint16>(static_cast<quint8>(response[7])) << 8) | static_cast<quint8>(response[6]);
+            if (this->calculateCrc(response.left(6)) != receivedCrc)
             {
                 emit errorOccurred(QString("写入响应CRC校验失败"));
                 continue;
@@ -268,7 +267,7 @@ QByteArray ModbusController::buildReadRequest(int slaveId, int startAddress, int
     request.append(static_cast<char>((quantity >> 8) & 0xFF)); // 读取数量 高位在前
     request.append(static_cast<char>(quantity & 0xFF));
     // CRC校验
-    quint16 crc = this->calculateCRC(request);
+    quint16 crc = this->calculateCrc(request);
     request.append(static_cast<char>(crc & 0xFF)); // crc 低位在前
     request.append(static_cast<char>((crc >> 8) & 0xFF));
     return request;
@@ -284,7 +283,7 @@ bool ModbusController::parseResponse(const QByteArray& data)
     return true;
 }
 
-quint16 ModbusController::calculateCRC(const QByteArray& data)
+quint16 ModbusController::calculateCrc(const QByteArray& data)
 {
     quint16 crc = 0xFFFF;
     for (char byte : data)

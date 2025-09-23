@@ -136,7 +136,7 @@ void SerialPortManager::onSerialPortRead()
     QMutexLocker locker(&m_bufferMutex);
     const QByteArray& readData = m_pSerialPort->readAll();
     m_readBuffer.append(readData);
-    emit sendReadData2Modbus(readData);
+    // emit sendReadData2Modbus(readData);
 }
 
 void SerialPortManager::onReadBufferTimeout()

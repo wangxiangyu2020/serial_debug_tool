@@ -44,7 +44,7 @@ private:
     QByteArray buildReadRequest(int slaveId, int startAddress, int quantity);
     QByteArray buildWriteRequest(int slaveId, int address, int value);
     bool parseResponse(const QByteArray& data);
-    quint16 calculateCRC(const QByteArray& data);
+    quint16 calculateCrc(const QByteArray& data);
 
     SerialPortManager* m_pSerialPortManager = nullptr;
     QByteArray m_buffer;
