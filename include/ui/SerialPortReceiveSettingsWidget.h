@@ -44,6 +44,7 @@ signals:
     void saveToFileChanged(bool enabled);
     void serialPortScriptSaved(const QString& key, const QString& script);
     void serialPortScriptEnabled(bool enabled);
+    void useModbusChanged(bool enabled);
 
 private slots:
     void onShowScriptEditor();
@@ -63,6 +64,7 @@ private:
     QCheckBox* m_pScriptReceiveCheckBox = nullptr;
     QPushButton* m_pScriptReceiveButton = nullptr;
     QPushButton* m_pScriptHelpButton = nullptr;
+    QCheckBox* m_pUseModbusCheckBox = nullptr;
     QPushButton* m_pSaveDataButton = nullptr;
     QPushButton* m_pClearDataButton = nullptr;
 

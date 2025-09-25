@@ -60,6 +60,7 @@ public slots:
     void setTimestampStatus(bool status);
     void startTimedSend(double interval, const QString& data);
     void stopTimedSend();
+    void setUseModbusStatus(bool status);
 
 signals:
     void statusChanged(const QString& status, int connectStatus = -1);
@@ -107,6 +108,7 @@ private:
     bool m_isHexSend = false;
     bool m_isSendStringDisplay = false;
     bool m_isDisplayTimestamp = false;
+    bool m_isUseModbus = false;
 
 
     QTimer* m_pTimedSendTimer;

@@ -68,6 +68,9 @@ void SerialPortReceiveSettingsWidget::createComponents()
     m_pScriptHelpButton->setObjectName("m_pScriptHelpButton");
     m_pScriptHelpButton->setFixedSize(15, 15);
     m_pScriptHelpButton->setToolTip("目前默认的接收超时为20ms,如果不符合你的需求,\r\n可以使用自定义脚本来对接收数据进行断帧和数据解析。");
+
+    m_pUseModbusCheckBox = new QCheckBox("启用Modbus模块", this);
+
     // 按钮
     m_pSaveDataButton = new QPushButton("保存数据", this);
     m_pSaveDataButton->setObjectName("m_pSaveDataButton");
@@ -82,8 +85,8 @@ void SerialPortReceiveSettingsWidget::createLayout()
 {
     // 主垂直布局 - 最小间距
     m_pMainLayout = new QVBoxLayout(this);
-    m_pMainLayout->setSpacing(5); // 最小化间距
-    m_pMainLayout->setContentsMargins(0, 0, 0, 0);
+    m_pMainLayout->setSpacing(5); // 稍微增加一点间距，避免过于拥挤
+    m_pMainLayout->setContentsMargins(5, 0, 5, 0); // 设置左右边距，上下为0
     // 创建水平布局用于放置保存文件和时间戳复选框
     QHBoxLayout* pSaveAndTimestampLayout = new QHBoxLayout();
     pSaveAndTimestampLayout->addWidget(m_pSaveToFileCheckBox);
@@ -97,19 +100,19 @@ void SerialPortReceiveSettingsWidget::createLayout()
     pHexAndScriptLayout->addWidget(m_pScriptReceiveButton);
     pHexAndScriptLayout->addWidget(m_pScriptHelpButton);
     pHexAndScriptLayout->addStretch();
-
     // 按钮水平布局
     m_pButtonLayout = new QHBoxLayout();
     m_pButtonLayout->setAlignment(Qt::AlignCenter);
     m_pButtonLayout->setSpacing(8);
-    m_pButtonLayout->setContentsMargins(0, 0, 0, 15); // 移除布局边距
+    m_pButtonLayout->setContentsMargins(0, 0, 0, 15);
     // 添加到按钮布局
     m_pButtonLayout->addWidget(m_pSaveDataButton);
     m_pButtonLayout->addWidget(m_pClearDataButton);
     // 添加到主布局 - 紧凑排列
     m_pMainLayout->addWidget(m_pTitleLabel, 0, Qt::AlignTop);
-    m_pMainLayout->addLayout(pSaveAndTimestampLayout); // 添加水平布局
+    m_pMainLayout->addLayout(pSaveAndTimestampLayout);
     m_pMainLayout->addLayout(pHexAndScriptLayout);
+    m_pMainLayout->addWidget(m_pUseModbusCheckBox);
     m_pMainLayout->addLayout(m_pButtonLayout);
 }
 
@@ -162,4 +165,10 @@ void SerialPortReceiveSettingsWidget::connectSignals()
                       if (key != "serialPort") return;
                       CMessageBox::showToast(this, status);
                   });
+    this->connect(m_pUseModbusCheckBox, &QCheckBox::clicked, [this](bool checked)
+    {
+        emit useModbusChanged(checked);
+    });
+    this->connect(this, &SerialPortReceiveSettingsWidget::useModbusChanged, SerialPortManager::getInstance(),
+                  &SerialPortManager::setUseModbusStatus);
 }

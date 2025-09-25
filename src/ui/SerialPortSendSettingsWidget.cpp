@@ -66,11 +66,7 @@ void SerialPortSendSettingsWidget::createComponents()
     // 新增：显示发送字符串复选框（位置提前）
     m_pShowSendStringCheckBox = new QCheckBox("显示发送字符串", this);
     m_pShowSendStringCheckBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-    // 定时发送相关组件的水平布局
-    m_pTimedSendLayout = new QHBoxLayout();
-    m_pTimedSendLayout->setAlignment(Qt::AlignLeft);
-    m_pTimedSendLayout->setSpacing(8);
-    m_pTimedSendLayout->setContentsMargins(0, 0, 0, 0);
+    // 定时发送
     m_pTimedSendCheckBox = new QCheckBox("定时发送", this);
     m_pTimedSendCheckBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     // 减小时间输入框尺寸
@@ -90,7 +86,11 @@ void SerialPortSendSettingsWidget::createLayout()
     m_pMainLayout = new QVBoxLayout(this);
     m_pMainLayout->setSpacing(2); // 最小化间距
     m_pMainLayout->setContentsMargins(0, 0, 0, 0); // 完全移除边距
-    // 添加到布局
+    // 定时发送相关组件的水平布局
+    m_pTimedSendLayout = new QHBoxLayout();
+    m_pTimedSendLayout->setAlignment(Qt::AlignLeft);
+    m_pTimedSendLayout->setSpacing(8);
+    m_pTimedSendLayout->setContentsMargins(0, 0, 0, 0);
     m_pTimedSendLayout->addWidget(m_pTimedSendCheckBox);
     m_pTimedSendLayout->addWidget(m_pIntervalEdit);
     m_pTimedSendLayout->addWidget(m_pIntervalLabel);

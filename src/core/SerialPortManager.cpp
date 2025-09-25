@@ -130,13 +130,18 @@ void SerialPortManager::stopTimedSend()
     }
 }
 
+void SerialPortManager::setUseModbusStatus(bool status)
+{
+    m_isUseModbus = status;
+}
+
 void SerialPortManager::onSerialPortRead()
 {
     if (!m_pSerialPort || !m_pSerialPort->isOpen()) return;
     QMutexLocker locker(&m_bufferMutex);
     const QByteArray& readData = m_pSerialPort->readAll();
     m_readBuffer.append(readData);
-    // emit sendReadData2Modbus(readData);
+    if (m_isUseModbus) emit sendReadData2Modbus(readData);
 }
 
 void SerialPortManager::onReadBufferTimeout()
