@@ -49,23 +49,9 @@ void ModbusController::writeSingleRegister(int slaveId, int startAddress, quint1
     m_lastRequestSlaveId = slaveId;
     m_lastRequestFuncCode = 0x06; // 功能码设为0x06
     m_lastRequestAddress = startAddress;
-
-    QByteArray request;
-    request.append(static_cast<char>(slaveId)); // 从站地址
-    request.append(static_cast<char>(0x06)); // 功能码
-    // 寄存器地址
-    request.append(static_cast<char>((startAddress >> 8) & 0xFF));
-    request.append(static_cast<char>(startAddress & 0xFF));
-    // 要写入的值
-    request.append(static_cast<char>((value >> 8) & 0xFF));
-    request.append(static_cast<char>(value & 0xFF));
-    // CRC
-    quint16 crc = calculateCrc(request);
-    request.append(static_cast<char>(crc & 0xFF));
-    request.append(static_cast<char>((crc >> 8) & 0xFF));
-
+    // 构造请求
+    QByteArray request = this->buildWriteSingleRequest(slaveId, startAddress, value);
     m_pSerialPortManager->handleWriteDataFromModbus(request);
-
     m_pResponseTimer->start(1000); // 启动1秒超时定时器
 }
 
@@ -81,34 +67,9 @@ void ModbusController::writeMultipleRegisters(int slaveId, int startAddress, con
     m_lastRequestSlaveId = slaveId;
     m_lastRequestFuncCode = 0x10; // 功能码设为0x10
     m_lastRequestAddress = startAddress;
-
-    int quantity = values.size();
-    int byteCount = quantity * 2;
-
-    QByteArray request;
-    request.append(static_cast<char>(slaveId)); // 1. 从站地址
-    request.append(static_cast<char>(0x10)); // 2. 功能码
-    // 起始地址
-    request.append(static_cast<char>((startAddress >> 8) & 0xFF));
-    request.append(static_cast<char>(startAddress & 0xFF));
-    // 寄存器数量
-    request.append(static_cast<char>((quantity >> 8) & 0xFF));
-    request.append(static_cast<char>(quantity & 0xFF));
-    // 字节数
-    request.append(static_cast<char>(byteCount));
-    // 数据负载
-    for (quint16 value : values)
-    {
-        request.append(static_cast<char>((value >> 8) & 0xFF));
-        request.append(static_cast<char>(value & 0xFF));
-    }
-    // CRC
-    quint16 crc = calculateCrc(request);
-    request.append(static_cast<char>(crc & 0xFF));
-    request.append(static_cast<char>((crc >> 8) & 0xFF));
-
+    // 构造请求
+    QByteArray request = this->buildWriteMultipleRegisters(slaveId, startAddress, values);
     m_pSerialPortManager->handleWriteDataFromModbus(request);
-
     m_pResponseTimer->start(1000); // 启动1秒超时定时器
 }
 
@@ -116,126 +77,8 @@ void ModbusController::onDataReceived(const QByteArray& data)
 {
     // 将新收到的数据追加的缓存中
     m_buffer.append(data);
-    // 尝试解析数据
-    // 一个Modbus帧至少有5个字节（地址+功能码+字节数/异常码+CRC）
-    while (m_buffer.length() >= 5)
-    {
-        int functionCode = static_cast<quint8>(m_buffer[1]);
-        // 判断是否为异常响应 异常响应的第二个字节是功能码 + 0x80
-        if (functionCode & 0x80)
-        {
-            if (m_buffer.length() < 5) return;
-            // 收到响应停止计时器
-            m_pResponseTimer->stop();
-            // 提取完整的异常响应数据
-            QByteArray response = m_buffer.left(5);
-            m_buffer.remove(0, 5);
-            // CRC校验
-            quint16 receivedCrc = (static_cast<quint16>(static_cast<quint8>(response[4])) << 8) | static_cast<quint8>(response[3]);
-            if (this->calculateCrc(response.left(3)) != receivedCrc)
-            {
-                emit errorOccurred(QString("异常响应CRC校验失败"));
-                continue; // 继续处理下一个数据包
-            }
-            // 检查异常功能码是否与请求匹配
-            if ((functionCode & 0x7F) == m_lastRequestFuncCode)
-            {
-                int exceptionCode = static_cast<quint8>(response[2]);
-                emit errorOccurred(QString("Modbus异常响应: 功能码 %1, 异常码 %2")
-                                   .arg(m_lastRequestFuncCode, 2, 16)
-                                   .arg(exceptionCode));
-            }
-            m_lastRequestSlaveId = -1;
-            continue;
-        }
-        // 处理0x03响应
-        if (functionCode == 0x03 && m_lastRequestFuncCode == 0x03)
-        {
-            // 检测是否响应正常 正常响应的功能码和请求的功能码一致
-            if (static_cast<quint8>(m_buffer[1]) != m_lastRequestFuncCode)
-            {
-                // 功能码不匹配丢弃
-                m_buffer.remove(0, 1);
-                continue;
-            }
-            // 对于读寄存器响应(0x03)，第3个字节是数据字节数
-            int byteCount = static_cast<quint8>(m_buffer[2]);
-            // 3(地址+功能码+字节数) + N(数据) + 2(CRC)
-            int frameLength = 3 + byteCount + 2;
-            if (m_buffer.length() < frameLength) return;
-            // 收到完整数据包，停止定时器
-            m_pResponseTimer->stop();
-            // 提取一个完整的正常响应数据包
-            QByteArray response = m_buffer.left(frameLength);
-            m_buffer.remove(0, frameLength);
-            // CRC 校验
-            quint16 receivedCrc = (static_cast<quint16>(static_cast<quint8>(response[frameLength - 1])) << 8) | static_cast<quint8>(response[frameLength - 2]);
-            if (this->calculateCrc(response.left(frameLength - 2)) != receivedCrc)
-            {
-                emit errorOccurred("正常响应CRC校验失败");
-                continue;
-            }
-            // 从站地址校验
-            if (static_cast<quint8>(response[0]) != m_lastRequestSlaveId)
-            {
-                emit errorOccurred("响应的从站地址与请求不匹配");
-                continue;
-            }
-            // 数据解析
-            QList<quint16> values;
-            // 数据从第4个字节（索引为3）开始
-            for (int i = 0; i < byteCount / 2; ++i)
-            {
-                quint8 highByte = response[3 + 2 * i];
-                quint8 lowByte = response[3 + 2 * i + 1];
-                quint16 value = (highByte << 8) | lowByte;
-                values.append(value);
-            }
-            // 发射信号，将解析出的数据传递出去
-            emit dataReady(m_lastRequestAddress, values);
-            m_lastRequestSlaveId = -1; // 清理状态，准备下一次请求
-        }
-        else if ((functionCode == 0x06 && m_lastRequestFuncCode == 0x06)
-            || (functionCode == 0x10 && m_lastRequestFuncCode == 0x10))
-        {
-            if (m_buffer.length() < 8) return; // 确保至少有8个字节
-            m_pResponseTimer->stop();
-            QByteArray response = m_buffer.left(8);
-            m_buffer.remove(0, 8);
-            // CRC 校验
-            quint16 receivedCrc = (static_cast<quint16>(static_cast<quint8>(response[7])) << 8) | static_cast<quint8>(response[6]);
-            if (this->calculateCrc(response.left(6)) != receivedCrc)
-            {
-                emit errorOccurred(QString("写入响应CRC校验失败"));
-                continue;
-            }
-            // 校验从站地址和功能码是否匹配
-            if (static_cast<quint8>(response[0]) != m_lastRequestSlaveId ||
-                static_cast<quint8>(response[1]) != m_lastRequestFuncCode)
-            {
-                emit errorOccurred(QString("写入响应的从站地址与功能码与请求不匹配"));
-                continue;
-            }
-            // 校验返回的地址和数量/值是否匹配
-            uint16_t respAddress = (static_cast<quint8>(response[2]) << 8) | static_cast<quint8>(response[3]);
-            // 假设我们之前已将请求的地址存放在 m_lastRequestAddress 中
-            if (respAddress != m_lastRequestAddress)
-            {
-                emit errorOccurred("写入响应的地址与请求不匹配");
-                continue;
-            }
-            // 所有校验通过，发射成功信号
-            emit writeSuccessful(functionCode, m_lastRequestAddress + 40001); // 传回UI地址
-
-            m_lastRequestSlaveId = -1; // 清理状态
-        }
-        else
-        {
-            // 收到的响应功能码与我们等待的不匹配，可能是上一条指令的延迟响应
-            // 为了防止解析错误，我们丢弃一个字节，尝试寻找下一帧的起始
-            m_buffer.remove(0, 1);
-        }
-    }
+    // 尝试解析缓存中的数据
+    this->tryParseBuffer();
 }
 
 void ModbusController::onResponseTimeout()
@@ -273,14 +116,158 @@ QByteArray ModbusController::buildReadRequest(int slaveId, int startAddress, int
     return request;
 }
 
-QByteArray ModbusController::buildWriteRequest(int slaveId, int address, int value)
+QByteArray ModbusController::buildWriteSingleRequest(int slaveId, int startAddress, quint16 value)
 {
-    return QByteArray();
+    QByteArray request;
+    request.append(static_cast<char>(slaveId)); // 从站地址
+    request.append(static_cast<char>(0x06)); // 功能码
+    // 寄存器地址
+    request.append(static_cast<char>((startAddress >> 8) & 0xFF));
+    request.append(static_cast<char>(startAddress & 0xFF));
+    // 要写入的值
+    request.append(static_cast<char>((value >> 8) & 0xFF));
+    request.append(static_cast<char>(value & 0xFF));
+    // CRC
+    quint16 crc = calculateCrc(request);
+    request.append(static_cast<char>(crc & 0xFF));
+    request.append(static_cast<char>((crc >> 8) & 0xFF));
+    return request;
 }
 
-bool ModbusController::parseResponse(const QByteArray& data)
+QByteArray ModbusController::buildWriteMultipleRegisters(int slaveId, int startAddress, const QList<quint16>& values)
 {
+    QByteArray request;
+    request.append(static_cast<char>(slaveId)); // 1. 从站地址
+    request.append(static_cast<char>(0x10)); // 2. 功能码
+    // 起始地址
+    request.append(static_cast<char>((startAddress >> 8) & 0xFF));
+    request.append(static_cast<char>(startAddress & 0xFF));
+    // 寄存器数量
+    int quantity = values.size();
+    int byteCount = quantity * 2;
+    request.append(static_cast<char>((quantity >> 8) & 0xFF));
+    request.append(static_cast<char>(quantity & 0xFF));
+    // 字节数
+    request.append(static_cast<char>(byteCount));
+    // 数据负载
+    for (quint16 value : values)
+    {
+        request.append(static_cast<char>((value >> 8) & 0xFF));
+        request.append(static_cast<char>(value & 0xFF));
+    }
+    // CRC
+    quint16 crc = calculateCrc(request);
+    request.append(static_cast<char>(crc & 0xFF));
+    request.append(static_cast<char>((crc >> 8) & 0xFF));
+    return request;
+}
+
+void ModbusController::tryParseBuffer()
+{
+    bool processedOneFrame;
+    do
+    {
+        processedOneFrame = false;
+        if (m_buffer.length() < 5) break; // 缓冲区数据不足以构成一个最小帧
+        int frameLength = -1;
+        uint8_t functionCode = m_buffer[1];
+        // 根据功能码，判断一个完整帧的预期长度
+        if (functionCode & 0x80) // 异常响应
+        {
+            frameLength = 5;
+        }
+        else if (functionCode == 0x03) // 读响应
+        {
+            if (m_buffer.length() < 3) break; // 长度不足以读取字节数
+            int byteCount = static_cast<quint8>(m_buffer[2]);
+            frameLength = 3 + byteCount + 2;
+        }
+        else if (functionCode == 0x06 || functionCode == 0x10) // 写响应
+        {
+            frameLength = 8;
+        }
+        // 如果数据不足或者功能码未知，则不处理
+        if (frameLength == -1)
+        {
+            // 功能码与我们等待的不匹配，丢弃一个字节尝试重新同步
+            m_buffer.remove(0, 1);
+            processedOneFrame = true; // 认为处理过，继续循环
+            continue;
+        }
+        if (m_buffer.length() < frameLength) break; // 缓冲区数据不足以构成一个完整帧, 等待更多数据
+        // 提取完整帧并交给核心处理器
+        QByteArray frame = m_buffer.left(frameLength);
+        if (this->processFrame(frame))
+        {
+            m_buffer.remove(0, frameLength);
+            processedOneFrame = true; // 成功处理，继续循环是否还有下一帧
+        }
+        else
+        {
+            // 如果处理失败，则丢弃一个字节尝试重新同步
+            m_buffer.remove(0, 1);
+            processedOneFrame = true;
+        }
+    }
+    while (processedOneFrame);
+}
+
+bool ModbusController::processFrame(const QByteArray& frame)
+{
+    // 收到完整帧，停止定时器
+    m_pResponseTimer->stop();
+    // CRC校验
+    int dataLength = frame.length() - 2;
+    quint16 receivedCrc = (static_cast<quint16>(static_cast<quint8>(frame[dataLength + 1])) << 8)
+        | static_cast<quint8>(frame[dataLength]);
+    if (this->calculateCrc(frame.left(dataLength)) != receivedCrc)
+    {
+        emit errorOccurred("响应的从站地址与请求不匹配");
+        return false;
+    }
+    // 根据功能码处理数据
+    uint8_t functionCode = frame[1];
+    if (functionCode & 0x80) this->handleExceptionResponse(frame);
+    else if (functionCode == 0x03) this->handleReadResponse(frame);
+    else if (functionCode == 0x06 || functionCode == 0x10) this->handleWriteResponse(frame);
+    else return false;
+    m_lastRequestSlaveId = -1;
     return true;
+}
+
+void ModbusController::handleReadResponse(const QByteArray& frame)
+{
+    int byteCount = static_cast<quint8>(frame[2]);
+    QList<quint16> values;
+    for (int i = 0; i < byteCount / 2; ++i)
+    {
+        quint8 highByte = frame[3 + 2 * i];
+        quint8 lowByte = frame[3 + 2 * i + 1];
+        values.append((highByte << 8) | lowByte);
+    }
+    emit dataReady(m_lastRequestAddress, values);
+}
+
+void ModbusController::handleWriteResponse(const QByteArray& frame)
+{
+    uint16_t respAddress = (static_cast<quint8>(frame[2]) << 8) | static_cast<quint8>(frame[3]);
+    if (respAddress != m_lastRequestAddress)
+    {
+        emit errorOccurred("写入响应的地址与请求不匹配");
+        return;
+    }
+    emit writeSuccessful(frame[1], m_lastRequestAddress + 40001);
+}
+
+void ModbusController::handleExceptionResponse(const QByteArray& frame)
+{
+    if ((frame[1] & 0x7F) == m_lastRequestFuncCode)
+    {
+        int exceptionCode = static_cast<quint8>(frame[2]);
+        emit errorOccurred(QString("Modbus异常: 功能码 0x%1, 异常码 0x%2")
+                           .arg(m_lastRequestFuncCode, 2, 16, QChar('0')).toUpper()
+                           .arg(exceptionCode, 2, 16, QChar('0')).toUpper());
+    }
 }
 
 quint16 ModbusController::calculateCrc(const QByteArray& data)

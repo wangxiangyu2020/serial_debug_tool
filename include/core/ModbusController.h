@@ -42,8 +42,13 @@ private slots:
 private:
     void connectSignals();
     QByteArray buildReadRequest(int slaveId, int startAddress, int quantity);
-    QByteArray buildWriteRequest(int slaveId, int address, int value);
-    bool parseResponse(const QByteArray& data);
+    QByteArray buildWriteSingleRequest(int slaveId, int address, quint16 value);
+    QByteArray buildWriteMultipleRegisters(int slaveId, int startAddress, const QList<quint16>& values);
+    void tryParseBuffer();
+    bool processFrame(const QByteArray &frame);
+    void handleReadResponse(const QByteArray &frame);
+    void handleWriteResponse(const QByteArray &frame);
+    void handleExceptionResponse(const QByteArray &frame);
     quint16 calculateCrc(const QByteArray& data);
 
     SerialPortManager* m_pSerialPortManager = nullptr;
