@@ -222,7 +222,7 @@ bool ModbusController::processFrame(const QByteArray& frame)
         | static_cast<quint8>(frame[dataLength]);
     if (this->calculateCrc(frame.left(dataLength)) != receivedCrc)
     {
-        emit errorOccurred("响应的从站地址与请求不匹配");
+        emit errorOccurred("响应数据CRC校验失败");
         return false;
     }
     // 根据功能码处理数据

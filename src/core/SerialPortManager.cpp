@@ -61,6 +61,7 @@ void SerialPortManager::handleWriteDataFromModbus(const QByteArray& data)
 // 主要业务方法
 void SerialPortManager::openSerialPort(const QMap<QString, QVariant>& serialParams)
 {
+    if (m_pSerialPort->isOpen()) m_pSerialPort->clear();
     this->configureSerialPort(serialParams);
     if (!m_pSerialPort->open(QIODevice::ReadWrite))
     {
